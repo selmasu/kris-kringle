@@ -8,7 +8,7 @@ final class SelmasuController
 	const REQUEST_FILE      = 'file';
 	const REQUEST_SING_OUT  = 'sign-out';
 
-	const VERSION           = '0.0.2';
+	const VERSION           = '0.0.1';
 	
 	/** @var Selmasu */
 	protected $s;
@@ -121,7 +121,7 @@ spl_autoload_register( 'selmasuAutoloader' );
 function selmasuAutoloader( $className )
 {
 	include '/usr/share/selmasu-framework/framework/classes.php';
-	include '/usr/share/selmasu-simpli.travel/core/classes.php';
+	include '/usr/share/selmasu-kris-kringle/core/classes.php';
 
     require_once '/usr/share/selmasu-framework/framework/libs/aws/aws-autoloader.php';
 	
