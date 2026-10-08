@@ -17,6 +17,6 @@ open class Constants {
     }
     
     class var signUpToken:String {
-        return "LKJhJtertewhjgmnlkKopiuYuyDhgFCkJghJHGdf"
+        return "c63ccdc9df5331aeb702c1cca1abcf864322fae52007ee157348193020b5bd34"
     }
 }

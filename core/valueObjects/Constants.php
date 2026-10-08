@@ -13,5 +13,5 @@ class Constants {
     const PHP_DATE_TIME_FORMAT = 'D jS M Y h:i a';
     const PHP_TIME_FORMAT = 'h:i a';
 
-    const SIGN_UP_TOKEN = "LKJhJtertewhjgmnlkKopiuYuyDhgFCkJghJHGdf";
+    const SIGN_UP_TOKEN = "c63ccdc9df5331aeb702c1cca1abcf864322fae52007ee157348193020b5bd34";
 }
