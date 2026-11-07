@@ -1,4 +1,7 @@
 <?php
+
+use services\user\UserService;
+
 class LoginController extends Controller implements ContentGenerator
 {
 	/**

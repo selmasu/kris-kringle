@@ -1,11 +1,14 @@
 <?php
-class EmailsModel extends \Model {
+
+namespace emails\services\emails;
+class EmailsModel extends \Model
+{
     /**
      * Gets all email details for a given query
      * @param \SqlQueryBits $query
      * @return array
      */
-    protected function getEmailsFromDB( \SqlQueryBits $query )
+    protected function getEmailsFromDB(\SqlQueryBits $query)
     {
         $sql = "
 			SELECT
@@ -17,7 +20,7 @@ class EmailsModel extends \Model {
 				" . $query->where()->get() . "
 			" . $query->orderByString() . "
 			" . $query->limitString();
-        return $this->adb->fetchAll( $sql );
+        return $this->adb->fetchAll($sql);
     }
 
     /**
@@ -25,7 +28,7 @@ class EmailsModel extends \Model {
      * @param \SqlQueryBits $query
      * @return int
      */
-    protected function getEmailsTotalFromDB( \SqlQueryBits $query )
+    protected function getEmailsTotalFromDB(\SqlQueryBits $query)
     {
         $sql = "
 			SELECT
@@ -35,21 +38,21 @@ class EmailsModel extends \Model {
 			WHERE
 				1
 				" . $query->where()->get();
-        return $this->adb->fetchValue( 'total', $sql );
+        return $this->adb->fetchValue('total', $sql);
     }
 
     /**
      * @param \KrisKringle\Email $email
      * @return int
      */
-    protected function createEmailInDB( \KrisKringle\Email $email )
+    protected function createEmailInDB(\KrisKringle\Email $email)
     {
         $sql = "
             INSERT INTO
                 " . $this->coreTables()->email() . "
             SET
                 " . $email->sqlSet();
-        $this->adb->query( $sql );
+        $this->adb->query($sql);
         return $email->emailId()->get();
     }
 
@@ -57,7 +60,7 @@ class EmailsModel extends \Model {
      * @param \KrisKringle\Email $email
      * @return int
      */
-    protected function saveToDB( \KrisKringle\Email $email )
+    protected function saveToDB(\KrisKringle\Email $email)
     {
         $sql = "
             UPDATE
@@ -66,11 +69,11 @@ class EmailsModel extends \Model {
                 " . $email->sqlSet() . "
             WHERE
                 emailId = " . (int)$email->emailId()->get();
-        $this->adb->query( $sql );
+        $this->adb->query($sql);
         return $email->emailId()->get();
     }
 
-    protected function addAttachmentToDB( $emailId, $fileId )
+    protected function addAttachmentToDB($emailId, $fileId)
     {
         $sql = "
 			INSERT INTO
@@ -78,10 +81,10 @@ class EmailsModel extends \Model {
             SET
                 emailId = " . (int)$emailId . ",
 				fileId = " . (int)$fileId;
-        $this->adb->query( $sql );
+        $this->adb->query($sql);
     }
 
-    protected function deleteAttachmentFromDB( $emailId, $fileId )
+    protected function deleteAttachmentFromDB($emailId, $fileId)
     {
         $sql = "
 			DELETE FROM
@@ -91,10 +94,10 @@ class EmailsModel extends \Model {
 				AND fileId = " . (int)$fileId . "
             LIMIT
                 1";
-        $this->adb->query( $sql );
+        $this->adb->query($sql);
     }
 
-    protected function getAttachmentsFromDB( \SqlQueryBits $query, $returnType = \Model::RETURN_TYPE_ARRAY )
+    protected function getAttachmentsFromDB(\SqlQueryBits $query, $returnType = \Model::RETURN_TYPE_ARRAY)
     {
         $sql = "
 			SELECT
@@ -110,21 +113,19 @@ class EmailsModel extends \Model {
 				" . $query->where()->get() . "
 			" . $query->orderByString() . "
 			" . $query->limitString();
-        if( $returnType == \Model::RETURN_TYPE_ARRAY )
-        {
-            return $this->adb->fetchAll( $sql );
+        if ($returnType == \Model::RETURN_TYPE_ARRAY) {
+            return $this->adb->fetchAll($sql);
         }
 
         $files = array();
-        foreach( $this->adb->fetchAll( $sql ) as $item )
-        {
-            $files[] = \File::create()->fromArray( $item );
+        foreach ($this->adb->fetchAll($sql) as $item) {
+            $files[] = \File::create()->fromArray($item);
         }
 
         return $files;
     }
 
-    protected function getAttachmentsTotalFromDB( \SqlQueryBits $query )
+    protected function getAttachmentsTotalFromDB(\SqlQueryBits $query)
     {
         $sql = "
 			SELECT
@@ -138,6 +139,6 @@ class EmailsModel extends \Model {
 			WHERE
 				1
 				" . $query->where()->get();
-        return $this->adb->fetchValue( 'total', $sql );
+        return $this->adb->fetchValue('total', $sql);
     }
 }

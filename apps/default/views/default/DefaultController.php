@@ -24,6 +24,14 @@ class DefaultController extends Controller implements ContentGenerator {
         $app = $this->getApp();
 
         switch ($app) {
+            case self::REQUEST_USERS:
+                UsersController::create($this->s())->getContent();
+                break;
+
+            case self::REQUEST_EMAILS:
+                EmailsController::create($this->s())->getContent();
+                break;
+
             case self::REQUEST_APPLE_SIGN_IN:
                 $this->appleSignIn();
                 break;

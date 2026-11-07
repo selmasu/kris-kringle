@@ -1,4 +1,7 @@
 <?php
+
+use services\user\UserService;
+
 class UserFormController extends Controller implements ContentGenerator
 {
 	/**
