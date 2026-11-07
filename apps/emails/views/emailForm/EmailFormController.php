@@ -25,7 +25,7 @@ class EmailFormController extends Controller implements ContentGenerator
 	{
 		switch( $this->s->pageRequest()->action() )
 		{
-            case SettingsController::AJAX_REQUEST_EMAIL_SAVE:
+            case self::AJAX_REQUEST_SAVE:
 				echo $this->saveEmail();
 				exit;
 				
@@ -37,19 +37,18 @@ class EmailFormController extends Controller implements ContentGenerator
 	
 	private function saveEmail()
 	{
-		if( $this->s->pageRequest()->intVar( 'emailId' ) )
-		{
-			return \LeReve\EmailsService::create( $this->s )->saveFromArray( $this->s->pageRequest()->vars() );
+		if( $this->s->pageRequest()->intVar( 'emailId' ) ) {
+			return EmailsService::create( $this->s )->saveFromArray( $this->s->pageRequest()->vars() );
 		}
 		
 		return -1;
 	}
 	
 	/**
-	 * @param Selamsu $s
+	 * @param Selmasu $s
 	 * @return EmailFormController
 	 */
-	public static function create( Selmasu $s )
+	public static function create( Selmasu $s ):EmailFormController
 	{
 		return new self( $s );
 	}
