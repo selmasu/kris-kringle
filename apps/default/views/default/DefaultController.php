@@ -1,6 +1,5 @@
 <?php
 class DefaultController extends Controller implements ContentGenerator {
-    const REQUEST_TRIP              = 'trip';
     const REQUEST_USERS             = 'users';
     const REQUEST_EMAILS            = 'emails';
     const REQUEST_PROFILE           = 'profile';
@@ -26,42 +25,26 @@ class DefaultController extends Controller implements ContentGenerator {
 
         switch ($app) {
             case self::REQUEST_APPLE_SIGN_IN:
-                return $this->appleSignIn();
-
-            case self::REQUEST_TRIP:
-                return TripController::create($this->s)->getContent();
+                $this->appleSignIn();
+                break;
 
             default:
                 return $this->v->getDefaultView();
         }
+
+        return '';
     }
 
     private function getApp() {
-    	return !$this->s->pageRequest()->request() ? self::REQUEST_TRIP : $this->s->pageRequest()->request();
+    	return !$this->s->pageRequest()->request() ? self::REQUEST_USERS : $this->s->pageRequest()->request();
     }
 
     public function getPublicContent() {
-        switch ($this->s->pageRequest()->request()) {
-            case self::REQUEST_DELETE_ACCOUNT:
-                return $this->v->deleteAccount();
-
-            case self::REQUEST_PRIVACY:
-                return $this->v->privacy();
-
-            case self::REQUEST_APPLE_SIGN_IN:
-                return $this->appleSignIn();
-
-            default:
-                return TripController::create($this->s)->getPublicContent();
-        }
 
     }
 
     public function getPageTitle() {
-        switch ($this->getApp()) {
-            default:
-                return 'simpli.travel';
-        }
+
     }
 
     public function execAjax() {
@@ -95,7 +78,7 @@ class DefaultController extends Controller implements ContentGenerator {
      * @param Selmasu $s
      * @return DefaultController
      */
-    public static function create(Selmasu $s) {
+    public static function create(Selmasu $s):DefaultController {
         return new DefaultController($s);
     }
 }
