@@ -1,11 +1,5 @@
 <?php
 
-namespace emails\services\emails;
-
-use Email;
-use File;
-use Selmasu;
-
 class EmailsService extends EmailsModel
 {
     /**

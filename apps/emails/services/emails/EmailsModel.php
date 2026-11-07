@@ -1,8 +1,5 @@
 <?php
-
-namespace emails\services\emails;
-class EmailsModel extends \Model
-{
+class EmailsModel extends Model {
     /**
      * Gets all email details for a given query
      * @param \SqlQueryBits $query

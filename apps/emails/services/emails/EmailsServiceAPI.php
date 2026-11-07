@@ -1,11 +1,4 @@
 <?php
-
-namespace emails\services\emails;
-
-use ListArguments;
-use Selmasu;
-use ServiceAPI;
-
 class EmailsServiceAPI extends ServiceAPI
 {
     //Function Names
