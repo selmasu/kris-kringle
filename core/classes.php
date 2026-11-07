@@ -21,6 +21,10 @@ $appClasses = [
 	//Core Services
     'UserService' => '/usr/share/selmasu-kris-kringle/core/services/user/UserService.php',
 
+    //Core View
+    'LoginController' => '/usr/share/selmasu-kris-kringle/core/views/login/LoginController.php',
+    'LoginView' => '/usr/share/selmasu-kris-kringle/core/views/login/LoginView.php',
+
 	//Default
 	'DefaultController' => '/usr/share/selmasu-kris-kringle/apps/default/views/default/DefaultController.php',
 	'DefaultView' => '/usr/share/selmasu-kris-kringle/apps/default/views/default/DefaultView.php',
