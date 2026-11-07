@@ -1,0 +1,21 @@
+@CHARSET "UTF-8";
+
+#giftCeritificateSettingsForm
+{
+    padding: 0 10px 10px 10px;
+}
+
+#giftCeritificateSettingsForm li
+{
+    margin: 10px 0 0 0;
+}
+
+#giftCeritificateSettingsForm label
+{
+    width: 220px;
+}
+
+.smallTextbox
+{
+    width: 7em;
+}

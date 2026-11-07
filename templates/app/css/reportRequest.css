@@ -1,0 +1,13 @@
+@CHARSET "UTF-8";
+
+#requestReportForm {
+	padding: 10px;
+}
+
+#requestReportForm li {
+	padding: 5px;
+}
+
+#requestReportForm label {
+	width: 160px;
+}

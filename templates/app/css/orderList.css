@@ -1,0 +1,36 @@
+@CHARSET "UTF-8";
+
+div.orderGroupWrap
+{
+    border: 1px solid #ccc;
+    background-color: #ffffff;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+#orderGroupTree
+{
+    margin-top: 10px;
+}
+
+#allOrders
+{
+    margin: 10px 0 10px 0;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#allOrders:hover
+{
+    text-decoration: underline;
+}
+
+#orderGroupForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#orderGroupForm label
+{
+    width: 110px;
+}

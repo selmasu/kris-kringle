@@ -1,0 +1,51 @@
+@CHARSET "UTF-8";
+
+#resourceForm
+{
+    padding: 0 10px 0 10px;
+}
+
+#resourceForm form li
+{
+    margin: 5px 0 0 0;
+}
+
+#resourceForm form label
+{
+    width: 110px;
+}
+
+#categoryTree label {
+    width: auto;
+}
+
+#resource h3
+{
+    padding: 0 10px;
+}
+
+.textBoxFull
+{
+    width: 80%;
+}
+
+label
+{
+    vertical-align: top;
+    padding-top: 6px;
+}
+
+label.checkbox
+{
+    width: auto !important;
+}
+
+#resourceForm input[type="checkbox"]
+{
+    vertical-align: -webkit-baseline-middle;
+}
+
+#uploadWrap
+{
+    display: inline-block;
+}

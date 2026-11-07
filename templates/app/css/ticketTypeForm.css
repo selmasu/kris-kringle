@@ -1,0 +1,27 @@
+@CHARSET "UTF-8";
+
+.formWrap li
+{
+    margin: 5px 0 0 0;
+}
+
+.formWrap label
+{
+    width: 110px;
+}
+
+.formWrap h3
+{
+    padding: 0 10px;
+}
+
+.textBoxFull
+{
+    width: 80%;
+}
+
+label
+{
+    vertical-align: top;
+    padding-top: 6px;
+}

@@ -1,0 +1,111 @@
+@CHARSET "UTF-8";
+
+#campaignForm
+{
+    padding: 0 10px;
+}
+
+#campaignForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#campaign h3
+{
+	padding: 0 10px;
+}
+
+#recipientsList h3
+{
+    padding: 0;
+}
+
+label
+{
+	width: 125px;
+}
+
+#cke_description
+{
+    margin: 0 10px 10px 10px;
+}
+
+input.k-textbox
+{
+    width: 35em;
+}
+
+#ckwrap
+{
+    margin-left: 134px;
+    margin-top: -20px;
+}
+
+.k-multiselect.k-header {
+    width: 35em;
+    display: inline-block;
+}
+
+.recipientsField li.k-button
+{
+    height: 25px;
+    margin: 2px !important;
+}
+
+.recipientsField label
+{
+    margin-top: 5px;
+    vertical-align: top;
+}
+
+#sendingQueued
+{
+    margin-top: 5px;
+    font-weight: bold;
+    color: #57af30;
+}
+
+#preview
+{
+    margin-top: 10px;
+}
+
+#preview p
+{
+    padding: 5px;
+}
+
+#filesWrap
+{
+    display: inline-block;
+}
+
+#attachmentList
+{
+    border: none;
+}
+
+div.attachmentItem
+{
+    margin: 10px;
+    float: left;
+}
+
+.totalRecipients {
+    width: 60%;
+}
+
+.emailTemplate
+{
+    padding: 5px;
+    color: #fff;
+    background-color: #762aaa;
+    font-size: large;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.emailTemplateDiv
+{
+    padding: 8px;
+}

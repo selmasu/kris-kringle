@@ -1,0 +1,94 @@
+@CHARSET "UTF-8";
+
+#demo label {
+    width: 90px;
+}
+
+#demo label.text {
+    width: auto;
+}
+
+#demoForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#demoForm .column-1 label {
+    width: 90px;
+}
+
+#demo h3
+{
+	padding: 0 10px;
+}
+
+#demo h2
+{
+	padding: 20px 0px 0px 0px;
+}
+
+#tabs
+{
+	margin-top: 10px;	
+}
+
+#notes
+{
+	margin-top: 10px;	
+}
+
+#attendee
+{
+	display: none;
+	margin-top: 20px;
+}
+
+.k-autocomplete
+{
+	width: 15em;
+}
+
+#customerForm .textAreaLarge,
+#customerForm .textBoxLarge
+{
+    width: 25em;
+}
+
+#customerForm .textAreaLarge
+{
+    height: 4em;
+}
+
+.pac-container
+{
+	z-index: 99999 !important;
+}
+
+#demonstrators
+{
+    width: 540px;
+    margin-left: 10px;
+}
+
+div.note
+{
+    font-style: italic;
+    border: 1px solid darkgray;
+    background: #f7f7f7;
+    padding: 5px 10px 5px 10px;
+    margin: 5px 5px 15px 10px;
+    width: 535px
+}
+
+.addCustomerNotes {
+    width: 25em;
+    height: 10em;
+}
+
+#paymentWindow form label {
+    width: 60px;
+}
+
+#paymentWindow form li {
+    margin-bottom: 5px;
+}

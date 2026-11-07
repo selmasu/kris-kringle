@@ -1,0 +1,28 @@
+@CHARSET "UTF-8";
+
+#emailTemplateForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#emailTemplateForm li
+{
+	margin: 5px;
+}
+
+#emailTemplate h3
+{
+	padding: 0 10px;
+}
+
+#emailTemplate h2
+{
+	padding: 20px 0px 0px 0px;
+}
+
+#emailTemplate label
+{
+    width: 125px;
+    vertical-align: top;
+    margin-top: 5px;
+}

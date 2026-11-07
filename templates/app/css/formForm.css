@@ -1,0 +1,100 @@
+@CHARSET "UTF-8";
+
+.formWrap h3
+{
+    margin: 20px;
+}
+
+#banking,
+#amendment,
+#commercial
+{
+    padding: 0 10px 0 10px;
+}
+
+form li
+{
+    margin: 5px 0 0 0;
+}
+
+form label
+{
+    width: 110px;
+    vertical-align: top;
+    margin-top: 6px;
+}
+
+form label.text {
+    padding: 0;
+}
+
+form h3
+{
+    margin: 10px 0 20px 10px;
+}
+
+form h3.second
+{
+    margin: 20px 0 10px 10px;
+}
+
+div.formItem
+{
+    float: left;
+    margin: 10px;
+}
+
+div.formItem ul li
+{
+    margin: 5px;
+}
+
+.combobox
+{
+    width: 15em;
+}
+
+div.notes
+{
+    margin-top: 20px;
+}
+
+table#orders,
+table#orderItems
+{
+    margin-left: 120px;
+}
+
+table#orders td,
+table#orders th,
+table#orderItems td,
+table#orderItems th
+{
+    padding: 5px;
+}
+
+#total
+{
+    font-weight: bold;
+}
+
+th.clothHeader div,
+th.concentrateHeader div
+{
+    display: inline-block;
+    width: 30px;
+}
+
+.expandPadding
+{
+    padding-right: 0px;
+}
+
+.warning
+{
+    color: darkred;
+    border: 1px solid orange;
+    padding: 10px;
+    width: 950px;
+    height: 15px;
+}

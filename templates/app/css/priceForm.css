@@ -1,0 +1,44 @@
+@CHARSET "UTF-8";
+
+#priceForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#priceForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#priceForm label
+{
+	width: 180px;
+}
+
+#product h3
+{
+	padding: 10px 10px;
+}
+
+label
+{
+	vertical-align: top;
+	padding-top: 6px;
+}
+
+label.table
+{
+	float: left;
+	padding-top: 2px;
+}
+
+table.inputs
+{
+	margin: 6px;
+}
+
+table.inputs td,
+table.inputs th	
+{
+	padding: 2px;
+}

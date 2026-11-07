@@ -1,180 +1,320 @@
 @CHARSET "UTF-8";
 
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;500&display=swap');
-
-html {
-    height: 100%
-}
-
 body {
-    font-family: 'Open Sans';
-    font-weight: 300;
+    /*background-color: rgba(220,212,233,0.5);
+    background-color: rgb(220,212,233);
+    background-color: rgb(250,242,254);*/
+    color: #000;
+    font-size: 15px;
 }
 
-#appleid-signin {
-    width: 185px;
-    margin: 15px auto;
+a,
+.breadcrumb a{
+    color: rgb(98,38,158);
 }
 
-#trip-col {
-    width: 450px;
-    position: absolute;
-    left: 0;
-    top: 67px;
-    bottom: 0;
-    overflow-y: hidden;
+.btn-green {
+    background-color: rgb(195, 213, 77);
+    color: #ffffff;
+}
+
+/* Optional: Add a slightly darker shade for hover/active states */
+.btn-green:hover {
+    background-color: rgb(175, 193, 57);
+    color: #ffffff;
+}
+
+/*#sidebar-menu ul li a i,
+#sidebar-menu > ul > li > a{
+    color: rgb(98,38,158);
+}
+
+#sidebar-menu > ul > li > a.active {
+    color: rgb(98,38,158) !important;
+}*/
+
+#sidebar-menu ul li:hover a i,
+#sidebar-menu > ul > li > a:hover{
+    color: #000 !important;
+}
+
+#sidebar-menu > ul > li > a.active,
+#sidebar-menu > ul > li > a.active i{
+    color: #000 !important;
+}
+
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+    color: #000;
+}
+
+.breadcrumb>.active {
+    color: #000;
+}
+
+.v-spacer-5 {
+    height: 5px;
+}
+
+.page-title-box {
+    padding: 25px 20px 10px;
+}
+
+.categoryWrap {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background-color: #fff;
+    padding: 5px;
+}
+
+/* Notes */
+ul.notesList li {
+    display: block;
+    margin: 10px;
     padding: 10px;
+    border: 1px solid #dbdbdb;
 }
 
-#trip-col.min {
-    display: none;
+/* Content Windows */
+#newsWindowContent p,
+#onboardWindow p
+{
+    line-height: 1.4em;
+    margin: 1em 0 1em 0;
 }
 
-#trip-col #days,
-#trip-col #to-dos,
-#trip-col #items,
-#trip-col #places {
-    position: absolute;
-    left: 0.75rem;
-    top: 53px;
-    bottom: 10px;
-    right: 0.75rem;
+/* FORM STYLES */
+
+form ul,
+form ol {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+    background: transparent;
+    list-style: none;
 }
 
-#trip-col-tab {
-    width: 50px;
-    position: absolute;
-    left: 450px;
-    top: 67px;
-    bottom: 0;
+fieldset
+{
+    border: none;
 }
 
-#trip-col-tab.min {
-    width: 50px;
+fieldset.left
+{
+    float: left;
+}
+
+fieldset.right
+{
+    float: right;
+}
+
+label {
+    font-weight: normal;
+}
+
+label.required
+{
+    font-weight: bold;
+}
+
+label.checkbox,
+label.auto {
+    width: auto;
+    display: inline;
+    font-weight: normal;
+}
+
+.valid
+{
+    color: green;
+}
+
+.invalid
+{
+    color: #AA0000;
+}
+
+.progress
+{
+    color: darkorange;
+}
+
+.spacer
+{
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+}
+
+.spacer-5
+{
+    width: 5px;
+    height: 5px;
+    display: inline-block;
+}
+
+label
+{
+    display: inline-block;
+    width: 110px;
+    padding-right: 5px;
+    text-align: right;
+}
+
+label.text,
+label.checkbox
+{
+    width: auto;
+}
+
+label.text
+{
+    padding: 8px 0 8px 0;
+}
+
+#fieldMatches label
+{
+    width: 220px
+}
+
+.labelSmall
+{
+    width: 75px;
+}
+
+.k-textbox
+{
+    width: 15em;
+}
+
+.textAreaLarge,
+.textBoxLarge
+{
+    width: 35em;
+}
+
+.textAreaMedium,
+.textBoxMedium
+{
+    width: 20em;
+}
+
+.textAreaSmall,
+.textBoxSmall
+{
+    width: 10em;
+}
+
+.textBoxTiny
+{
+    width: 5em;
+}
+
+.textBoxTiny2
+{
+    width: 6em;
+}
+
+.textBoxTeenyTiny
+{
+    width: 3em;
+}
+
+textarea.k-textbox
+{
+    padding: 2px 5px 2px 5px;
+}
+
+.textAreaLarge,
+.textAreaMedium
+{
+    height: 10em;
+}
+
+select,
+.k-dropdown
+{
+    width: 15em;
+}
+
+.selectLarge
+{
+    width: 35em;
+}
+
+.selectMedium
+{
+    width: 20em;
+}
+
+.selectSmall
+{
+    width: 10em;
+}
+
+.selectTiny
+{
+    width: 5em;
+}
+
+.k-numerictextbox
+{
+    width: 15em;
+}
+
+.k-datepicker
+{
+    width: 15em;
+}
+
+ul.horizontalInputs li
+{
+    display: inline;
+}
+
+.formWrap {
+    background: white;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+
+.actionBar {
+    margin-top: 10px;
+}
+
+.ckwrap
+{
+    display: inline-block
+}
+
+#page-utils-loading {
     position: absolute;
     left: 0;
-    top: 67px;
+    right: 0;
+    top: 0;
     bottom: 0;
+    background-color: rgba(255,255,255,.75);
+    z-index: 9999;
 }
 
-#trip-col-tab div {
-    cursor: pointer;
+#page-utils-loading-inner {
+    margin: auto;
+    color: black;
+    width: 100%;
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
-#planner #map {
-    margin-left: 450px;
-}
 
-#planner #map.max {
-    margin-left: 0;
-}
 
-.card {
-    box-shadow: 0 0 2px 0 rgb(0 0 0 / 20%);
-    cursor: pointer;
-}
-
-.card.selected {
-    box-shadow: 0 0 2px #348cd4
-}
-
-.info-between {
-    border-left: 1px dashed;
-    margin-left: 4px;
-}
-
-.far.orange {
-    color: orange;
-}
-
-.fa-circle-user {
-    font-size: 32px;
-}
-
-.delete-destination {
-    color: #f7531f;
-}
-
-.card.selected .destination:hover {
-    font-weight: 500;
-}
-
-.pac-container {
-    z-index: 20000
-}
-
-#suggestion-window #reason {
-    height: 150px
-}
-
-.to-do-item,
-.to-take-item,
-.place-item {
-    border-left: 1px dashed;
-    margin-left: 10px;
-    cursor: pointer;
-}
-
-.to-do-item,
-.to-take-item {
-    height: 40px;
-}
-
-.to-do-item i,
-.to-take-item i {
-    margin-left: -22px;
-    background-color: #ffffff;
-    font-size: 20px;
-}
-
-.to-do-item.complete span,
-.to-take-item.packed span {
-    text-decoration: line-through;
-}
-
-.place-item {
-    min-height: 40px;
-}
-
-.place-item img {
-    margin-left: -26px;
-    border: 2px solid #8892d6
-}
-
-.place-item div {
-    width: 90%;
-}
-/* Map discovery controls stay attached to the map when the itinerary changes. */
-.planner-discovery {
-    background: #fff;
-    color: #25352f;
-    border-radius: 10px;
-    box-shadow: 0 2px 12px #0003;
-    margin: 12px;
-    padding: 12px;
-    width: 330px;
-    max-width: calc(100vw - 36px);
-    max-height: calc(100vh - 170px);
-    overflow-y: auto;
-    font-family: 'Open Sans', sans-serif;
-    font-size: 13px;
-}
-.discovery-search { display: flex; gap: 6px; }
-.discovery-search input { min-width: 0; font-size: 13px; }
-.discovery-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.discovery-actions a { margin-right: 8px; }
-.discovery-status { margin: 8px 0 0; }
-.discovery-status:empty, .discovery-details:empty { display: none; }
-.discovery-results { max-height: 210px; overflow-y: auto; margin-top: 8px; }
-.discovery-result { display: block; text-align: left; width: 100%; padding: 9px 4px; border: 0; border-bottom: 1px solid #e4e9e6; background: #fff; color: inherit; }
-.discovery-result:hover, .discovery-result:focus-visible { background: #f0f7f3; }
-.discovery-result span { display: block; font-size: 12px; color: #52615b; }
-.discovery-details { margin-top: 10px; }
-.discovery-details h3 { font-size: 18px; }
-.discovery-details label { display: block; }
-.discovery-photo { width: 100%; height: 150px; object-fit: cover; border-radius: 6px; }
-.discovery-photo + a { display: block; font-size: 11px; }
-@media (max-width: 850px) {
-    .planner-discovery { width: 270px; max-width: calc(100vw - 480px); }
-    #map.max .planner-discovery { max-width: calc(100vw - 36px); }
+/* Mobile Overrides*/
+@media (max-width: 640px) {
+    .app-search .form-control {
+        width: 120px;
+    }
 }

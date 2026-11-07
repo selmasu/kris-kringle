@@ -1,0 +1,26 @@
+@CHARSET "UTF-8";
+
+#threeWayCallForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#threeWayCallForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#threeWayCall h3
+{
+	padding: 10px 10px;
+}
+
+.k-autocomplete
+{
+	width: 15em;
+}
+
+#threeWayTabs
+{
+    margin-top: 10px;
+}

@@ -1,0 +1,58 @@
+@CHARSET "UTF-8";
+
+.formWrap
+{
+	padding: 0 10px 10px 10px;
+}
+
+#onboardForm {
+    margin-bottom: -35px;
+}
+
+#onboardForm li
+{
+	margin: 5px 0 0 0;
+}
+
+#onboardForm label
+{
+	width: 110px;
+}
+
+#onboard h3
+{
+	padding: 0;
+}
+
+.panel
+{
+	padding: 10px;
+}
+
+label
+{
+	vertical-align: top;
+	padding-top: 6px;
+}
+
+label.checkbox
+{
+	width: auto !important;
+}
+
+input[type="checkbox"]
+{
+	vertical-align: -webkit-baseline-middle;
+}
+
+table.k-editor
+{
+	height: 600px;
+}
+
+#ckwrap
+{
+    margin-left: 115px;
+    margin-top: -25px;
+    margin-bottom: 35px;
+}

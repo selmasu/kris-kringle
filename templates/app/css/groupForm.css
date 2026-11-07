@@ -1,0 +1,32 @@
+@CHARSET "UTF-8";
+
+#groupDetailsForm
+{
+    padding: 0 10px 0 10px;
+    width: 900px;
+}
+
+#groupForm li
+{
+    height: 35px;
+}
+
+#group h3
+{
+    padding: 10px 10px;
+}
+
+#group h2
+{
+    padding: 20px 0px 0px 0px;
+}
+
+.breadCrumb
+{
+    margin: 0 0 10px 5px;
+}
+
+.k-autocomplete
+{
+    width: 15em;
+}

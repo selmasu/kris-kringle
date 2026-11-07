@@ -1,0 +1,50 @@
+@CHARSET "UTF-8";
+
+#threeWayCallTimeForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#threeWayCallTimeForm li
+{
+	margin: 5px 0 0 0;
+}
+
+#threeWayCallTime h3
+{
+	padding-top: 15px;
+	padding-bottom: 0px;
+}
+
+#threeWayCallTime label
+{
+    width: 125px;
+}
+
+#threeWayCallTime label.checkbox,
+#threeWayCallTime label.text
+{
+    width: auto;
+}
+
+.k-multiselect.k-header {
+    width: 34.8em;
+    display: inline-block;
+}
+
+#trainingConsultantsField li.k-button
+{
+    height: 25px;
+    margin: 2px;
+}
+
+#trainingConsultantsField label
+{
+    margin-top: 5px;
+    vertical-align: top;
+}
+
+textarea.textAreaLarge
+{
+    height: 15em;
+}

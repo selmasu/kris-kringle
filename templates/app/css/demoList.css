@@ -1,0 +1,14 @@
+@CHARSET "UTF-8";
+
+ul.horizontal li 
+{
+	margin-top: 10px;
+	float: left;
+	text-align: center;
+	width: 14%;
+}
+
+div.snapshotCount
+{
+	font-size: 2em;
+}

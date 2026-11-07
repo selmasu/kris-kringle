@@ -1,0 +1,21 @@
+@CHARSET "UTF-8";
+
+#customDetailsType
+{
+	width: 15em;
+}
+
+#customDetailsForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#customDetailsForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#customDetails h3
+{
+	padding: 10px 10px;
+}

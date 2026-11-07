@@ -1,0 +1,57 @@
+@CHARSET "UTF-8";
+
+#customerType
+{
+	width: 15em;
+}
+
+#contactForm,
+#customerForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#contactForm li,
+#customerForm li,
+#addressForm li,
+#productBankForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#contact h3,
+#customer h3
+{
+	padding: 0 10px;
+}
+
+#customerTabs
+{
+	margin-top: 20px;
+}
+
+#notes
+{
+	margin-top: 10px;	
+}
+
+div.legend span
+{
+    margin: 10px 0 0 165px;
+    font-style: italic;
+}
+
+.pac-container
+{
+    z-index: 11000 !important;
+}
+
+#productBankForm label
+{
+	width: 120px;
+}
+
+#addressSuggestions,
+#shippingAddressSuggestions {
+	margin-left: 165px;
+}

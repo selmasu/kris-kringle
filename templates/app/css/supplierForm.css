@@ -1,0 +1,86 @@
+@CHARSET "UTF-8";
+
+#supplierForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#supplierForm li
+{
+    margin: 5px 0 0 0;
+}
+
+li.text
+{
+    padding: 5px 0 5px 0;
+}
+
+#supplier h3
+{
+	padding: 0 10px;
+}
+
+#lastName,
+#firstName
+{
+	width: 14.9em;
+}
+
+#postcode
+{
+	width: 4.6em;
+}
+
+#tabs
+{
+	margin-top: 10px;	
+}
+
+#notes
+{
+	margin-top: 10px;	
+}
+
+.k-autocomplete
+{
+	width: 15em;
+}
+
+.textBoxLarge
+{
+    width: 30em;
+}
+
+div.filters
+{
+    margin: 5px;
+}
+
+ul.horizontal li
+{
+	margin-top: 10px;
+	float: left;
+	text-align: center;
+	width: 14%;
+}
+
+div.snapshotCount
+{
+	font-size: 2em;
+}
+
+span.gridFootnote,
+span.gridMatches
+{
+    margin: 15px 0 0 0;
+}
+
+div.left
+{
+    float: left;
+    margin: 5px;
+}
+
+#ninetyDayChallengeTracker h5 {
+    margin-top: 6px;
+}

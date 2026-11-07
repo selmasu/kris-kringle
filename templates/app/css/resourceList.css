@@ -1,0 +1,26 @@
+@CHARSET "UTF-8";
+
+div.categoryWrap
+{
+    border: 1px solid #ccc;
+    background-color: #ffffff;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+#categoryTree
+{
+    margin-top: 10px;
+}
+
+#allFiles
+{
+    margin: 10px 0 10px 0;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#allFiles:hover
+{
+    text-decoration: underline;
+}

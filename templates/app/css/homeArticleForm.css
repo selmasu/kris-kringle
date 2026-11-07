@@ -1,0 +1,64 @@
+@CHARSET "UTF-8";
+
+#homeArticleForm li
+{
+	margin: 5px 0 0 0;
+}
+
+#homeArticleForm label
+{
+	width: 140px;
+}
+
+#homeArticle h3
+{
+	padding: 10px 0;
+}
+
+#pages label:first-child
+{
+	float: left;
+}
+
+#pages ul
+{
+	float: left;
+	margin: -3px 0 0 3px;
+}
+
+textarea.k-textbox
+{
+	width: 800px;
+	height: 100px;
+}
+
+.panel
+{
+	padding: 10px;
+}
+
+label
+{
+    vertical-align: top;
+    padding-top: 6px;
+}
+
+label.checkbox
+{
+    width: auto !important;
+}
+
+input[type="checkbox"]
+{
+    margin-right: 5px;
+}
+
+.k-upload {
+    width: 400px;
+    display: inline-block;
+}
+
+#homeArticleImage {
+	max-width: 400px;
+	margin-left: 145px;
+}

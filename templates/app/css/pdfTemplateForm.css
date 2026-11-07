@@ -1,0 +1,48 @@
+@CHARSET "UTF-8";
+
+#outer
+{
+	margin: 0 20px 0 20px;
+}
+
+#pdfTemplateForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#pdfTemplateForm fieldset li
+{
+    margin: 5px 0 0 0;
+}
+
+#pdfTemplateForm label
+{
+	width: 110px;
+}
+
+#pdfTemplate h3
+{
+	padding: 10px 10px;
+}
+
+.label-top {
+    vertical-align: top;
+    margin-top: 6px;
+}
+
+.cssEditor
+{
+    position: relative;
+    width: 800px;
+    display: inline-block;
+    border: 1px solid #dadada;
+}
+
+.cssEditor div.editor
+{
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}

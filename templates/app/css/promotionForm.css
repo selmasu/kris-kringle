@@ -1,0 +1,75 @@
+@CHARSET "UTF-8";
+
+#promotionForm
+{
+    padding: 0 10px 10px 10px;
+}
+
+#promotionForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#promotion h3
+{
+    padding: 0 10px;
+}
+
+#promotionForm label {
+    width: 150px;
+}
+
+.k-autocomplete
+{
+    width: 25em;
+}
+
+legend
+{
+    padding: 10px 0 10px 118px;
+    font-style: italic;
+}
+
+.k-textbox {
+    width: 400px;
+}
+
+#productList, #categoryList
+{
+    margin: 5px 0 0 155px;
+}
+
+#categoryList
+{
+    max-width: 400px;
+}
+
+.category
+{
+    float: left;
+    padding: 0 30px 0 0;
+}
+
+#productList .k-i-close
+{
+    cursor: pointer;
+}
+
+#categoryTree label {
+    width: auto;
+}
+
+div.imagePreview {
+    text-align: center;
+    width: 400px;
+    height: 400px;
+}
+
+div.imagePreview img {
+    max-width: 400px;
+    max-height: 400px;
+}
+
+.image {
+    display: inline-block;
+}

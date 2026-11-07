@@ -1,0 +1,65 @@
+@CHARSET "UTF-8";
+
+#templateForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#templateForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#templateForm label
+{
+	width: 110px;
+}
+
+#template h3
+{
+	padding: 10px 10px;
+}
+
+#editorOuter
+{
+	position: relative;
+	width: 85%;
+	min-height: 500px;
+	margin: 0 0 0 3px;
+	border: 1px solid #dadada;
+}
+
+#templateEditor
+{
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+}
+
+.panel
+{
+	padding: 10px;
+}
+
+.left
+{
+	float: left;
+}
+
+label
+{
+	vertical-align: top;
+	padding-top: 6px;
+}
+
+label.checkbox
+{
+	width: auto !important;	
+}
+
+input[type="checkbox"]
+{
+	vertical-align: -webkit-baseline-middle;	
+}

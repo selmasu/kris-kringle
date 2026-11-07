@@ -1,0 +1,45 @@
+@CHARSET "UTF-8";
+
+#calendarEventForm, #timeOffForm, #blockOutForm, #rosterForm, #rostersForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#calendarEventForm li,
+#timeOffForm li,
+#blockOutForm li,
+#rosterForm li
+{
+	margin: 5px 0 0 0;
+}
+
+#calendarEvent h3
+{
+	padding-top: 15px;
+	padding-bottom: 0px;
+}
+
+#calendarEvent label
+{
+    width: 125px;
+}
+
+textarea.textAreaLarge
+{
+    height: 15em;
+}
+
+.staffGrid
+{
+	width: 300px;
+}
+
+.rostersDetail
+{
+	width: 465px;
+}
+
+.rostersDetail li
+{
+    margin: 10px 0 0 0;
+}

@@ -1,0 +1,94 @@
+@CHARSET "UTF-8";
+
+#paymentForm li,
+#registerForm li,
+#eventForm li,
+#earlyBirdForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#event h3,
+#eventView h3,
+#earlyBirdForm h3
+{
+	padding: 10px 10px;
+}
+
+label
+{
+	width: 225px;
+}
+
+table.k-editor
+{
+	height: 700px;
+}
+
+div.detail
+{
+	padding-bottom: 10px;
+}
+
+#cke_description
+{
+    margin: 0 10px 10px 10px;
+}
+
+#registrationList h3
+{
+	padding: 0;
+}
+
+#registerForm label
+{
+    width: 250px;
+}
+
+#registerForm label.checkbox,
+#registerForm label.text
+{
+    width: auto;
+}
+
+#eventView
+{
+	margin-top: 10px;
+}
+
+#registration table td,
+#registration table th
+{
+	padding: 5px;
+}
+
+#registration table th
+{
+	text-align: right;
+	font-weight: normal;
+	text-transform: uppercase;
+}
+
+#eventView #description p
+{
+    line-height: 1.4em;
+    margin: 1em 0 1em 0;
+}
+
+#eventView #description ul li
+{
+    list-style-type: disc;
+    margin-left: 3em;
+}
+
+#eventView #description ol li
+{
+    list-style-type: decimal;
+    margin-left: 3em;
+}
+
+#eventView #description td,
+#eventView #description th
+{
+    padding: 5px;
+}

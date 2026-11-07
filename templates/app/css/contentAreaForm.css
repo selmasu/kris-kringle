@@ -1,0 +1,47 @@
+@CHARSET "UTF-8";
+
+#contentAreaForm li
+{
+	margin: 5px 0 0 0;
+}
+
+#contentAreaForm label
+{
+	width: 110px;
+}
+
+textarea.k-textbox
+{
+	width: 800px;
+	height: 100px;
+}
+
+.panel
+{
+	padding: 10px;
+}
+
+label
+{
+    vertical-align: top;
+    padding-top: 6px;
+}
+
+label.checkbox
+{
+    width: auto !important;
+}
+
+input[type="checkbox"]
+{
+    margin-right: 5px;
+}
+
+.k-upload {
+    width: 400px;
+    display: inline-block;
+}
+
+.backgroundImage {
+    margin: 10px 0 0 115px;
+}

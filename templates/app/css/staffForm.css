@@ -1,0 +1,98 @@
+@CHARSET "UTF-8";
+
+#staffForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#staffForm li
+{
+    margin: 5px 0 0 0;
+}
+
+li.text
+{
+    padding: 5px 0 5px 0;
+}
+
+#staff h3
+{
+	padding: 0 10px;
+}
+
+#lastName,
+#firstName
+{
+	width: 14.9em;
+}
+
+#postcode
+{
+	width: 4.6em;
+}
+
+#tabs
+{
+	margin-top: 10px;	
+}
+
+#notes
+{
+	margin-top: 10px;	
+}
+
+.textBoxLarge
+{
+    width: 30em;
+}
+
+
+div.full div.node {
+	width                 : 400px;
+	height                : 240px;
+}
+
+div.filters
+{
+    margin: 5px;
+}
+
+ul.horizontal li
+{
+	margin-top: 10px;
+	float: left;
+	text-align: center;
+	width: 14%;
+}
+
+div.left
+{
+    float: left;
+    margin: 5px;
+}
+
+label {
+	vertical-align: top;
+	padding-top: 6px;
+}
+
+.file-upload-label
+{
+	width: auto;
+	padding: 0;
+	margin: 0;
+}
+
+.k-dropzone {
+	padding: 0;
+}
+
+.bsb
+{
+    width: 7.3em;
+}
+
+.accountNumber
+{
+    width: 7.45em;
+}

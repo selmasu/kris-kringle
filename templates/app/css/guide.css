@@ -1,0 +1,63 @@
+@CHARSET "UTF-8";
+
+#progress
+{
+    width: 100%;
+}
+
+#stepText
+{
+    margin-top: 20px;
+    font-size: 15px;
+}
+
+#stepText p
+{
+    line-height: 25px;
+}
+
+#stepText ul li
+{
+    list-style-type: disc;
+    margin-left: 3em;
+    line-height: 25px;
+}
+
+#stepText ol
+{
+    margin: 15px;
+}
+
+#stepText ol li
+{
+    list-style-type: decimal;
+    margin-left: 3em;
+    margin-top: 10px;
+}
+
+#stepContent,
+#stepContent div button
+{
+    margin-top: 15px;
+}
+
+.guideBookingsOuter td
+{
+    padding: 20px;
+}
+
+.guideBookings td,
+.guideBookings th
+{
+    padding: 5px 10px 5px 10px;
+}
+
+.guideBookings tr:nth-child(even)
+{
+    background-color: #f0f0f0;
+}
+
+#shipToForm li
+{
+    margin: 5px;
+}

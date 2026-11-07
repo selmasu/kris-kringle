@@ -1,0 +1,72 @@
+@CHARSET "UTF-8";
+
+#shipping h3
+{
+	padding: 10px 10px;
+}
+
+#shippingForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#shippingForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#smartFreight
+{
+    margin-top: 20px;
+}
+
+
+#smartFreight h3
+{
+    padding: 10px 10px;
+}
+
+#smartFreightForm
+{
+    padding: 0 10px 0 10px;
+}
+
+#smartFreightForm li
+{
+    margin: 5px 0 0 0;
+}
+
+label
+{
+	width: 120px;
+}
+
+#orderDetails td
+{
+	padding: 5px;
+}
+
+#returns
+{
+	margin-top: 20px;
+}
+
+#returns h3
+{
+	padding: 10px 10px;
+}
+
+#returnedForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#returnedForm li
+{
+	margin: 5px 0 0 0;
+}
+
+#returnedOrderDetails td
+{
+	padding: 5px;
+}

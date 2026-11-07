@@ -1,0 +1,22 @@
+@CHARSET "UTF-8";
+
+#customerDetails
+{
+	width: 800px;
+	margin: 20px 0 0 0;
+}
+
+#customerDetails h3
+{
+	padding: 10px 10px;
+}
+
+#customerDetailsForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#customerDetailsForm li
+{
+    margin: 5px 0 0 0;
+}

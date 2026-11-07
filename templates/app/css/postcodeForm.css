@@ -1,0 +1,27 @@
+@CHARSET "UTF-8";
+
+#postcodeForm
+{
+    padding: 0 10px 0 10px;
+}
+
+#postcodeForm li
+{
+    margin-top: 5px;
+}
+
+#postcodeForm label
+{
+    vertical-align: top;
+    margin-top: 6px;
+}
+
+#postcode h3
+{
+    padding: 0 10px;
+}
+
+#postcode h2
+{
+    padding: 20px 0px 0px 0px;
+}

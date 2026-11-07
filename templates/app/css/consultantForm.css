@@ -1,0 +1,304 @@
+@CHARSET "UTF-8";
+
+#paymentForm li,
+#incentiveProgramPointsForm li,
+#consultantForm fieldset li,
+#consultancyForm fieldset li,
+#coachingReport fieldset li,
+#personalUseForm li,
+#freeProductForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#consultantForm fieldset label,
+#consultancyForm fieldset label,
+#coachingReport fieldset label
+{
+    width: 160px;
+}
+
+li.text
+{
+    padding: 5px 0 5px 0;
+}
+
+div.legend {
+    margin-left: 150px;
+}
+
+#consultant h3
+{
+	padding: 0 10px;
+}
+
+
+#bottomTabs
+{
+	margin-top: 10px;
+}
+
+#notes
+{
+	margin-top: 10px;	
+}
+
+.k-autocomplete
+{
+	width: 15em;
+}
+
+.textBoxLarge
+{
+    width: 30em;
+}
+
+div.orgChart {
+	border                : 1px solid #cccccc;
+	background-color      : #ffffff;
+	margin                : 10px;
+	padding               : 20px;
+    overflow              : auto;
+}
+
+div.orgChart h2 {
+	margin                : 0px;
+	font-size             : 1em;
+	border-bottom         : 2px solid black;
+	border-bottom         : none;
+}
+
+div.orgChart ul {
+	list-style            : none;
+	margin                : 4px;
+	padding               : 0px;
+	font-size             : 0.8em;
+	text-align            : left;
+}
+
+div.orgChart ul.stack,
+div.orgChart ul.stack ul {
+	text-align            : center;
+}
+
+div.orgChart table {
+	width                 : 100%;
+}
+
+div.orgChart tr.lines td.line {
+	width                 : 1px;
+	height                : 20px;
+}
+
+div.orgChart tr.lines td.top {
+	border-top            : 3px solid #762aaa;
+}
+
+div.orgChart tr.lines td.left {
+	border-right          : 2px solid #762aaa;
+}
+
+div.orgChart tr.lines td.right {
+	border-left           : 2px solid #762aaa;
+}
+
+div.orgChart td {
+	text-align            : center;
+	vertical-align        : top;
+	padding               : 0px 2px;
+}
+
+div.orgChart div.node
+{
+    cursor                : pointer;
+    border                : 1px solid #762aaa;
+    display               : inline-block;
+    padding               : 0 4px;
+    background-color      : #ffffff;
+    line-height           : 1.3em;
+    box-shadow            : 4px 4px 6px #888888;
+    -moz-box-shadow       : 4px 4px 6px #888888;
+    -webkit-box-shadow    : 4px 4px 6px #888888;
+}
+
+div.full div.node {
+	width                 : 420px;
+	height                : 260px;
+}
+
+div.mini div.node {
+    width                 : 120px;
+    height                : 180px;
+}
+
+div.orgChart div.hasChildren {
+	background-color      : #ffffff;
+}
+
+div.orgChart.interactive div.hasChildren {
+	cursor                : pointer;
+}
+
+div.orgChart div.node.hover {
+	background-color      : white;
+}
+
+div.full div.node img
+{
+	width: 120px;
+	border-radius: 50%;
+}
+
+div.mini div.node img
+{
+	width: 50px;
+	border-radius: 50%;
+}
+
+#incentiveProgramList h3
+{
+	padding: 0;
+}
+
+.bsb
+{
+	width: 7.3em;
+}
+
+.accountNumber
+{
+	width: 7.45em;
+}
+
+div.teamMemberBookings,
+div.teamMemberProfile
+{
+	float: left;
+	margin: 5px;
+}
+
+div.full div.teamMemberProfile
+{
+	margin: 10px;
+	width: 150px;
+}
+
+div.mini div.teamMemberProfile
+{
+    margin: 10px;
+    width: 100px;
+}
+
+div.mini div.teamMemberProfile h4
+{
+	font-size: 16px;
+}
+
+div.full div.departed
+{
+    width: 408px;
+    height: 240px;
+    background: #dddddd;
+    margin-left: -4px;
+}
+
+div.mini div.departed
+{
+    width: 128px;
+    height: 180px;
+    background: #dddddd;
+    margin-left: -4px;
+}
+
+div.teamMemberBookings td,
+div.teamMemberBookings th
+{
+	padding: 5px;
+}
+
+div.teamMemberBookings td
+{
+	font-size: 1.8em;
+}
+
+div.teamMemberBookings th
+{
+	font-weight: normal;
+}
+
+table.teamMemberSales
+{
+	margin-top: 10px;
+}
+
+table.teamMemberSales th,
+table.teamMemberSales td
+{
+	text-align: right;
+}
+
+table.teamMemberSales td
+{
+	font-size: 1em;
+}
+
+div.lastCoached
+{
+	font-size: 0.9em;
+    margin-left: -170px;
+    margin-top: 100px;
+}
+
+#teamTreeList li ul
+{
+    margin: 20px 0 0 40px;
+    background-color: rgba( 0, 0, 0, 0.025 );
+}
+
+#teamTreeList li
+{
+    padding: 10px;
+}
+
+div.filters
+{
+    margin: 5px;
+}
+
+ul.horizontal li
+{
+	margin-top: 10px;
+	float: left;
+	text-align: center;
+	width: 14%;
+}
+
+div.snapshotCount
+{
+	font-size: 2em;
+}
+
+span.gridFootnote,
+span.gridMatches
+{
+    margin: 15px 0 0 0;
+}
+
+div.left
+{
+    float: left;
+    margin: 5px;
+}
+
+#team ul {
+	list-style: none;
+	padding: 0;
+}
+
+#uplineTree {
+	display: inline-block;
+}
+
+#uplineTree ul {
+	margin-left: 20px;
+}

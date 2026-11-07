@@ -1,0 +1,23 @@
+@CHARSET "UTF-8";
+
+#pageTextForm li
+{
+	margin: 5px 0 0 0;
+}
+
+#pageTextForm label
+{
+	width: 110px;
+	vertical-align: top;
+	margin-top: 5px;
+}
+
+#pageText h3
+{
+	padding: 10px 0;
+}
+
+#ckwrap
+{
+    display: inline-block;
+}

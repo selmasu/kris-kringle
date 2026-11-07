@@ -1,0 +1,14 @@
+@CHARSET "UTF-8";
+
+#testimonialForm li
+{
+	margin: 5px 0 0 0;
+}
+
+#testimonialForm label
+{
+	width: 110px;
+    margin-top: 5px;
+    vertical-align: top;
+}
+

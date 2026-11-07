@@ -1,0 +1,722 @@
+@CHARSET "UTF-8";
+
+#orderForm
+{
+	width: 1070px;
+}
+
+h2.status
+{
+	padding: 0;
+    margin: -30px 0;
+	text-align: center;
+}
+
+#orderType
+{
+	width: 15em;
+}
+
+.k-textbox,
+.k-autocomplete,
+.k-dropdown,
+.k-combobox,
+.k-datepicker,
+.k-datetimepicker,
+.k-numerictextbox
+{
+	width: 14.5em;
+}
+
+.selectTiny,
+.textBoxTiny
+{
+	width: 5em;
+}
+.textBoxTeenyTiny
+{
+	width: 3em;
+}
+
+.selectSmall
+{
+	width: 10em;
+}
+
+div.topBoxes
+{
+	min-width: 21.5em;
+	float: left;
+	margin: 0 10px 0 0;
+}
+
+.topBoxes .formWrap
+{
+	min-height: 480px;
+    width: 330px;
+}
+
+.topBoxes .formWrap .k-invalid-msg
+{
+    margin-left: 90px;
+}
+
+#attendees,
+#bookingBonusDemos,
+.productsBox
+{
+    width: 1055px;
+}
+
+#paymentForm li,
+#orderForm li,
+#refundWindow form li
+{
+    margin: 5px 0 0 0;
+}
+
+.horizontalInputs label
+{
+	width: 6em;	
+}
+
+ul.horizontalInputs li
+{
+	display: inline-block;
+}
+
+#order h3
+{
+	padding: 10px 0px 5px;
+    margin: 0;
+}
+
+label
+{
+	width: 80px;
+}
+
+#paymentForm label {
+    width: 140px;
+}
+
+#paymentForm label.text {
+    width: auto;
+}
+
+.textBoxFull
+{
+	width: 80%;
+}
+
+.panel
+{
+	padding: 10px;
+}
+
+#shipToHeading
+{
+	float: left;	
+}
+
+#shipToCheckbox
+{
+	float: right;
+	margin-top: 7px;
+}
+
+label.table
+{
+	float: left;
+	padding-top: 2px;
+}
+
+table.inputs
+{
+	margin: 6px;
+}
+
+table.inputs td,
+table.inputs th	
+{
+	padding: 2px;
+}
+
+table.inputs
+{
+	padding-left: 7px;
+}
+
+th
+{
+    vertical-align: middle;
+}
+
+label.checkbox,
+label.radio
+{
+	width: auto !important;
+    display: inline;
+}
+
+input#orderCustomerCallTime
+{
+	width: 7em;
+}
+
+p.autocomplete
+{
+	font-size: 0.85em;
+	line-height: 1.3em;
+}
+
+.customerCallTimeAMPM
+{
+	width: 7em;
+}
+
+#demoFormItem span.k-input
+{
+    height: 40px;
+    padding: 0 0 3px 0;
+}
+
+#demoFormItem span.k-icon
+{
+    margin-top: 14px;
+}
+
+td.clothSelection,
+td.concentrateSelection
+{
+    text-align: center;
+    visibility: hidden;
+}
+
+th.clothHeader div,
+th.concentrateHeader div
+{
+    display: inline-block;
+    width: 2.4em;
+}
+
+.clothQty,
+.concentrateQty
+{
+    border: none;
+    width: 2em;
+    margin: 0 2px 0 2px;
+}
+
+.expandPadding
+{
+    padding-right: 0px;
+}
+
+#hostProducts,
+.products,
+#specialOffers,
+#bookingBonusProducts,
+#consultantRewardsProducts,
+#eventOrderItems,
+.orderTotals,
+#hostOrderTotals,
+#hostUpgradeTotals,
+#specialOfferTotals,
+#bookingBonusTotals,
+#consultantRewardsTotals,
+#eventTotals
+{
+	margin: 5px;
+}
+
+#hostProducts td,
+.products td,
+#specialOffers td,
+#bookingBonusTotals td,
+#consultantRewardsProducts td,
+#eventOrderItems td,
+#hostOrderTotals td,
+#specialOfferTotals td,
+#bookingBonusTotals td,
+#consultantRewardsTotals td,
+#eventTotals td
+{
+	padding: 5px;
+    white-space: nowrap;
+}
+
+#hostProducts th,
+.products th,
+#specialOffers th,
+#bookingBonusProducts th,
+#consultantRewardsProducts th,
+#eventOrderItems th,
+#hostOrderTotals th,
+#specialOfferTotals th,
+#bookingBonusTotals th,
+#consultantRewardsTotals th,
+#eventTotals th
+{
+	text-transform: uppercase;
+	font-size: 0.9em;
+	font-weight: bold;
+	padding: 5px;
+}
+
+.orderProducts {
+    width: 1055px;
+}
+
+.itemCode,
+.qty,
+.price,
+.delete
+{
+	width: 100px;
+}
+
+.product
+{
+	width: 580px;
+}
+
+.customerProduct
+{
+    width: 340px;
+}
+
+td.customerProduct {
+    width: 365px;
+}
+
+.total,
+#hostOrderTotals td,
+#specialOfferTotals td,
+#bookingBonusTotals td,
+#consultantRewardsTotals td,
+#eventTotals td
+{
+	width: 130px;
+	text-align: right;
+}
+
+#hostProducts label.checkbox,
+.products label.checkbox,
+#specialOffers label.checkbox,
+#bookingBonusProducts label.checkbox,
+#consultantRewardsProducts label.checkbox
+{
+	text-transform: uppercase;
+}
+
+#hostOrderTotals th,
+#specialOfferTotals th,
+#bookingBonusTotals th,
+#consultantRewardsTotals th,
+#eventTotals th
+{
+	width: 1035px;
+	text-align: right;
+}
+
+#statusButtons {
+    margin-bottom: 5px;
+}
+
+#statusButtons a
+{
+	float: right;
+	margin-left: 5px;
+}
+
+#historyWindow h3
+{
+	text-align: center;
+}
+
+#historyWindow td,
+#historyWindow th
+{
+	padding: 2px 5px 2px 5px;
+}
+
+#historyWindow th,
+#historyWindow .totals
+{
+	text-align: right;
+}
+
+#historyWindow th.qty,
+#historyWindow th.notes,
+#historyWindow th.product-options,
+#historyWindow table.topDetails th
+{
+	text-align: left;
+}
+
+#historyWindow .orderItems
+{
+    width: 100%;
+	margin-top: 20px;
+}
+
+#notes
+{
+	margin-top: 10px;
+}
+
+a#openDemo
+{
+	cursor: pointer;
+}
+
+a#openDemo:hover
+{
+	text-decoration: underline;
+}
+
+#customerForm .horizontalInputs label,
+#customerForm label
+{
+    width: 110px;
+}
+
+#customerForm label.text
+{
+    width: auto;
+}
+
+.textAreaLarge,
+.textBoxLarge
+{
+    width: 35em;
+}
+
+.textAreaMedium,
+.textBoxMedium
+{
+    width: 20em;
+}
+
+.textAreaSmall,
+.textBoxSmall
+{
+    width: 10em;
+}
+
+.textBoxTiny
+{
+    width: 5em;
+}
+
+.textBoxTiny2
+{
+    width: 6em;
+}
+
+.textBoxTeenyTiny
+{
+    width: 3em;
+}
+
+.pac-container
+{
+	z-index: 99999 !important;
+}
+
+.previewWindow h3
+{
+    text-align: center;
+}
+
+.previewWindow table.topDetails td,
+.previewWindow table.topDetails th
+{
+    padding: 2px 5px 2px 5px;
+}
+
+.previewWindow table.topDetails div
+{
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    min-height: 200px;
+}
+
+.previewWindow table.topDetails th
+{
+    text-align: right;
+}
+
+.previewWindow .orderItems
+{
+    margin: 10px;
+}
+
+.previewWindow th,
+.previewWindow .totals
+{
+    text-align: right;
+}
+
+.previewWindow th.qty,
+.previewWindow th.product
+{
+    text-align: left;
+}
+
+#previewChecks,
+.previewWindow .orderItems
+{
+    margin-top: 20px;
+}
+
+#previewChecks button
+{
+    float: right;
+}
+
+#previewChecks label.checkbox
+{
+    font-size: 1.1em;
+}
+
+.pdfIcon
+{
+	background-image: url('images/pdf-25.png');
+	width: 25px;
+	height: 25px;
+}
+
+.addCustomerNotes {
+    width: 25em;
+    height: 10em;
+}
+
+.orderTotals td {
+
+    padding: 5px;
+    white-space: nowrap;
+}
+
+.orderTotals th
+{
+    text-transform: uppercase;
+    font-weight: bold;
+    padding: 5px;
+	width: 920px;
+	text-align: right;
+}
+
+.products td
+{
+    vertical-align: top;
+}
+
+#totalPrice {
+    text-transform: uppercase;
+    font-size: 1.2em;
+    font-weight: bold;
+    padding: 5px;
+    display: none;
+}
+
+.optionName
+{
+    padding: 0 0 5px 0;
+}
+
+.requiredOption
+{
+    color: red;
+}
+
+/* General Tables */
+table.General, table.CartContents { margin: 0 0 20px 0; width: 100%; border-collapse: collapse }
+table.General thead tr th, table.CartContents thead tr th { padding:15px 20px; text-align: center; font: 700 12px "Roboto Condensed", Arial; text-transform: uppercase; color: #737373; }
+table.General tbody td, table.CartContents tbody td { vertical-align: top }
+table.General tbody tr.First td { border-top: 0 }
+
+table.General thead tr th:first-child, table.CartContents thead tr th:first-child,
+table.General tbody tr td:first-child, table.CartContents tbody tr td:first-child { text-align: left; }
+
+table.CartContents tfoot tr td { padding: 0; border-bottom: 1px solid #e0dfdf }
+table.CartContents tfoot .SubTotal td { border-top: 0; }
+
+.General thead, .CartContents thead { background: #f3f3f3; border-bottom: 1px solid #d6d5d5; }
+.CartContents tbody td { border-bottom: 0 }
+.CartContents tbody td.CartItemQuantity {
+	text-align: center;
+}
+.CartContents .ProductName a { font-weight: 700; color: #000; }
+
+table.General tbody tr td, .CartContents tbody tr td { padding: 10px 0 }
+.CartContents tbody tr td.CartThumb { padding-right: 20px; }
+.CartContents tbody tr td.ProductName { padding-left: 0; text-align: left;}
+#CartContent .CartContents tbody tr td.ProductName { text-align: left; }
+.CartContents .quantityInput { width: 50px; }
+#CartContent .CartContents tbody tr td { vertical-align: middle;}
+
+.CartContents tfoot .SubTotal td { font-weight: bold }
+.CartContents tfoot .SubTotal td div { padding: 16px 20px 17px; font-weight: 700; font-size: 14px; color: #000; }
+.CartContents tfoot .SubTotal td div .ProductPrice {display: inline-block; font-size: 13px; margin-left: 10px; min-width: 140px; }
+.CartContents tfoot .SubTotal.gtotal td div, .CartContents tfoot .SubTotal:last-child td div { font-size: 20px; }
+.CartContents tfoot .SubTotal.gtotal td div .ProductPrice, .CartContents tfoot .SubTotal:last-child td div .ProductPrice { font-size: 22px; }
+
+.CartContents .cart-items {
+	width: 45%;
+}
+
+.CartContents .item-notes {
+    width: 15%;
+}
+
+.CartContents .quantity {
+	width: 10%;
+}
+
+.CartContents .item-price {
+	width: 15%;
+}
+
+.CartContents .item-total {
+	width: 15%;
+    text-align: right;
+}
+
+.CartContents, .productAttributes {
+	width: 100%;
+}
+
+.CartContents .ItemShipping th.ItemShippingDescription {
+    text-align: left;
+}
+
+.CartContents .ItemShipping th {
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+    padding: 6px 10px;
+}
+
+.CartContents .ItemShipping:first-child th {
+    border-top: none;
+}
+
+.CartContents tbody td,
+.CartContents tfoot td {
+    padding: 6px 10px;
+    vertical-align: top;
+}
+
+.CartContents tfoot .SubTotal td {
+    border-top: 1px solid;
+    text-align: right;
+    font-weight: bold;
+}
+
+.CartContents .CartItemTotalPrice
+{
+    padding-right: 20px;
+    text-align: right;
+}
+
+#cartItems
+{
+    background: -webkit-linear-gradient(top, #ffffff, #fafafa);
+}
+
+.CartThumb img {
+    max-width: 100px;
+    height: auto;
+}
+
+
+.CartRemoveLink {
+    display: inline-block;
+    color: #ef553b;
+}
+
+
+#giftWrappingForm li
+{
+    margin: 10px 0 0 0;
+}
+
+#giftWrapContainer
+{
+    padding: 20px;
+}
+
+.itemRevisions{
+	margin: 20px 0 0 0;
+}
+
+#actionBar {
+    margin-top: 10px;
+}
+
+.k-button.prominent {
+    background: #99ca3b;
+    color: #fff;
+    border: 1px solid #99ca3b;
+}
+
+.lowStock {
+    background: red;
+    color: white;
+    padding: 5px;
+    margin: 5px;
+    border-radius: 5px;
+}
+
+.delayed,
+.soldOut {
+    background: orangered;
+    color: white;
+    padding: 5px;
+    margin: 5px;
+    border-radius: 5px;
+}
+
+#addressSuggestions,
+#shippingAddressSuggestions,
+#orderAddressSuggestions,
+#orderShippingAddressSuggestions {
+    margin: 10px 0 0 90px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    width: 14.5em;
+}
+
+#addressSuggestions li,
+#shippingAddressSuggestions li,
+#orderAddressSuggestions li,
+#orderShippingAddressSuggestions li {
+    padding: 5px;
+    border-bottom: 1px solid #ccc;
+}
+
+#card-number {
+    width: 217px;
+    height: 35px;
+    padding: 5px;
+    background-color: white;
+}
+
+#expiration-date,
+#card-cvv {
+    width: 100px;
+    height: 35px;
+    padding: 5px;
+    background-color: white;
+}
+
+#card-cvv {
+    width: 82px;
+}
+
+#paymentsToolbarButtons .k-button {
+    vertical-align: top;
+    height: 45px;
+    margin: 0;
+}

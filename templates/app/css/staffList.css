@@ -1,0 +1,62 @@
+@CHARSET "UTF-8";
+
+#skillForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#skillForm li
+{
+    margin: 5px 0 0 0;
+}
+
+li.text
+{
+    padding: 5px 0 5px 0;
+}
+
+
+#tabs
+{
+	margin-top: 10px;	
+}
+
+#notes
+{
+	margin-top: 10px;	
+}
+
+.textBoxLarge
+{
+    width: 30em;
+}
+
+
+div.full div.node {
+	width                 : 400px;
+	height                : 240px;
+}
+
+div.filters
+{
+    margin: 5px;
+}
+
+ul.horizontal li
+{
+	margin-top: 10px;
+	float: left;
+	text-align: center;
+	width: 14%;
+}
+
+div.left
+{
+    float: left;
+    margin: 5px;
+}
+
+label {
+	vertical-align: top;
+	padding-top: 6px;
+}

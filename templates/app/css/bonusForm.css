@@ -1,0 +1,42 @@
+@CHARSET "UTF-8";
+
+#bonusForm
+{
+    padding: 0 10px 10px 10px;
+}
+
+#bonusForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#bonus h3
+{
+    padding: 10px 10px;
+}
+
+#tierGrid
+{
+	width: 500px;
+	margin-left: 128px;
+}
+
+#bonusTierForm
+{
+    padding: 0 10px 10px 10px;
+}
+
+#bonusTierForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#bonusTier h3
+{
+    padding: 10px 10px;
+}
+
+textarea.textAreaLarge
+{
+    height: 15em;
+}

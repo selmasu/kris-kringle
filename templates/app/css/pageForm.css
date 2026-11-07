@@ -1,0 +1,60 @@
+@CHARSET "UTF-8";
+
+#pageForm li
+{
+	margin: 5px 0 0 0;
+}
+
+#pageForm label
+{
+	width: 110px;
+}
+
+#page h3
+{
+	padding: 10px 0;
+}
+
+#pages label:first-child
+{
+	float: left;
+}
+
+#pages ul
+{
+	float: left;
+	margin: -3px 0 0 3px;
+}
+
+textarea.k-textbox
+{
+	width: 800px;
+	height: 100px;
+}
+
+.panel
+{
+	padding: 10px;
+}
+
+label
+{
+    vertical-align: top;
+    padding-top: 6px;
+}
+
+label.checkbox
+{
+    width: auto !important;
+}
+
+input[type="checkbox"]
+{
+    vertical-align: -webkit-baseline-middle;
+}
+
+#ckwrap
+{
+    margin-left: 120px;
+    margin-top: -15px
+}

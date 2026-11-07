@@ -1,0 +1,27 @@
+@CHARSET "UTF-8";
+
+div.reportMenuWrapper
+{
+	float: left;
+	margin: 10px;
+	width: 250px;
+}
+
+div.gridWrap
+{
+	float: left;
+	margin: 10px;
+}
+
+.k-grid {
+	font-size: 1.25rem;
+}
+
+.k-grid th.k-header {
+	text-align: center;
+}
+
+.multiSelectWrap {
+	margin-left: 5px;
+	width: 400px;
+}

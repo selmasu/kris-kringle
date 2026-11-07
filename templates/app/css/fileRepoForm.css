@@ -1,0 +1,47 @@
+@CHARSET "UTF-8";
+
+#fileRepoForm li
+{
+	margin: 5px 0 0 0;
+}
+
+#fileRepoForm label
+{
+	width: 110px;
+}
+
+textarea.k-textbox
+{
+	width: 800px;
+	height: 100px;
+}
+
+.panel
+{
+	padding: 10px;
+}
+
+label
+{
+    vertical-align: top;
+    padding-top: 6px;
+}
+
+label.checkbox
+{
+    width: auto !important;
+}
+
+input[type="checkbox"]
+{
+    margin-right: 5px;
+}
+
+#uploadWrap {
+    width: 400px;
+    display: inline-block;
+}
+
+#categoryTree label {
+    width: auto;
+}

@@ -1,0 +1,26 @@
+@CHARSET "UTF-8";
+
+#messageForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#messageForm li
+{
+	margin: 5px;
+}
+
+#message h3
+{
+	padding: 0 10px;
+}
+
+#message h2
+{
+	padding: 20px 0px 0px 0px;
+}
+
+#message label
+{
+    width: 125px;
+}

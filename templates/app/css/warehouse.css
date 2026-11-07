@@ -1,0 +1,21 @@
+@CHARSET "UTF-8";
+
+#inventoryCodeForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#inventoryCodeForm li
+{
+    margin: 5px 0 0 0;
+}
+
+li.text
+{
+    padding: 5px 0 5px 0;
+}
+
+#inventoryCodeForm h3
+{
+	padding: 0 10px;
+}

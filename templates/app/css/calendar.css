@@ -1,0 +1,57 @@
+@CHARSET "UTF-8";
+
+#types div
+{
+    float: left;
+    color: #ffffff;
+    padding: 5px 10px 5px 10px;
+}
+
+#eventWrap
+{
+    background-color: #348cd4;
+}
+
+#partyWrap
+{
+    background-color: #45bbe0;
+}
+
+#onlinePartyWrap
+{
+    background-color: #8892d6;
+}
+
+#marketWrap
+{
+    background-color: #1ea69a;
+}
+
+#expoWrap
+{
+    background-color: #ff9800;
+}
+
+#promoWrap
+{
+    background-color: #F06292;
+}
+
+#consultantPromoWrap
+{
+    background-color: #f7531f;
+}
+
+.pac-container
+{
+    z-index: 99999 !important;
+}
+
+#calendarSyncButton .k-i-calendar
+{
+    background-image: url('https://da7xgjtj801h2.cloudfront.net/2013.2.716/styles/Flat/sprite.png') !important;
+}
+
+.k-scheduler-table .k-today, .k-today>.k-scheduler-datecolumn, .k-today>.k-scheduler-groupcolumn {
+    background-color: rgba(220,212,233,0.5);
+}

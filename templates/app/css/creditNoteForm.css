@@ -1,0 +1,30 @@
+@CHARSET "UTF-8";
+
+#creditNoteForm {
+	min-width: 840px;
+}
+
+h2.status {
+	padding: 0;
+    margin: -30px 0;
+	text-align: center;
+}
+
+div.topBoxes {
+	min-width: 420px;
+	float: left;
+	margin: 0 10px 0 0;
+}
+
+.topBoxes .formWrap {
+	min-height: 400px;
+    width: 400px;
+}
+
+.topBoxes .formWrap .k-invalid-msg {
+    margin-left: 90px;
+}
+
+.refundItems {
+	width: 100%;
+}

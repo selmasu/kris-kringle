@@ -1,0 +1,96 @@
+body {
+    background-color: #fff;
+}
+
+.home {
+    background: #fff;
+}
+
+.home-header {
+    background: #000;
+    margin-top: 5px;
+}
+
+.home-content {
+    padding: 5px;
+}
+
+.home-content a,
+.home-content a:visited,
+.home-content a:hover {
+    color: #000;
+}
+
+.home-header h4 {
+    color: #fff;
+}
+
+.home-header a {
+    color: #fff;
+    text-transform: uppercase;
+    margin: 5px 15px 5px 5px;
+}
+
+.home-content .article {
+    max-width: 700px;
+    margin: auto;
+}
+
+.right-links {
+    margin-top: 10px;
+}
+
+.right-links a.active {
+    color: #92D050;
+}
+
+.left-links {
+    padding-top: 5px;
+}
+
+.left-links i {
+    font-size: 30px;
+}
+.home-article-image {
+    margin-bottom: 10px;
+}
+
+.home-article-text {
+    height: 200px;
+}
+
+.home-article-category {
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.home-article-title {
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 24px;
+}
+
+.home-article-date {
+    font-style: italic;
+    margin-top: 10px;
+}
+
+.featured {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.badge-wrap {
+    display: inline-block;
+    position: relative;
+}
+
+.badge-wrap div {
+    position: absolute;
+    top: -25px;
+    left: -15px;
+}
+
+.home-video {
+    margin-top: 20px;
+}

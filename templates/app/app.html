@@ -1,38 +1,161 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta name="description" content="">
-		<meta name="author" content="">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>LeR&ecirc;ve</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-		<meta name="appleid-signin-client-id" content="[CLIENT_ID]">
-		<meta name="appleid-signin-scope" content="[SCOPES]">
-		<meta name="appleid-signin-redirect-uri" content="[REDIRECT_URI]">
-		<meta name="appleid-signin-state" content="[STATE]">
-		<meta name="appleid-signin-nonce" content="[NONCE]">
-		<meta name="appleid-signin-use-popup" content="true">
+        <!-- App favicon -->
+        <link rel="shortcut icon" href="/templates/app/assets/images/fav-icon.png">
 
-		<link rel="icon" href="/templates/app/images/favicon.png">
+        <!--chartist Chart CSS -->
+		<link rel="stylesheet" href="/templates/_template/plugins/chartist/css/chartist.min.css">
 
-		<title><sPageTitle></sPageTitle></title>
+        <!-- App css -->
+        <link href="/templates/_template/plugins/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet" />
+        <link href="/templates/_template/Light/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        <link href="/templates/_template/Light/assets/css/core.css" rel="stylesheet" type="text/css" />
+        <link href="/templates/_template/Light/assets/css/components.css" rel="stylesheet" type="text/css" />
+        <link href="/templates/_template/Light/assets/css/icons.css" rel="stylesheet" type="text/css" />
+        <link href="/templates/_template/Light/assets/css/pages.css" rel="stylesheet" type="text/css" />
+        <link href="/templates/_template/Light/assets/css/menu.css" rel="stylesheet" type="text/css" />
+        <link href="/templates/_template/Light/assets/css/responsive.css" rel="stylesheet" type="text/css" />
 
-		<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700" rel="stylesheet">
+        <link href="/templates/shared/css/kendoui.2020.1.114/kendo.common.min.css?v=1.6.5" rel="stylesheet" />
+        <link href="/templates/shared/css/kendoui.2020.1.114/kendo.dataviz.min.css?v=1.6.5" rel="stylesheet" />
+        <link href="/templates/shared/css/kendoui.2020.1.114/kendo.dataviz.bootstrap.min.css?v=1.6.5" rel="stylesheet" />
+        <link href="/templates/shared/css/kendoui.2020.1.114/kendo.bootstrap.min.css?v=1.6.5" rel="stylesheet" />
+        <link href="/templates/app/css/style.css?v=1.6.5" rel="stylesheet" />
+        <link href="/templates/shared/css/kendo.custom.css?v=1.6.5" rel="stylesheet" />
 
-		<link rel="stylesheet" href="/templates/shared/assets/css/bootstrap.min.css" type="text/css"/>
-		<link rel="stylesheet" href="/templates/shared/fontawesome/css/all.css" type="text/css">
-		<link rel="stylesheet" href="/templates/shared/css/kendoui.2022.2.510/kendo.bootstrap-v4.min.css">
-		<link rel="stylesheet" href="/templates/app/css/style.css" type="text/css">
+        <script src="/templates/_template/Light/assets/js/modernizr.min.js"></script>
 
-		<script src="/templates/shared/assets/js/vendor.js"></script>
-		<script src="/scripts/framework/libs/kendoui.2022.2.510/kendo.all.min.js"></script>
-		<script src="/framework-scripts/Utils.js"></script>
-		<script src="/scripts/framework/user/User.js"></script>
-		<script src="/scripts/framework/App.js"></script>
-		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAFisvHHT4m0FZKgmqyeQMTfelKDDgOxXA&libraries=places"></script>
-	</head>
+        <!-- External -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/2.4.0/jszip.js"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjvzAnfI2Hd1AqJFV0FvZ1bIuTKllPF-4&libraries=places"></script>
 
-	<body>
-		<sContent></sContent>
-	</body>
+        <!-- jQuery  -->
+        <script src="/templates/_template/Light/assets/js/jquery.min.js"></script>
+        <script src="/templates/_template/Light/assets/js/bootstrap.min.js"></script>
+        <script src="/templates/_template/Light/assets/js/metisMenu.min.js"></script>
+        <script src="/templates/_template/Light/assets/js/waves.js"></script>
+        <script src="/templates/_template/Light/assets/js/jquery.slimscroll.js"></script>
+        <script src="/templates/_template/plugins/bootstrap-select/js/bootstrap-select.min.js" type="text/javascript"></script>
+
+        <!-- Counter js  -->
+        <script src="/templates/_template/plugins/waypoints/jquery.waypoints.min.js"></script>
+        <script src="/templates/_template/plugins/counterup/jquery.counterup.min.js"></script>
+
+        <!-- Framework -->
+        <script src="/framework-scripts/Utils.js?v=1.6.5"></script>
+        <script src="/framework-scripts/components/note/InstanceNotes.js?v=1.6.5"></script>
+        <script src="/scripts/framework/libs/kendoui.2020.1.114/kendo.all.min.js?v=1.6.5"></script>
+        <script src="/framework-scripts/libs/ckeditor/ckeditor.js?v=1.6.5"></script>
+        <script src="/framework-scripts/libs/ckeditor/adapters/jquery.js?v=1.6.5"></script>
+        <script src="/framework-scripts/libs/date/date.js?v=1.6.5"></script>
+
+        <script src="/scripts/framework/user/User.js?v=1.6.5"></script>
+        <script src="/scripts/apps/tasks/Tasks.js?v=1.6.5"></script>
+        <script src="/scripts/apps/App.js?v=1.6.5"></script>
+        <sHeaderScripts></sHeaderScripts>
+    </head>
+
+
+    <body>
+
+        <!-- Begin page -->
+        <div id="wrapper">
+
+            <!-- Top Bar Start -->
+            <div class="topbar">
+
+                <!-- LOGO -->
+                <div class="topbar-left">
+                    <!-- Image logo -->
+                    <a href="/" class="logo">
+                        <span>
+                            <img src="/templates/app/assets/images/lereve-logo-black.svg" alt="" height="30">
+                        </span>
+                        <i>
+                            <img src="/templates/app/assets/images/icon.png" alt="">
+                        </i>
+                    </a>
+                </div>
+
+                <!-- Button mobile view to collapse sidebar menu -->
+                <div class="navbar navbar-default" role="navigation">
+                    <div class="container">
+
+                        <!-- Navbar-left -->
+                        <ul class="nav navbar-nav navbar-left">
+                            <li>
+                                <button type="button" class="button-menu-mobile open-left waves-effect">
+                                    <i class="dripicons-menu"></i>
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Right(Notification) -->
+                        <sTopBarButtons></sTopBarButtons>
+                        <!-- end navbar-right -->
+
+                    </div><!-- end container -->
+                </div><!-- end navbar -->
+            </div>
+            <!-- Top Bar End -->
+
+
+            <!-- ========== Left Sidebar Start ========== -->
+            <sMenu></sMenu>
+            <!-- Left Sidebar End -->
+
+
+
+            <!-- ============================================================== -->
+            <!-- Start right Content here -->
+            <!-- ============================================================== -->
+            <div class="content-page">
+                <!-- Start content -->
+                <div class="content">
+                    <div class="container">
+
+                        <sContent></sContent>
+
+                    </div> <!-- container -->
+
+                </div> <!-- content -->
+
+                <footer class="footer text-right">
+                    LeR&ecirc;ve
+                </footer>
+
+            </div>
+
+
+            <!-- ============================================================== -->
+            <!-- End Right content here -->
+            <!-- ============================================================== -->
+
+
+        </div>
+        <!-- END wrapper -->
+
+
+
+        <script>
+            var resizefunc = [];
+        </script>
+        
+        <!--Chartist Chart-->
+		<!--<script src="/templates/_template/plugins/chartist/js/chartist.min.js"></script>
+        <script src="/templates/_template/plugins/chartist/js/chartist-plugin-tooltip.min.js"></script>-->
+
+        <!-- App js -->
+        <script src="/templates/_template/Light/assets/js/jquery.core.js"></script>
+        <script src="/templates/_template/Light/assets/js/jquery.app.js"></script>
+
+        <!-- Dashboard init -->
+        <!--<script src="/templates/_template/Light/assets/pages/jquery.dashboard.js"></script>-->
+    </body>
 </html>

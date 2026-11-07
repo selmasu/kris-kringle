@@ -1,0 +1,360 @@
+@CHARSET "UTF-8";
+
+#trainingModuleQuestionForm, #questionOptionForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#trainingModule {
+	background: white;
+	padding: 10px;
+	border: 1px solid #ccc;
+}
+
+#trainingModuleForm ul.formElements li,
+#trainingModuleQuestionForm li,
+#questionOptionForm li,
+#trainingModuleCategoryForm li
+{
+	margin: 5px 0 0 0;
+}
+
+#trainingModuleCategoryForm label {
+	width: 135px;
+	vertical-align: top;
+	margin-top: 6px;
+}
+
+#trainingModuleForm ul.formElements li label {
+    vertical-align: top;
+    margin-top: 5px;
+}
+
+#trainingModule h3
+{
+	padding-top: 15px;
+	padding-bottom: 0px;
+}
+
+#trainingModule label
+{
+    width: 110px;
+}
+
+#trainingModule label.checkbox
+{
+	width: auto;
+}
+
+.uploadWrap,
+#uploadWrap
+{
+    display: inline-block;
+}
+
+.ckwrap,
+#ckwrap
+{
+	display: inline-block;
+}
+
+#trainingModuleQuestion textarea
+{
+	width: 400px;
+	height: 100px;
+}
+
+#trainingModuleQuestion label,
+#trainingModuleQuestion label.auto
+{
+	vertical-align: top;
+	margin-top: 5px;
+}
+
+#trainingModuleHomePageGrid {
+    overflow: auto;
+}
+
+.k-i-custom-icon-home {
+  background-image: url('/templates/app/assets/images/home16.png');
+}
+
+.k-i-custom-icon-archive {
+    background-image: url('/templates/app/assets/images/archive-16.png');
+}
+
+.k-i-custom-icon-archive-on {
+    background-image: url('/templates/app/assets/images/archive_filled-16.png');
+}
+
+.k-widget.k-tooltip {
+	background: black;
+	text-align: center;
+}
+
+.trainingModuleItemContent
+{
+    line-height: 20px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+}
+
+.trainingModuleItemContent p
+{
+    padding-top: 10px;
+}
+
+#trainingModuleCategoryToolbar, #trainingModuleCategoryTree
+{
+    border: 1px solid #dadada;
+    background-color: #f5f5f5;
+}
+
+#trainingModuleCategoryTree
+{
+    margin-top: 2px;
+    padding: 10px;
+    background-color: #fff;
+}
+
+#trainingModuleCategoryToolbar, #trainingModuleItemToolbar
+{
+	padding-left: 5px;
+}
+
+.trainingModuleListRecord
+{
+	padding-bottom: 10px;
+}
+
+.trainingModuleListRecordCreated, .wikiItemRecordCreated
+{
+	font-style: italic;
+}
+
+.trainingModuleListRecordCreated
+{
+	font-size: 90%;
+}
+
+#trainingModuleListView
+{
+	border: 1px solid #ccc;
+	padding: 10px;
+}
+
+.trainingModuleProgressBarDiv
+{
+	margin: 10px 0 0 0;
+}
+
+.trainingModuleProgressBarDiv h2
+{
+	display: inline-block;
+	vertical-align: middle;
+	margin: 0;
+	padding-left: 10px;
+}
+
+#trainingModuleProgressBar
+{
+	width: 605px;
+}
+
+.trainingModuleContentLeft
+{
+    line-height: 20px;
+    padding-right: 20px;
+    padding-top: 10px;
+    display: table-cell;
+}
+
+.trainingModuleContentRight
+{
+    line-height: 20px;
+    vertical-align: top;
+    padding-bottom: 10px;
+}
+
+.trainingModuleContentRight p
+{
+    padding-top: 10px;
+}
+
+.video-js
+{
+	border: 1px solid #DDDDDD;
+}
+
+#trainingModuleVideoDiv
+{
+	padding-top: 25px;
+}
+
+.actionBar
+{
+    margin-top: 20px;
+}
+
+#trainingModuleStepContentDiv
+{
+    width: 100%;
+	/*min-height: 460px;*/
+}
+
+.trainingModuleReading
+{
+	/*padding-top: 25px;*/
+}
+
+.trainingModuleReading ul, .trainingModuleReading ol, .trainingModuleItemContent ul, .trainingModuleItemContent ol
+{
+	padding-top: 10px;
+	padding-left: 40px;
+	padding-bottom: 10px;
+}
+
+.trainingModuleReading ul li, .trainingModuleItemContent ul li
+{
+	list-style-type: disc;
+}
+
+.trainingModuleReading ol li, .trainingModuleItemContent ol li
+{
+	list-style-type: decimal;
+}
+
+.trainingModuleQuestion
+{
+	padding-top: 10px;
+	padding-bottom: 5px;
+}
+
+.trainingModuleAnswers
+{
+    max-height: 600px;
+    overflow: auto;
+	padding-bottom: 15px;
+}
+
+.trainingModuleAnswers img
+{
+	padding-right: 5px;
+	padding-top: 4px;
+}
+
+.tablecell
+{
+	display: table-cell;
+}
+
+.trainingModuleAnswers p
+{
+	/*padding-left: 20px;*/
+}
+
+.trainingModuleAnswers td, .trainingModuleAnswers th
+{
+	padding: 5px;
+}
+
+.trainingModuleReviewLabel
+{
+	font-weight: bold;
+	padding-top: 10px;
+	padding-bottom: 15px;
+}
+
+.trainingModuleResourceList
+{
+	padding: 10px;
+}
+
+.trainingModuleCompleteMessage
+{
+	padding-top: 25px;
+}
+
+#trainingModuleResultsDiv
+{
+	background: white;
+	padding: 10px;
+	border: 1px solid #ccc;
+}
+
+.trainingModuleResultsLabel, .trainingModuleResultsValue
+{
+	padding-top: 10px;
+	float: left;
+}
+
+.trainingModuleResultsLabel
+{
+	font-weight: bold;
+	width: 100px;
+}
+
+.trainingModuleDownloads
+{
+	padding-bottom: 5px;
+}
+
+.trainingModuleListNoRecords
+{
+	padding-top: 10px;
+	font-style: italic;
+}
+
+.alreadyCompleteRow
+{
+	padding-bottom: 10px;
+}
+
+.alreadyCompleteLabel
+{
+	width: 100px;
+	font-weight: bold;
+}
+
+.alreadyCompleteDate
+{
+	width: 220px;
+}
+
+.alreadyCompleteActionButton
+{
+	/*width: 200px;*/
+}
+
+.k-widget.k-listview
+{
+	border: 0px;
+}
+
+.k-item.k-state-selected
+{
+	background-color: #57AF30;
+	border-color: #AAAAAA;
+}
+
+.questionOptions
+{
+	padding: 0 10px 0 10px;
+}
+
+.answer
+{
+	color: #57AF30;
+}
+
+.questionOption
+{
+    padding: 10px;
+}
+
+.answerTable
+{
+	margin-top: 20px;
+	width: 100%;
+}

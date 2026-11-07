@@ -1,0 +1,198 @@
+@CHARSET "UTF-8";
+
+.formWrap
+{
+	padding: 0 10px 10px 10px;
+}
+
+#wikiCategoryForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#wikiCategoryForm li
+{
+	margin: 5px 0 0 0;
+}
+
+#wikiCategory h3
+{
+	padding: 10px 0;
+}
+
+#wikiCategory label
+{
+    width: 125px;
+}
+
+#wikiCategoryTree
+{
+    border: 1px solid #dadada;
+    background-color: #f5f5f5;
+    margin-top: 2px;
+    padding: 10px;
+    min-height: 500px;
+}
+
+#wikiCategoryTree, #wikiCategoryToolbar
+{
+}
+
+#wikiItemListView
+{
+	padding: 10px;
+}
+
+#wikiCategoryToolbar, #wikiItemToolbar
+{
+	padding-left: 5px;
+}
+
+.wikiItemListRecord
+{
+	padding-bottom: 10px;
+}
+
+.wikiItemListRecordCreated, .wikiItemRecordCreated
+{
+	font-style: italic;
+}
+
+.wikiItemListRecordCreated
+{
+	font-size: 90%;
+}
+
+.wikiItemRecordCreated
+{
+	font-size: 95%;
+	padding-top: 5px;
+}
+
+.k-listview
+{
+    border: none;
+}
+
+.itemEditor
+{
+	height: 400px;
+}
+
+#wikiItemForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#wikiItemForm li
+{
+	margin: 5px 0 0 0;
+}
+
+#wikiItem h3
+{
+	padding: 10px 0;
+}
+
+#wikiItem label
+{
+    width: 125px;
+}
+
+#ckwrap
+{
+    margin-left: 135px;
+    margin-top: -15px
+}
+
+#uploadWrap
+{
+    display: inline-block;
+}
+
+#wikiItemDisplay
+{
+	padding-top: 10px;
+}
+
+.wikiItemContent
+{
+    padding-top: 10px;
+    line-height: 20px;
+}
+
+.wikiItemContent ul,
+.wikiItemContent ol,
+.wikiItemContent p
+{
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+#wikiFilesListView
+{
+	border: 0px;
+	padding-top: 20px;
+	text-align: left;
+}
+
+.wikiFileRecord
+{
+	padding-bottom: 5px;
+}
+
+.wikiItemTitle
+{
+	padding-top: 10px;
+}
+
+.wikiItemToolbarBreadcrumb
+{
+	float: left;
+}
+
+.wikiItemToolbarButtons
+{
+	float: right; padding-top: 5px;
+}
+
+.homePageTextArea
+{
+	height: 400px;
+}
+
+.k-i-custom-icon-home {
+  background-image: url('/templates/app/images/home16.png');
+}
+
+.k-i-custom-icon-archive {
+    background-image: url('/templates/app/images/archive-16.png');
+}
+
+.k-i-custom-icon-archive-on {
+    background-image: url('/templates/app/images/archive_filled-16.png');
+}
+
+.k-widget.k-tooltip {
+	background: white;
+	text-align: right;
+}
+
+table.bordered,
+table.bordered th,
+table.bordered td {
+    border: 1px solid black;
+}
+
+
+.wikiItemContent ul li
+{
+    list-style-type: disc;
+    margin-left: 3em;
+}
+
+.wikiItemContent ol li
+{
+    list-style-type: decimal;
+    margin-left: 3em;
+}

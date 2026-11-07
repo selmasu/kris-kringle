@@ -1,0 +1,9 @@
+@CHARSET "UTF-8";
+
+.statusFilters {
+    margin: 5px;
+}
+
+.k-grid-toolbar label {
+    margin: 5px;
+}

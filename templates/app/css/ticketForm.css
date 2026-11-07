@@ -1,0 +1,65 @@
+@CHARSET "UTF-8";
+
+#ticketForm, #ticketAssessmentForm
+{
+	padding: 0 10px 0 10px;
+}
+
+#ticketForm li, #ticketAssessmentForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#ticket h3
+{
+	padding: 0 10px;
+}
+
+#detail
+{
+	width: 600px;
+	height: 10em;
+}
+
+.k-autocomplete
+{
+	width: 15em;
+}
+
+ul#activity {
+    list-style: none;
+    margin-left: -40px;
+}
+
+#activity li
+{
+    padding: 5px;
+    margin: 10px 0 10px 0;
+    border-bottom: 1px solid lightgray;
+}
+
+#ticketTabs {
+    margin-top: 5px;
+}
+
+#ticketTabs h3 {
+    padding-left: 0;
+}
+
+#ticketTimeGrid h3
+{
+    padding: 0;
+}
+
+.commentsWrap {
+    margin-right: 40px;
+    width: 600px;
+}
+
+#commentsNotesList textarea.textAreaLarge {
+    width: 95%;
+}
+
+.activityWrap {
+    width: 350px;
+}

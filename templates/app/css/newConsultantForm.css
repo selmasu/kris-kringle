@@ -1,0 +1,38 @@
+@CHARSET "UTF-8";
+
+#consultantForm fieldset li {
+    margin: 5px 0 0 0;
+}
+
+#consultantForm fieldset label {
+    width: 220px;
+}
+
+#consultantForm h4,
+#demos {
+	margin-left: 225px;
+}
+
+#demos td,
+#demos th {
+	padding: 10px;
+}
+
+#card-number {
+    width: 217px;
+    height: 35px;
+    padding: 5px;
+    background-color: white;
+}
+
+#expiration-date,
+#card-cvv {
+    width: 100px;
+    height: 35px;
+    padding: 5px;
+    background-color: white;
+}
+
+#card-cvv {
+    width: 82px;
+}

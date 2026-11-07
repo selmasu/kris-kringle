@@ -1,0 +1,37 @@
+@CHARSET "UTF-8";
+
+#emailForm
+{
+    padding: 0 10px 0 10px;
+}
+
+#emailForm li
+{
+    margin-top: 5px;
+}
+
+#emailForm label
+{
+    vertical-align: top;
+    margin-top: 6px;
+}
+
+#email h3
+{
+    padding: 0 10px;
+}
+
+#email h2
+{
+    padding: 20px 0px 0px 0px;
+}
+
+#ckwrap
+{
+    display: inline-block;
+}
+
+.k-multiselect.k-header {
+    width: 35em;
+    display: inline-block;
+}

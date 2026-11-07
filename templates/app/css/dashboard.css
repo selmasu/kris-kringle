@@ -1,0 +1,179 @@
+@CHARSET "UTF-8";
+
+div.adminDashboard
+{
+	margin: 0 0 10px 0;
+}
+
+div.consultantDashboard h3 {
+    margin-top: 10px;
+}
+
+.consultantDashboard .k-grid tbody .k-button,
+.consultantDashboard .k-ie8 .k-grid tbody button.k-button {
+    min-width: 30px;
+}
+
+div.roundedBorder
+{
+	border: 1px solid #dbdbdb;
+	border-radius: 5px;
+    background-color: #ffffff;
+    margin-top: 0;
+}
+
+div.roundedBorder.padded {
+    padding: 10px;
+}
+
+#snapshotData {
+    padding: 10px;
+}
+
+.snapshotData h4 {
+    font-size: 1.1em;
+    text-align: center;
+}
+
+div.snapshotCount
+{
+	font-size: 2.2em;
+    text-align: center;
+}
+
+div.snapshotValue
+{
+	font-size: 1.5em;
+}
+
+.chart {
+    border-radius: 5px;
+    margin-bottom: 5px;
+    border: 1px solid #dbdbdb;
+}
+
+h3.stats
+{
+    float: left;
+}
+
+#demoCharts {
+    margin-top: 25px;
+}
+
+div.filters
+{
+    float: right;
+    margin: -5px 0 5px 0;
+}
+
+#dateWrap
+{
+	margin-top: 15px;
+}
+
+#summary h3
+{
+	float: left;	
+}
+
+#summary a
+{
+	float: right;
+}
+
+#notSetCount
+{
+    color: #333333;
+}
+
+table.stats th,
+table.stats td
+{
+	padding: 5px;
+	height: 15px;
+}
+
+table.stats th
+{
+	text-align: right;
+	text-transform: uppercase;
+	font-size: 0.9em;
+	white-space: nowrap;
+}
+
+#demoStats tr:hover
+{
+	cursor: pointer;
+}
+
+#demoChartMenu
+{
+	text-align: right;
+}
+
+#demoChartMenu a
+{
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+#demoChartMenu a:hover,
+#demoChartMenu a.on
+{
+	text-decoration: none;
+}
+
+.consultantId
+{
+	width: 13em;
+	margin-left: 5px;
+	text-align: left;
+}
+
+.k-i-arrow-e {
+	background-image: url( 'https://da7xgjtj801h2.cloudfront.net/2013.2.716/styles/Metro/sprite.png' ) !important;
+}
+
+#onTrack
+{
+	text-align: center;
+}
+
+.k-grid-content tr:hover a
+{
+	color: #ffffff;
+}
+
+.commissionDate
+{
+    font-size: 0.8em;
+    white-space: nowrap;
+}
+
+#teamForwardBookings h3
+{
+    margin-top: 10px;
+}
+
+h3.left
+{
+    float: left;
+    margin-right: 10px;
+}
+
+div.commissionsLoading
+{
+    margin: 100px 25% 100px 25%;
+    width: 50%;
+}
+
+#ninetyDayChallengeTracker h5 {
+    margin-top: 6px;
+}
+
+.widget-two-custom,
+.widget-two-info,
+.widget-two-primary {
+    height: 165px;
+}

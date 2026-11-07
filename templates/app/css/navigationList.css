@@ -1,0 +1,29 @@
+@CHARSET "UTF-8";
+
+div.navigationWrap
+{
+    border: 1px solid #ccc;
+    background-color: #ffffff;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+#categoryTree
+{
+    margin-top: 10px;
+}
+
+#navigationForm li, #productOptionDetailForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#navigationForm label
+{
+    width: 110px;
+}
+
+#navigationForm h3
+{
+    padding: 0 10px;
+}

@@ -1,0 +1,28 @@
+#amount,
+#reference,
+#nameOnCard,
+#card-number {
+    width: 217px;
+}
+
+#card-number {
+    height: 35px;
+    padding: 5px;
+    background-color: white;
+}
+
+#expiration-date,
+#card-cvv {
+    width: 100px;
+    height: 35px;
+    padding: 5px;
+    background-color: white;
+}
+
+#card-cvv {
+    width: 82px;
+}
+
+#paymentForm li {
+    padding: 5px;
+}

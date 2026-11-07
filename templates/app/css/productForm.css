@@ -1,0 +1,139 @@
+@CHARSET "UTF-8";
+
+#productForm fieldset li
+{
+    margin: 5px 0 0 0;
+}
+
+#productForm label
+{
+    width: 140px;
+}
+
+#product h3
+{
+    padding: 0 10px;
+}
+
+.textBoxFull
+{
+    width: 80%;
+}
+
+label
+{
+    vertical-align: top;
+    padding-top: 6px;
+}
+
+label.checkbox,
+.k-item label
+{
+    width: auto !important;
+}
+
+label.radio
+{
+    width: auto !important;
+    vertical-align: middle !important;
+}
+
+label.checkbox-label
+{
+    padding-top: 0;
+}
+
+#uploadWrap
+{
+    display: inline-block;
+}
+
+.ckWrap {
+    display: inline-block;
+}
+
+.productImage {
+    height: 200px;
+    width: 100%;
+    margin: 10px 0 10px 0;
+}
+
+.imageDiv {
+    float: left;
+    width: 220px;
+    text-align: center;
+}
+
+.imageDiv img {
+    max-height: 250px;
+}
+
+.imageDescriptionDiv {
+    float: left;
+    width: 500px;
+}
+
+.imageIsThumbnailDiv {
+    float: left;
+    width: 150px;
+    text-align: center;
+}
+
+.imageDeleteDiv {
+    float: left;
+    width: 100px;
+    text-align: center;
+}
+
+#ribbonImage img {
+    max-width: 100%;
+}
+
+.productVideo {
+    height: 200px;
+    width: 100%;
+    margin: 10px 0 10px 0;
+}
+
+.videoDiv {
+    float: left;
+    width: 220px;
+}
+
+.videoDescriptionDiv {
+    float: left;
+    width: 300px;
+    margin-left: 20px;
+}
+
+.videoIsDefaultDiv {
+    float: left;
+    width: 150px;
+    text-align: center;
+}
+
+.videoDeleteDiv {
+    float: left;
+    width: 100px;
+    text-align: center;
+}
+
+.videoEmbedCodeDiv {
+    float: left;
+    width: 300px;
+    margin-left: 20px;
+}
+
+.videoWrapper {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 */
+    padding-top: 25px;
+    height: 0;
+}
+.videoWrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}

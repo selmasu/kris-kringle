@@ -1,0 +1,120 @@
+@CHARSET "UTF-8";
+
+#refund
+{
+	
+}
+
+h2.status
+{
+	padding-top: 15px;
+	text-align: center;
+}
+
+#paymentForm li,
+#refundForm li
+{
+    margin: 5px 0 0 0;
+}
+
+#refund h3
+{
+	padding: 10px 0px 0px;
+}
+
+#processButton
+{
+    float: right;
+    margin-top: 10px;
+}
+
+label
+{
+	width: 80px;
+}
+
+label.checkbox
+{
+    height: 20px;
+}
+
+#refundForm textarea
+{
+    height: 10em;
+    width: 100%;
+}
+
+table.refundTotal td,
+table.refundTotal th,
+table.orderItems td,
+table.orderItems th
+{
+    padding: 5px;
+    vertical-align: top;
+}
+
+table.refundTotal td,
+table.refundTotal th
+{
+    color: #CC0000;
+}
+
+table.orderItems td.qty,
+table.orderItems th.qty
+{
+    width: 25px;
+    text-align: left;
+}
+
+table.orderItems td.product,
+table.orderItems th.product
+{
+    width: 500px;
+    text-align: left;
+}
+
+table.orderItems td.unitPrice,
+table.orderItems td.total,
+table.orderItems th.unitPrice,
+table.orderItems th.total
+{
+    width: 80px;
+    text-align: right;
+}
+
+table.refundTotal td,
+table.orderItems td.refund,
+table.orderItems th.refund
+{
+    width: 100px;
+    text-align: right;
+}
+
+table.refundTotal th
+{
+    text-align: right;
+    width: 715px;
+}
+
+table.topDetails td,
+table.topDetails th
+{
+    padding: 2px 5px 2px 5px;
+}
+
+table.topDetails div
+{
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    min-height: 200px;
+}
+
+table.topDetails th
+{
+    text-align: right;
+}
+
+table.topDetails h3
+{
+    padding: 5px !important;
+}
