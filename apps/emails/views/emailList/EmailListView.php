@@ -10,7 +10,7 @@ class EmailListView
                 var _emailId = 0;
 
                 $( document ).ready( function() {
-                    $( "#mainContentDiv" ).load( "/ajax/users/list" );
+                    $( "#mainContentDiv" ).load( "/ajax/emailList" );
                 });
             </script>
         </div>
