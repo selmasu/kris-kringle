@@ -1,6 +1,23 @@
 <?php
 class EmailListView extends SettingsView
-{	
+{
+    public function getContentDiv()
+    {
+        ob_start();
+        ?>
+        <div id="mainContentDiv">
+            <script type="text/javascript">
+                var _emailId = 0;
+
+                $( document ).ready( function() {
+                    $( "#mainContentDiv" ).load( "/ajax/users/list" );
+                });
+            </script>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
 	public function getEmailList()
 	{
 		ob_start();
@@ -28,7 +45,7 @@ class EmailListView extends SettingsView
 				<div id="emailGrid"></div>
 			</div>
         </div>
-		<script src="/scripts/apps/settings/EmailList.js" type="text/javascript"></script>
+		<script src="/scripts/apps/emails/EmailList.js" type="text/javascript"></script>
 		<?php
 		return ob_get_clean();
 	}
