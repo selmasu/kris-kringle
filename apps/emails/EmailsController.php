@@ -13,7 +13,6 @@ class EmailsController extends Controller implements ContentGenerator {
         if (!$this->canManage())
             return '';
 
-        Utils::trace('Emails');
         return EmailListController::create($this->s)->getContent();
     }
 

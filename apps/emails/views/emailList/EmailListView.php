@@ -4,6 +4,7 @@ class EmailListView
     public function getContentDiv()
     {
         ob_start();
+        Utils::trace("contne");
         ?>
         <div id="mainContentDiv">
             <script type="text/javascript">
