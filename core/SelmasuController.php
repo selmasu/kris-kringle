@@ -88,8 +88,21 @@ final class SelmasuController
 	
 	private function getAppContent()
 	{
+        if( $this->s->pageRequest()->isAdmin()) {
+            return $this->adminContent();
+        }
+
 		return $this->s->parseTemplate( 'app', $this->getPagePlaceholderData() );
 	}
+
+    private function adminContent(){
+        if( !$this->s->loggedIn() || $this->s->user()->mfaCode()->get() ) {
+            header( 'Location: /login?r=/' . $this->s->pageRequest()->uri() );
+            exit;
+        }
+
+        return $this->s->parseTemplate( 'app', $this->getAdminPlaceholders() );
+    }
 	
 	/**
 	 * @return PagePlaceholderData
@@ -104,6 +117,20 @@ final class SelmasuController
 
         return $data;
 	}
+
+    /**
+     * @return PagePlaceholderData
+     */
+    private function getAdminPlaceholders():PagePlaceholderData {
+        $defaultController = DefaultController::create( $this->s );
+        $placeholderData = PagePlaceholderData::create();
+        $placeholderData->content()->set( DefaultController::create( $this->s )->getContent() );
+        $placeholderData->menu()->set( MenuBuilder::create( $this->s )->menu() );
+        $placeholderData->topBarButtons()->set( MenuBuilder::create( $this->s )->topBarButtons() );
+        $placeholderData->pageTitle()->set( $defaultController->getPageTitle() );
+
+        return $placeholderData;
+    }
 
     private function setCliUser()
     {

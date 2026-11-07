@@ -43,8 +43,8 @@ class DefaultController extends Controller implements ContentGenerator {
 
     }
 
-    public function getPageTitle() {
-
+    public function getPageTitle():string {
+        return 'Kris Kringle';
     }
 
     public function execAjax() {
