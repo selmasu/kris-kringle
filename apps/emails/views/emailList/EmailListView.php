@@ -1,5 +1,5 @@
 <?php
-class EmailListView extends SettingsView
+class EmailListView
 {
     public function getContentDiv()
     {
