@@ -8,7 +8,6 @@ class LoginView
         <div class="account-content">
             <form class="form-horizontal" id="login">
                 <input id="r" value="<?php echo $s->pageRequest()->stringVar('r');?>" type="hidden"/>
-                <input id="countryId" value="<?php echo SelmasuController::$countryId;?>" type="hidden"/>
                 <input id="mfa" value="<?php echo Settings::$mfa;?>" type="hidden"/>
                 <?php
                 if(!$s->loggedIn()){
