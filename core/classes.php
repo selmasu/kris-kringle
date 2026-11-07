@@ -17,10 +17,11 @@ $appClasses = [
     'EmailsModel' => '/usr/share/selmasu-kris-kringle/apps/emails/services/emails/EmailsModel.php',
     'EmailsService' => '/usr/share/selmasu-kris-kringle/apps/emails/services/emails/EmailsService.php',
     'EmailsServiceAPI' => '/usr/share/selmasu-kris-kringle/apps/emails/services/emails/EmailsServiceAPI.php',
-    'EmailListController' => '/usr/share/selmasu-kris-kringle/core/views/emailList/EmailListController.php',
-    'EmailListView' => '/usr/share/selmasu-kris-kringle/core/views/emailList/EmailListView.php',
-    'EmailFormController' => '/usr/share/selmasu-kris-kringle/core/views/emailForm/EmailFormController.php',
-    'EmailFormView' => '/usr/share/selmasu-kris-kringle/core/views/emailForm/EmailFormView.php',
+    'EmailListController' => '/usr/share/selmasu-kris-kringle/apps/emails/views/emailList/EmailListController.php',
+    'EmailListView' => '/usr/share/selmasu-kris-kringle/apps/emails/views/emailList/EmailListView.php',
+    'EmailFormController' => '/usr/share/selmasu-kris-kringle/apps/emails/views/emailForm/EmailFormController.php',
+    'EmailFormView' => '/usr/share/selmasu-kris-kringle/apps/emails/views/emailForm/EmailFormView.php',
+    'EmailsController' => '/usr/share/selmasu-kris-kringle/apps/emails/EmailsController.php',
 
 	//Core Services
     'UserService' => '/usr/share/selmasu-kris-kringle/core/services/user/UserService.php',
