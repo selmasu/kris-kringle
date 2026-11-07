@@ -17,7 +17,7 @@ class MenuBuilder {
             ?>
             <ul class="list-unstyled topnav-menu float-end mb-0">
                 <?php
-                if($this->s->user()->permissions()->settings()->hasAccess()){
+                if($this->s->user()->admin()->get()){
                     ?>
                     <li class="dropdown notification-list">
                         <a href="/settings" class="nav-link right-bar-toggle waves-effect waves-light"><i class="fe-settings noti-icon"></i></a>
@@ -134,143 +134,7 @@ class MenuBuilder {
 	 */
 	public function menu()
 	{
-
         ob_start();
-        if($this->s->loggedIn()){
-            $app = $this->s->pageRequest()->request() ?: $this->s->user()->defaultApp()->get();
-            $app = $app ? $app : DefaultController::REQUEST_DASHBOARD;
-            ?>
-            <ul class="list-unstyled topnav-menu topnav-menu-left m-0">
-                <li class="nav-item <?php echo $app == 'dashboard' ? 'active' : '';?>">
-                    <a class="nav-link" href="/dashboard">business <span class="sr-only">(current)</span></a>
-                </li>
-	            <?php
-                if($this->s->user()->permissions()->leads()->canManage()) {
-                    ?>
-                    <li class="nav-item <?php echo $app == 'leads' ? 'active' : ''; ?>">
-                        <a class="nav-link" href="/leads">leads</a>
-                    </li>
-                    <!--<li class="nav-item <?php echo $app == 'proposals' ? 'active' : ''; ?>">
-                        <a class="nav-link" href="/proposals">proposals</a>
-                    </li>-->
-                    <?php
-                }
-	            if($this->s->user()->permissions()->quotes()->hasAccess()){
-		            ?>
-                    <li class="nav-item <?php echo $app == 'quotes' ? 'active' : '';?>">
-                        <a class="nav-link" href="/quotes">quotes</a>
-                    </li>
-                    <!--<li class="nav-item <?php echo $app == 'contracts' ? 'active' : ''; ?>">
-                        <a class="nav-link" href="/contracts">contracts</a>
-                    </li>-->
-                    <?php
-                }
-                if($this->s->user()->permissions()->projects()->canManage()) {
-                    ?>
-                    <li class="nav-item <?php echo $app == 'projects' ? 'active' : ''; ?>">
-                        <a class="nav-link" href="/projects">projects</a>
-                    </li>
-                    <?php
-                }
-                ?>
-                <li class="nav-item <?php echo $app == 'todo' ? 'active' : ''; ?>">
-                    <a class="nav-link" href="/todo">todo</a>
-                </li>
-                <?php
-                if($this->s->user()->permissions()->projects()->canManage()) {
-                    ?>
-                    <li class="nav-item <?php echo $app == 'status' ? 'active' : ''; ?>">
-                        <a class="nav-link" href="/status">status</a>
-                    </li>
-                    <?php
-                }
-                ?>
-                <li class="nav-item <?php echo $app == 'time' ? 'active' : ''; ?>">
-                    <a class="nav-link" href="/time">time</a>
-                </li>
-                <li class="nav-item <?php echo $app == 'tasks' ? 'active' : ''; ?>">
-                    <a class="nav-link" href="/tasks">tasks</a>
-                </li>
-                <?php
-	            if($this->s->user()->permissions()->tickets()->hasAccess() || $this->s->user()->permissions()->tickets()->canManage()) {
-		            ?>
-                    <li class="nav-item <?php echo $app == 'support' ? 'active' : ''; ?>">
-                        <a class="nav-link" href="/support">support</a>
-                    </li>
-		            <?php
-	            }
-	            ?>
-                <li class="dropdown d-xl-none">
-                    <a class="nav-link dropdown-toggle waves-effect waves-light" data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
-                        more...
-                        <i class="mdi mdi-chevron-down"></i>
-                    </a>
-                    <div class="dropdown-menu" style="">
-                        <?php
-                        if($this->s->user()->permissions()->customers()->canManage()) {
-                            ?>
-                            <a class="dropdown-item" href="/customers">customers</a>
-                            <?php
-                        }
-                        if($this->s->user()->permissions()->invoices()->canManage()) {
-                            ?>
-                            <a class="dropdown-item" href="/invoices">Invoices</a>
-                            <?php
-                        }
-                        if($this->s->user()->permissions()->reports()->hasAccess()){
-                            ?>
-                            <a class="dropdown-item" href="/reports/billable-time">reports</a>
-                            <?php
-                        }
-                        ?>
-                        <a class="dropdown-item" href="/files">files</a>
-                        <?php
-                        if($this->s->user()->permissions()->users()->canManage()){
-                            ?>
-                            <a class="dropdown-item" href="/team">team</a>
-                            <?php
-                        }
-                        ?>
-                    </div>
-                </li>
-                <?php
-                if($this->s->user()->permissions()->customers()->canManage()) {
-                    ?>
-                    <li class="d-none d-xl-block nav-item <?php echo $app == 'customers' ? 'active' : ''; ?>">
-                        <a class="nav-link" href="/customers">customers</a>
-                    </li>
-                    <?php
-                }
-                if($this->s->user()->permissions()->invoices()->canManage()) {
-                    ?>
-                    <li class="d-none d-xl-block nav-item <?php echo $app == 'invoices' ? 'active' : ''; ?>">
-                        <a class="nav-link" href="/invoices">invoices</a>
-                    </li>
-                    <?php
-                }
-                if($this->s->user()->permissions()->reports()->hasAccess()){
-	                ?>
-                    <li class="d-none d-xl-block nav-item <?php echo $app == 'reports' ? 'active' : '';?>">
-                        <a class="nav-link" href="/reports/billable-time">reports</a>
-                    </li>
-	                <?php
-                }
-                ?>
-                <li class="d-none d-xl-block nav-item <?php echo $app == 'files' ? 'active' : '';?>">
-                    <a class="nav-link" href="/files">files</a>
-                </li>
-                <?php
-                if($this->s->user()->permissions()->users()->canManage()){
-                    ?>
-                    <li class="d-none d-xl-block nav-item <?php echo $app == 'team' ? 'active' : '';?>">
-                        <a class="nav-link" href="/team">team</a>
-                    </li>
-                    <?php
-                }
-                ?>
-            </ul>
-            <?php
-        }
 
         return ob_get_clean();
 	}
