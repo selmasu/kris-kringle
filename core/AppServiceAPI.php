@@ -1,7 +1,4 @@
 <?php
-
-use emails\services\emails\EmailsServiceAPI;
-
 class AppServiceAPI {
     /** services */
     const TRIP          = 'trip';

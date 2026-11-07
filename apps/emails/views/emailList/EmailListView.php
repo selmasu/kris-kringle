@@ -5,9 +5,7 @@ class EmailListView
     {
         ob_start();
         ?>
-            <div>asdf</div>
         <div id="mainContentDiv">
-            asdfasdf
             <script type="text/javascript">
                 var _emailId = 0;
 
