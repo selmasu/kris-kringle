@@ -74,11 +74,6 @@ class EmailFormView
                                             <select data-bind="value: bccAddress" id="bccAddress" name="bccAddress"></select>
                                             <div class="clear"></div>
                                         </li>
-                                        <li class="formItem">
-                                            <label for="placeholders">Insert Placeholder</label>
-                                            <select id="placeholders"></select>
-                                            <button class="k-button" type="button" id="insertPlaceholder">Go</button>
-                                        </li>
                                         <li>
                                             <label for="htmlBody" class="label-top">Body</label>
                                             <div class="ckwrap">
@@ -102,7 +97,7 @@ class EmailFormView
                     </div>
                 </div>
             </div>
-			<script src="/scripts/apps/settings/EmailForm.js" type="text/javascript"></script>
+			<script src="/scripts/apps/emails/EmailForm.js" type="text/javascript"></script>
 		<?php
 		return ob_get_clean();
 	}
