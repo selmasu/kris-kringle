@@ -20,7 +20,7 @@ class EmailsServiceAPI extends ServiceAPI
 	{
 		parent::__construct( $s );
 		
-		$this->emailsService = \simpli\EmailsService::create( $s );
+		$this->emailsService = EmailsService::create( $s );
 	}
 	
 	/**
@@ -58,7 +58,7 @@ class EmailsServiceAPI extends ServiceAPI
 	 * @param Selmasu $s
 	 * @return EmailsServiceAPI
 	 */
-	public static function create( Selmasu $s )
+	public static function create( Selmasu $s ):EmailsServiceAPI
 	{
 		return new self( $s );
 	}

@@ -89,7 +89,7 @@ class UsersModel extends Model {
      * @param string $email
      * @return User|null
      */
-    protected function getUserByEmailFromDB( string $email )
+    protected function getUserByEmailFromDB( string $email ): ?User
     {
         $sql = "
 			SELECT
@@ -444,5 +444,40 @@ class UsersModel extends Model {
             " . $query->orderByString();
         return $this->db->fetchAll($sql);
     }
+
+    protected function setOneTimeCodeInDB(string $email): ?string {
+        $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $sql = "
+            UPDATE
+                " . $this->coreTables()->user() . "
+            SET
+                oneTimeCode = '" . $this->db->escapeString($code) . "',
+                oneTimeCodeExpiry = DATE_ADD(NOW(), INTERVAL 5 MINUTE),
+                oneTimeCodeAttempts = 0
+            WHERE
+                email = '" . $this->db->escapeString($email) . "'
+                AND userId > 0
+                AND deleted = 0
+                AND (oneTimeCodeExpiry IS NULL OR oneTimeCodeExpiry <= DATE_ADD(NOW(), INTERVAL 4 MINUTE))
+            LIMIT
+                1";
+        $this->db->query($sql);
+        $affected = (int)$this->db->fetchValue('affected', 'SELECT ROW_COUNT() AS affected');
+        return $affected === 1 ? $code : null;
+    }
+
+    protected function clearOneTimeCodeInDB(int $userId, string $code):void {
+        $this->db->query("
+            UPDATE
+                " . $this->coreTables()->user() . "
+            SET
+                oneTimeCode = ''
+            WHERE
+                userId = " . (int)$userId . "
+                AND oneTimeCode = '" . $this->db->escapeString($code) . "'
+            LIMIT
+                1");
+    }
+
 
 }

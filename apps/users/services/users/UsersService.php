@@ -125,7 +125,7 @@ class UsersService extends UsersModel {
      * @param string $email
      * @return User|null
      */
-	public function getUserByEmail(string $email) {
+	public function getUserByEmail(string $email): ?User {
         return $this->getUserByEmailFromDB($email);
     }
 
@@ -248,6 +248,71 @@ class UsersService extends UsersModel {
     public function deleteMyAccount(){
         $this->deleteUserFromDB( $this->s()->userId() );
         $this->s()->session()->destroySession();
+    }
+
+    public function sendOneTimeCode(string $emailAddress):array
+    {
+        $emailAddress = strtolower(trim($emailAddress));
+        if (strlen($emailAddress) > 100 || !filter_var($emailAddress, FILTER_VALIDATE_EMAIL)) {
+            return ['sent' => false, 'error' => 'Please enter a valid email address'];
+        }
+
+        $lock = 'otp_' . substr(hash('sha256', $emailAddress), 0, 56);
+        if ((int)$this->db->fetchValue('acquired', "SELECT GET_LOCK('" . $lock . "', 5) AS acquired") !== 1) {
+            return ['sent' => false, 'error' => 'Unable to send a code. Please try again'];
+        }
+        try {
+            $user = $this->getUserByEmail($emailAddress);
+            if (!$user) {
+                $user = User::create();
+                $user->email()->set($emailAddress);
+                $user->admin()->set(false);
+                $user->superUser()->set(false);
+                $user->passwordLogin()->set(false);
+                $userId = $this->saveUserToDB($user);
+                if ($userId) {
+                    $user->userId()->set($userId);
+                } else {
+                    // Another sign-in provider may have created the address.
+                    $user = $this->getUserByEmail($emailAddress);
+                }
+            }
+
+            if (!$user || !$user->userId()->get()) {
+                return ['sent' => false, 'error' => 'Unable to send a code. Please try again'];
+            }
+
+            $oneTimeCode = $this->setOneTimeCodeInDB($emailAddress);
+            if ($oneTimeCode === null) {
+                return ['sent' => false, 'error' => 'Please wait one minute before requesting another code', 'retryAfter' => 60];
+            }
+        } finally {
+            $this->db->query("DO RELEASE_LOCK('" . $lock . "')");
+        }
+
+        $email = \KrisKringle\EmailsService::create($this->s())->getEmailObject(\KrisKringle\Email::TYPE_ONE_TIME_CODE);
+        if (!$email) {
+            $email = \KrisKringle\Email::create();
+            $email->subject()->set('Your Kris Kringle sign-in code');
+            $email->htmlBody()->set('<p>Your sign-in code is <strong>[[Access Code]]</strong>.</p><p>Use it to sign in or create your account. It expires in five minutes.</p><p>If you did not request this code, you can ignore this email.</p>');
+        }
+
+        $email->fromAddress()->set('noreply@' . Settings::$mailgunDomain);
+        $email->fromName()->set('Kris Kringle');
+        $email->toAddress()->set($emailAddress);
+        $email->htmlBody()->strReplace('[[First Name]]', htmlspecialchars($user->firstName()->get(), ENT_QUOTES, 'UTF-8'));
+        $email->htmlBody()->strReplace('[[Access Code]]', $oneTimeCode);
+        $email->plainBody()->set('Your Kris Kringle sign-in code is ' . $oneTimeCode . '. It expires in five minutes.');
+        $email->active()->set(true);
+        $email->app()->set('authentication');
+        $email->id()->set('OTC_' . $user->userId()->get() . '_' . bin2hex(random_bytes(8)));
+
+        if (!EmailService::create($this->s())->sendMail($email)) {
+            $this->clearOneTimeCodeInDB($user->userId()->get(), $oneTimeCode);
+            return ['sent' => false, 'error' => 'Could not send email, please try again in one minute'];
+        }
+
+        return ['sent' => true, 'error' => '', 'retryAfter' => 60, 'expiresIn' => 300];
     }
 	
 	/**

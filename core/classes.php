@@ -12,6 +12,12 @@ $appClasses = [
     'Constants' => '/usr/share/selmasu-kris-kringle/core/valueObjects/Constants.php',
     'App' => '/usr/share/selmasu-kris-kringle/core/valueObjects/App.php',
 
+    //Email templates
+    'KrisKringle\\Email' => '/usr/share/selmasu-kris-kringle/core/valueObjects/Email.php',
+    'KrisKringle\\EmailsModel' => '/usr/share/selmasu-kris-kringle/core/services/emails/EmailsModel.php',
+    'KrisKringle\\EmailsService' => '/usr/share/selmasu-kris-kringle/core/services/emails/EmailsService.php',
+    'EmailsServiceAPI' => '/usr/share/selmasu-kris-kringle/core/services/emails/EmailsServiceAPI.php',
+
 	//Core Services
     'UserService' => '/usr/share/selmasu-kris-kringle/core/services/user/UserService.php',
 

@@ -26,6 +26,7 @@ class UsersServiceAPI extends ServiceAPI
     const DECLINE_REQUEST_TO_FOLLOW = 'declineRequestToFollow';
     const DELETE_MY_ACCOUNT         = 'deleteMyAccount';
     const SIGN_UP                   = 'signUp';
+    const SEND_ONE_TIME_CODE        = 'sendOneTimeCode';
 	
 	//Argument Names
 	const USER_ID                   = 'userId';
@@ -120,6 +121,9 @@ class UsersServiceAPI extends ServiceAPI
             case self::GET_FOLLOWING_LISTS:
                 return $this->usersService->getFollowingLists();
 
+            case self::SEND_ONE_TIME_CODE:
+                return $this->usersService->sendOneTimeCode($this->stringArgument(self::EMAIL));
+
             case self::SIGN_UP:
                 return $this->usersService->signUp($this->arrayArgument(self::DATA));
 		}
@@ -138,7 +142,7 @@ class UsersServiceAPI extends ServiceAPI
 	 * @return bool
 	 */
 	public static function getIsAllowedPublicly( string $function ):bool{
-		return in_array($function, [self::GET_USER, self::SIGN_UP]);
+		return in_array($function, [self::GET_USER, self::SIGN_UP, self::SEND_ONE_TIME_CODE]);
 	}
 	
 	/**

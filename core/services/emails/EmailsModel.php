@@ -1,7 +1,5 @@
 <?php
-namespace simpli;
-class EmailsModel extends \Model
-{
+class EmailsModel extends \Model {
     /**
      * Gets all email details for a given query
      * @param \SqlQueryBits $query
@@ -41,10 +39,10 @@ class EmailsModel extends \Model
     }
 
     /**
-     * @param \simpli\Email $email
+     * @param \KrisKringle\Email $email
      * @return int
      */
-    protected function createEmailInDB( \simpli\Email $email )
+    protected function createEmailInDB( \KrisKringle\Email $email )
     {
         $sql = "
             INSERT INTO
@@ -56,10 +54,10 @@ class EmailsModel extends \Model
     }
 
     /**
-     * @param \simpli\Email $email
+     * @param \KrisKringle\Email $email
      * @return int
      */
-    protected function saveToDB( \simpli\Email $email )
+    protected function saveToDB( \KrisKringle\Email $email )
     {
         $sql = "
             UPDATE

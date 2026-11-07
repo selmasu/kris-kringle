@@ -1,5 +1,4 @@
 <?php
-namespace simpli;
 class EmailsService extends EmailsModel
 {
     /**
@@ -49,7 +48,7 @@ class EmailsService extends EmailsModel
     /**
      * Gets an email
      * @param int $emailId
-     * @return \simpli\Email
+     * @return \KrisKringle\Email
      */
     public function getEmailObject( $emailId )
     {
@@ -60,7 +59,7 @@ class EmailsService extends EmailsModel
             ->where()->set( ' AND email.emailId = ' . (int)$emailId );
         foreach( $this->getEmailsFromDB( $query ) as $email )
         {
-            $email = \simpli\Email::create()->fromArray( $email );
+            $email = \KrisKringle\Email::create()->fromArray( $email );
             $attachments = array();
             /** @var \File $attachment */
             foreach( $this->getEmailAttachments($emailId) as $attachment ){
@@ -82,7 +81,7 @@ class EmailsService extends EmailsModel
      */
     public function createEmail($emailId){
         $organisation = \OrganisationService::create($this->s())->getUserOrg();
-        $email = \simpli\Email::create();
+        $email = \KrisKringle\Email::create();
         $email->emailId()->set($emailId);
         $email->subject()->set($email->defaultSubject($emailId));
         $email->htmlBody()->set($email->defaultBody($emailId, $organisation->logoUrl()->get()));
@@ -197,7 +196,7 @@ class EmailsService extends EmailsModel
 	/**
 	 * Static creator
 	 * @param Selmasu $s
-	 * @return \simpli\EmailsService
+	 * @return EmailsService
 	 */
 	public static function create( \Selmasu $s )
 	{
