@@ -6,7 +6,8 @@ final class SelmasuController
 	const REQUEST_AJAX      = 'ajax';
 	const REQUEST_PAJAX     = 'pajax';
 	const REQUEST_FILE      = 'file';
-	const REQUEST_SING_OUT  = 'sign-out';
+	const REQUEST_SIGN_OUT  = 'sign-out';
+    const REQUEST_LOGIN     = 'login';
 
 	const VERSION           = '0.0.1';
 	
@@ -50,9 +51,13 @@ final class SelmasuController
 				$content = FileController::create( $this->s )->getContent();
 			break;
 
-			case self::REQUEST_SING_OUT:
+			case self::REQUEST_SIGN_OUT:
                 $this->signOut();
 			break;
+
+            case self::REQUEST_LOGIN:
+                $content = $this->login();
+                break;
 			
 			default:
 				$content = $this->getAppContent();
@@ -63,6 +68,16 @@ final class SelmasuController
 			echo $content;
 		}
 	}
+
+    private function login()
+    {
+        if( !$this->s->loggedIn() || $this->s->user()->mfaCode()->get()) {
+            return $this->s->parseTemplate( 'login', PagePlaceholderData::create()->content()->set( LoginController::create( $this->s )->getContent() ) );
+        } else {
+            header( 'Location: /' );
+            exit;
+        }
+    }
 
 	private function signOut()
 	{
