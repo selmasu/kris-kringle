@@ -1,15 +1,9 @@
 <?php
-
-namespace services\user;
-use Selmasu;
-use UsersService;
-
 /**
  * Legacy service called by framework
  * Class UserService
  */
-class UserService extends UsersService
-{
+class UserService extends UsersService {
 
     /**
      * @param Selmasu $s
