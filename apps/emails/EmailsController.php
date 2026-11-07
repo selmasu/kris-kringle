@@ -13,10 +13,8 @@ class EmailsController extends Controller implements ContentGenerator {
         if (!$this->canManage())
             return '';
 
-        switch ($this->s->pageRequest()->page()) {
-            default:
-                return EmailListController::create($this->s)->getContent();
-        }
+        Utils::trace('Emails');
+        return EmailListController::create($this->s)->getContent();
     }
 
     public function execAjax()

@@ -29,9 +29,6 @@ class EmailListView
                         <li>
                             <a href="/admin">LeR&ecirc;ve</a>
                         </li>
-                        <li>
-                            <a href="/admin/settings">Settings</a>
-                        </li>
                         <li class="active">
                             Emails
                         </li>

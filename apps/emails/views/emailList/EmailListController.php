@@ -31,10 +31,10 @@ class EmailListController extends Controller implements ContentGenerator
 	}
 	
 	/**
-	 * @param Selamsu $s
+	 * @param Selmasu $s
 	 * @return EmailListController
 	 */
-	public static function create( Selmasu $s )
+	public static function create( Selmasu $s ):EmailListController
 	{
 		return new EmailListController( $s );
 	}
