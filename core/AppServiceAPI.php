@@ -3,7 +3,7 @@ class AppServiceAPI {
     /** services */
     const TRIP          = 'trip';
     const USERS         = 'users';
-    const POST          = 'post';
+    const EMAILS        = 'emails';
 
     /** @var Selmasu */
     private $s;
@@ -21,14 +21,11 @@ class AppServiceAPI {
     public function getServiceAPI(string $app, string $service)
     {
         switch ($service) {
-            case self::TRIP:
-                return TripServiceAPI::create($this->s);
+            case self::EMAILS:
+                return EmailsServiceAPI::create($this->s);
 
             case self::USERS:
                 return UsersServiceAPI::create($this->s);
-
-            case self::POST:
-                return PostServiceAPI::create($this->s);
         }
     }
 
@@ -39,10 +36,6 @@ class AppServiceAPI {
      * @return bool
      */
     public static function getIsAllowedPublicly(string $app, string $service, string $function):bool {
-        if ($service == self::TRIP && TripServiceAPI::getIsAllowedPublicly($function)) {
-            return true;
-        }
-
         if ($service == self::USERS && UsersServiceAPI::getIsAllowedPublicly($function)) {
             return true;
         }
