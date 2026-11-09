@@ -35,10 +35,10 @@ $appClasses = [
 	'DefaultView' => '/usr/share/selmasu-kris-kringle/apps/default/views/default/DefaultView.php',
 
     //KrisKringle
-    'KrisKringleService' => '/usr/share/selmasu-kris-kringle/apps/post/services/post/KrisKringleService.php',
-    'KrisKringleModel' => '/usr/share/selmasu-kris-kringle/apps/post/services/post/KrisKringleModel.php',
-    'KrisKringleServiceAPI' => '/usr/share/selmasu-kris-kringle/apps/post/services/post/KrisKringleServiceAPI.php',
-    'KrisKringle' => '/usr/share/selmasu-kris-kringle/apps/post/valueObjects/KrisKringle.php',
+    'KrisKringleService' => '/usr/share/selmasu-kris-kringle/apps/krisKringles/services/krisKringles/KrisKringlesService.php',
+    'KrisKringleModel' => '/usr/share/selmasu-kris-kringle/apps/krisKringles/services/krisKringles/KrisKringlesModel.php',
+    'KrisKringleServiceAPI' => '/usr/share/selmasu-kris-kringle/apps/krisKringles/services/krisKringles/KrisKringlesServiceAPI.php',
+    'KrisKringle' => '/usr/share/selmasu-kris-kringle/apps/krisKringles/valueObjects/KrisKringle.php',
 
     //Users
     'UsersController' => '/usr/share/selmasu-kris-kringle/apps/users/UsersController.php',

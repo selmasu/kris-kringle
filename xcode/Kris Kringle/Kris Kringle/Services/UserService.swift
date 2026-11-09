@@ -120,7 +120,7 @@ class UserService {
         service = "authentication"
         functionCall = "loginApple"
         
-        callService(Utils.requestParams(["code": code, "firstName": firstName, "lastName": lastName, "clientId": "travel.simpli"]))
+        callService(Utils.requestParams(["code": code, "firstName": firstName, "lastName": lastName, "clientId": "Kris Kringle"]))
     }
     
     func sendOneTimeCode(_ email: String) {

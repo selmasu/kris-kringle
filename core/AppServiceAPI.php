@@ -4,6 +4,7 @@ class AppServiceAPI {
     const TRIP          = 'trip';
     const USERS         = 'users';
     const EMAILS        = 'emails';
+    const KRIS_KRINGLES = 'krisKringles';
 
     /** @var Selmasu */
     private $s;
@@ -23,6 +24,9 @@ class AppServiceAPI {
         switch ($service) {
             case self::EMAILS:
                 return EmailsServiceAPI::create($this->s);
+
+            case self::KRIS_KRINGLES:
+                return KrisKringleServiceAPI::create($this->s);
 
             case self::USERS:
                 return UsersServiceAPI::create($this->s);
