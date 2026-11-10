@@ -43,6 +43,29 @@ class KrisKringleServiceAPI extends ServiceAPI
                 $name = $arguments['name'] ?? null;
                 return $this->krisKringleService->createKrisKringle(is_string($name) ? $name : '', $_FILES['picture'] ?? null);
 
+            case 'getKrisKringle':
+                header('Cache-Control: private, no-store');
+                return $this->krisKringleService->getKrisKringle($this->intArgument(self::ID));
+
+            case 'updateKrisKringle':
+            case 'addKrisKringleMember':
+                $token = $_POST['selmasuToken'] ?? null;
+                if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || !is_string($token) || $token === ''
+                    || !hash_equals((string)$this->s()->user()->selmasuToken()->get(), $token)) {
+                    return ['error' => 'Please sign in again.'];
+                }
+                $id = $this->intArgument(self::ID);
+                if ($functionToCall === 'addKrisKringleMember') {
+                    header('Cache-Control: private, no-store');
+                    $email = $_POST['email'] ?? null;
+                    return $this->krisKringleService->addKrisKringleMember($id, is_string($email) ? $email : '');
+                }
+                $name = $_POST['name'] ?? null;
+                if ($name !== null && !is_string($name)) {
+                    return ['error' => 'Enter a valid name.'];
+                }
+                return $this->krisKringleService->updateKrisKringle($id, $name, $_FILES['picture'] ?? null);
+
             case self::UPDATE_PICTURE:
                 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
                     return ['error' => 'Uploading a group photo requires a POST request.'];

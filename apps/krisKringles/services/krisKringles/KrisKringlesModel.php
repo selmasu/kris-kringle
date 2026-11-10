@@ -56,15 +56,74 @@ class KrisKringleModel extends Model
             FROM $table WHERE krisKringleId = $id AND createdBy = $owner AND deleted = 0$lockClause")->fetchAssoc();
     }
 
-    protected function updateKrisKringlePictureInDB(int $id, int $owner, int $serial, string $version): ?array
+    protected function getVisibleKrisKringleFromDB(int $id): ?array
+    {
+        return $this->adb->query("SELECT krisKringle.krisKringleId, krisKringle.name, krisKringle.year,
+            krisKringle.createdBy, krisKringle.pictureVersion " . $this->visibleGroupsFromWhere()
+            . " AND krisKringle.krisKringleId = $id")->fetchAssoc();
+    }
+
+    protected function getKrisKringleMembersFromDB(int $id, int $owner, bool $showEmails): array
+    {
+        $memberTable = $this->tables()->krisKringleMember();
+        $userIds = $this->adb->fetchAllValues('userId', "SELECT userId FROM $memberTable WHERE krisKringleId = $id");
+        $userIds[] = $owner;
+        $ids = implode(',', array_map('intval', $userIds));
+        $userTable = $this->coreTables()->user();
+        $emailColumn = $showEmails ? ', email' : '';
+        $users = $this->db->fetchAll("SELECT userId, displayName, firstName, lastName$emailColumn
+            FROM $userTable WHERE userId IN ($ids) AND deleted = 0
+            ORDER BY (userId = $owner) DESC, displayName, firstName, userId");
+        return array_map(static function (array $user) use ($owner, $showEmails) {
+            $name = trim($user['displayName'] ?? '');
+            if ($name === '') {
+                $name = trim(($user['firstName'] ?? '') . ' ' . ($user['lastName'] ?? ''));
+            }
+            $member = [
+                'userId' => (int)$user['userId'],
+                'name' => $name,
+                'isCreator' => (int)$user['userId'] === $owner,
+            ];
+            if ($showEmails) {
+                $member['email'] = $user['email'];
+            }
+            return $member;
+        }, $users);
+    }
+
+    protected function addKrisKringleMemberInDB(int $id, int $owner, int $userId): bool
+    {
+        $memberTable = $this->tables()->krisKringleMember();
+        $this->adb->query("SELECT userId FROM $memberTable LIMIT 0");
+        $this->adb->query('START TRANSACTION');
+        if (!$this->getOwnedKrisKringleFromDB($id, $owner, true)) {
+            $this->adb->query('ROLLBACK');
+            return false;
+        }
+        // Locking the group serializes duplicate additions, including on existing schemas.
+        $exists = $this->adb->query("SELECT userId FROM $memberTable
+            WHERE krisKringleId = $id AND userId = $userId LIMIT 1")->fetchValue('userId');
+        if (!$exists && !$this->adb->executePrepared(
+            "INSERT INTO $memberTable (krisKringleId, userId) VALUES (?, ?)",
+            [$id, $userId]
+        )) {
+            $this->adb->query('ROLLBACK');
+            return false;
+        }
+        $this->adb->query('COMMIT');
+        return true;
+    }
+
+    protected function updateKrisKringleInDB(int $id, int $owner, ?string $name, ?int $serial, ?string $version): ?array
     {
         $table = $this->tables()->krisKringle();
         $this->adb->query('START TRANSACTION');
         $group = $this->getOwnedKrisKringleFromDB($id, $owner, true);
         if (!$group || !$this->adb->executePrepared(
-            "UPDATE $table SET pictureFileSerial = ?, pictureVersion = ?, updatedBy = ?, updatedDate = NOW()
+            "UPDATE $table SET name = COALESCE(?, name), pictureFileSerial = COALESCE(?, pictureFileSerial),
+                pictureVersion = COALESCE(?, pictureVersion), updatedBy = ?, updatedDate = NOW()
                 WHERE krisKringleId = ?",
-            [$serial, $version, $owner, $id]
+            [$name, $serial, $version, $owner, $id]
         )) {
             $this->adb->query('ROLLBACK');
             return null;

@@ -320,6 +320,46 @@ class UsersService extends UsersModel {
         $this->s()->session()->destroySession();
     }
 
+    public function getOrCreateEmailAccount(string $emailAddress): ?User
+    {
+        $lock = $this->emailAccountLock($emailAddress);
+        if ((int)$this->db->fetchValue('acquired', "SELECT GET_LOCK('$lock', 5) AS acquired") !== 1) {
+            return null;
+        }
+        try {
+            return $this->findOrCreateEmailAccount($emailAddress);
+        } finally {
+            $this->db->query("DO RELEASE_LOCK('$lock')");
+        }
+    }
+
+    private function emailAccountLock(string $emailAddress): string
+    {
+        return 'otp_' . substr(hash('sha256', $emailAddress), 0, 56);
+    }
+
+    private function findOrCreateEmailAccount(string $emailAddress): ?User
+    {
+        $user = $this->getUserByEmail($emailAddress);
+        if ($user) {
+            return $user;
+        }
+
+        $user = User::create();
+        $user->email()->set($emailAddress);
+        $user->admin()->set(false);
+        $user->superUser()->set(false);
+        $user->passwordLogin()->set(false);
+        $userId = $this->saveUserToDB($user);
+        if ($userId) {
+            $user->userId()->set($userId);
+            return $user;
+        }
+
+        // Another sign-in provider may have created the address.
+        return $this->getUserByEmail($emailAddress);
+    }
+
     public function sendOneTimeCode(string $emailAddress):array
     {
         $emailAddress = strtolower(trim($emailAddress));
@@ -327,26 +367,12 @@ class UsersService extends UsersModel {
             return ['sent' => false, 'error' => 'Please enter a valid email address'];
         }
 
-        $lock = 'otp_' . substr(hash('sha256', $emailAddress), 0, 56);
+        $lock = $this->emailAccountLock($emailAddress);
         if ((int)$this->db->fetchValue('acquired', "SELECT GET_LOCK('" . $lock . "', 5) AS acquired") !== 1) {
             return ['sent' => false, 'error' => 'Unable to send a code. Please try again'];
         }
         try {
-            $user = $this->getUserByEmail($emailAddress);
-            if (!$user) {
-                $user = User::create();
-                $user->email()->set($emailAddress);
-                $user->admin()->set(false);
-                $user->superUser()->set(false);
-                $user->passwordLogin()->set(false);
-                $userId = $this->saveUserToDB($user);
-                if ($userId) {
-                    $user->userId()->set($userId);
-                } else {
-                    // Another sign-in provider may have created the address.
-                    $user = $this->getUserByEmail($emailAddress);
-                }
-            }
+            $user = $this->findOrCreateEmailAccount($emailAddress);
 
             if (!$user || !$user->userId()->get()) {
                 return ['sent' => false, 'error' => 'Unable to send a code. Please try again'];

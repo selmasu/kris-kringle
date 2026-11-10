@@ -170,15 +170,13 @@ namespace {
         public function setPermissionError() { return $this; }
         public function toArray() { return ['error' => 'permissionError']; }
     }
-}
 
-namespace KrisKringle {
     final class EmailsService {
         public static $configured = true;
         public static function create($s) { return new self(); }
         public function getEmailObject($id) {
             if (!self::$configured) { return null; }
-            $email = Email::create();
+            $email = \KrisKringle\Email::create();
             $email->subject()->set('Your code');
             $email->htmlBody()->set('<p>Hello [[First Name]], your code is [[Access Code]].</p>');
             return $email;
@@ -290,7 +288,7 @@ namespace {
     EmailService::$succeeds = true;
 
     $s = new Selmasu();
-    \KrisKringle\EmailsService::$configured = false;
+    EmailsService::$configured = false;
     check(send($s, 'fallback@example.test')['sent'] === true, 'A default email works before a custom template is configured');
     check(str_contains(end(EmailService::$messages)['subject'], 'Kris Kringle'), 'The default code email is branded');
 

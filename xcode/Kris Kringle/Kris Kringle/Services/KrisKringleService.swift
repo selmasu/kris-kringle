@@ -24,6 +24,24 @@ struct KrisKringleSummary: Identifiable {
     }
 }
 
+struct KrisKringleMember: Identifiable {
+    let id: Int
+    let name: String
+    let email: String?
+    let isCreator: Bool
+
+    init(json: JSON) throws {
+        guard let id = json["userId"].int, id > 0,
+              let name = json["name"].string, let isCreator = json["isCreator"].bool else {
+            throw KrisKringleService.ServiceError("The server returned an invalid group member.")
+        }
+        self.id = id
+        self.name = name
+        self.email = json["email"].string
+        self.isCreator = isCreator
+    }
+}
+
 enum KrisKringleService {
     struct ServiceError: LocalizedError {
         let message: String
@@ -44,9 +62,28 @@ enum KrisKringleService {
         return try KrisKringleSummary(json: result["data"])
     }
 
-    static func updatePicture(id: Int, picture: Data) async throws -> KrisKringleSummary {
-        let result = try await request("updateKrisKringlePicture", parameters: ["id": String(id)], picture: picture)
+    static func detail(id: Int) async throws -> (group: KrisKringleSummary, members: [KrisKringleMember]) {
+        let result = try await request("getKrisKringle", parameters: ["id": String(id)])
+        return (try KrisKringleSummary(json: result["data"]), try members(from: result))
+    }
+
+    static func update(id: Int, name: String?, picture: Data?) async throws -> KrisKringleSummary {
+        var fields = ["id": String(id)]
+        fields["name"] = name
+        let result = try await request("updateKrisKringle", parameters: fields, picture: picture)
         return try KrisKringleSummary(json: result["data"])
+    }
+
+    static func addMember(id: Int, email: String) async throws -> [KrisKringleMember] {
+        let result = try await request("addKrisKringleMember", parameters: ["id": String(id), "email": email])
+        return try members(from: result)
+    }
+
+    private static func members(from result: JSON) throws -> [KrisKringleMember] {
+        guard let members = result["members"].array else {
+            throw ServiceError("The server didn’t return a list of group members.")
+        }
+        return try members.map { try KrisKringleMember(json: $0) }
     }
 
     static func picture(id: Int) async throws -> Data {
