@@ -3,10 +3,10 @@
 class EmailsService extends EmailsModel
 {
     /**
-     * @param \ListArguments $listArguments
+     * @param ListArguments $listArguments
      * @return array
      */
-    public function getEmails(\ListArguments $listArguments)
+    public function getEmails(ListArguments $listArguments)
     {
         $where = '';
 
@@ -17,7 +17,7 @@ class EmailsService extends EmailsModel
 							OR email.fromAddress LIKE '%" . $this->adb->escapeString($search) . "%' )";
         }
 
-        $query = \SqlQueryBits::create()
+        $query = SqlQueryBits::create()
             ->limit()->set($listArguments->take()->get())
             ->offset()->set($listArguments->skip()->get())
             ->orderBy()->set($this->sortToString($listArguments->sort()->get()))
@@ -33,7 +33,7 @@ class EmailsService extends EmailsModel
      */
     public function getEmail($emailId)
     {
-        $query = \SqlQueryBits::create()
+        $query = SqlQueryBits::create()
             ->limit()->set(1)
             ->offset()->set(0)
             ->where()->set(' AND email.emailId = ' . (int)$emailId);
@@ -51,18 +51,18 @@ class EmailsService extends EmailsModel
      */
     public function getEmailObject($emailId)
     {
-        $fileService = \FileService::create($this->s());
-        $query = \SqlQueryBits::create()
+        $fileService = FileService::create($this->s());
+        $query = SqlQueryBits::create()
             ->limit()->set(1)
             ->offset()->set(0)
             ->where()->set(' AND email.emailId = ' . (int)$emailId);
         foreach ($this->getEmailsFromDB($query) as $email) {
             $email = \KrisKringle\Email::create()->fromArray($email);
             $attachments = array();
-            /** @var \File $attachment */
+            /** @var File $attachment */
             foreach ($this->getEmailAttachments($emailId) as $attachment) {
                 $cachePath = $fileService->cacheFile($attachment);
-                $attachments[] = \EmailAttachment::create()
+                $attachments[] = EmailAttachment::create()
                     ->path()->set($cachePath)
                     ->name()->set($attachment->originalName()->get());
             }
@@ -79,7 +79,7 @@ class EmailsService extends EmailsModel
      */
     public function createEmail($emailId)
     {
-        $organisation = \OrganisationService::create($this->s())->getUserOrg();
+        $organisation = OrganisationService::create($this->s())->getUserOrg();
         $email = \KrisKringle\Email::create();
         $email->emailId()->set($emailId);
         $email->subject()->set($email->defaultSubject($emailId));
@@ -93,10 +93,10 @@ class EmailsService extends EmailsModel
     }
 
     /**
-     * @param Email $email
+     * @param \KrisKringle\Email $email
      * @return int
      */
-    public function save($email)
+    public function save(\KrisKringle\Email $email)
     {
         return $this->saveToDB($email);
     }
@@ -108,7 +108,7 @@ class EmailsService extends EmailsModel
      */
     public function saveFromArray($data)
     {
-        return $this->save(Email::create()->fromArray($data));
+        return $this->save(\KrisKringle\Email::create()->fromArray($data));
     }
 
     /**
@@ -127,7 +127,7 @@ class EmailsService extends EmailsModel
         $this->addAttachmentToDB($emailId, $fileId);
     }
 
-    public function getAttachments(\ListArguments $listArguments, $emailId)
+    public function getAttachments(ListArguments $listArguments, $emailId)
     {
         $where = ' AND email.emailId = ' . (int)$emailId;
 
@@ -156,21 +156,11 @@ class EmailsService extends EmailsModel
         return $this->getAttachmentsFromDB($query, \Model::RETURN_TYPE_OBJECT);
     }
 
-    public function sendBackupFailedEmail()
-    {
-        if ($email = $this->getEmailObject(Email::TYPE_BACKUP_FAILED)) {
-            $email
-                ->id()->set(Email::TYPE_BACKUP_FAILED . '_' . date('YmdHi'))
-                ->app()->set('core');
-            \EmailService::create($this->s())->sendMail($email);
-        }
-    }
-
     /**
-     * @param \ListArguments $listArguments
+     * @param ListArguments $listArguments
      * @return array
      */
-    public function getLoggedEmails(\ListArguments $listArguments)
+    public function getLoggedEmails(ListArguments $listArguments)
     {
         $where = '';
 
@@ -195,7 +185,7 @@ class EmailsService extends EmailsModel
      * @param Selmasu $s
      * @return EmailsService
      */
-    public static function create(\Selmasu $s)
+    public static function create(Selmasu $s)
     {
         return new self($s);
     }
