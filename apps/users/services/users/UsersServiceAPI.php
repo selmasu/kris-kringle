@@ -7,23 +7,13 @@ class UsersServiceAPI extends ServiceAPI
 	const GET_USERS                 = 'getUsers';
 	const GET_USERS_FOR_SELECT      = 'getUsersForSelect';
     const GET_USERS_FOR_ADMIN       = 'getUsersForAdmin';
+    const GET_ADMIN_USERS           = 'getAdminUsers';
 	const DELETE_USERS              = 'deleteUsers';
     const UPDATE_USER               = 'updateUser';
 	const GET_PERMISSIONS           = 'getUserPermissions';
     const GET_USER_PROFILE          = 'getUserProfile';
     const GET_USER_PROFILE_BY_ID    = 'getUserProfileById';
-    const GET_ORGANISATION_FOR_EDIT = 'getOrganisationForEdit';
     const ARCHIVE                   = 'archive';
-    const FOLLOW                    = 'follow';
-    const UNFOLLOW                  = 'unfollow';
-    const INVITE_TO_FOLLOW          = 'inviteToFollow';
-    const REQUEST_TO_FOLLOW         = 'requestToFollow';
-    const CHECK_REQUESTS            = 'checkRequests';
-    const GET_FOLLOWING_LISTS       = 'getFollowingLists';
-    const ACCEPT_INVITE_TO_FOLLOW   = 'acceptInviteToFollow';
-    const DECLINE_INVITE_TO_FOLLOW  = 'declineInviteToFollow';
-    const ACCEPT_REQUEST_TO_FOLLOW  = 'acceptRequestToFollow';
-    const DECLINE_REQUEST_TO_FOLLOW = 'declineRequestToFollow';
     const DELETE_MY_ACCOUNT         = 'deleteMyAccount';
     const SIGN_UP                   = 'signUp';
     const SEND_ONE_TIME_CODE        = 'sendOneTimeCode';
@@ -91,36 +81,6 @@ class UsersServiceAPI extends ServiceAPI
             case self::ARCHIVE:
                 return $this->usersService->archive($this->intArgument( self::USER_ID ));
 
-            case self::FOLLOW:
-                return $this->usersService->follow($this->intArgument( self::USER_ID ));
-
-            case self::UNFOLLOW:
-                return $this->usersService->unfollow($this->intArgument( self::USER_ID ));
-
-            case self::INVITE_TO_FOLLOW:
-                return $this->usersService->inviteToFollow($this->arrayArgument( self::DATA ));
-
-            case self::CHECK_REQUESTS:
-                return $this->usersService->checkRequests($this->arrayArgument( self::DATA ));
-
-            case self::REQUEST_TO_FOLLOW:
-                return $this->usersService->requestToFollow($this->arrayArgument( self::DATA ));
-
-            case self::ACCEPT_INVITE_TO_FOLLOW:
-                return $this->usersService->acceptInviteToFollow($this->intArgument( self::USER_ID ));
-
-            case self::DECLINE_INVITE_TO_FOLLOW:
-                return $this->usersService->declineInviteToFollow($this->intArgument( self::USER_ID ));
-
-            case self::ACCEPT_REQUEST_TO_FOLLOW:
-                return $this->usersService->acceptRequestToFollow($this->intArgument( self::USER_ID ));
-
-            case self::DECLINE_REQUEST_TO_FOLLOW:
-                return $this->usersService->declineRequestToFollow($this->intArgument( self::USER_ID ));
-
-            case self::GET_FOLLOWING_LISTS:
-                return $this->usersService->getFollowingLists();
-
             case self::SEND_ONE_TIME_CODE:
                 return $this->usersService->sendOneTimeCode($this->stringArgument(self::EMAIL));
 
@@ -133,6 +93,9 @@ class UsersServiceAPI extends ServiceAPI
             {
                 case self::GET_USERS_FOR_ADMIN:
                     return $this->usersService->getUsersForAdmin( ListArguments::create()->fromArray( $arguments ) );
+
+                case self::GET_ADMIN_USERS:
+                    return $this->usersService->getAdminUsers( ListArguments::create()->fromArray( $arguments ) );
             }
         }
 	}

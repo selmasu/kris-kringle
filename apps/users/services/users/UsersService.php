@@ -233,6 +233,29 @@ class UsersService extends UsersModel {
     }
 
     /**
+     * @param ListArguments $listArguments
+     * @return array
+     */
+    public function getAdminUsers(ListArguments $listArguments):array {
+        $where = ' AND user.userId > 0';
+        $where .= ' AND user.admin = 1';
+
+        if ($listArguments->filters()->stringVal('name')) {
+            $search = $listArguments->filters()->stringVal('name');
+            $where .= " AND ( user.firstName LIKE '%" . $this->adb->escapeString($search) . "%'
+                            OR user.lastName LIKE '%" . $this->adb->escapeString($search) . "%')";
+        }
+
+        $query = SqlQueryBits::create();
+        $query->limit()->set($listArguments->take()->get());
+        $query->offset()->set($listArguments->skip()->get());
+        $query->orderBy()->set('name');
+        $query->where()->set($where);
+
+        return $this->getUsersForSelectFromDB($query);
+    }
+
+    /**
      * @param array $ids
      */
 	public function deleteUsers( array $ids ){
