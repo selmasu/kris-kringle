@@ -49,6 +49,7 @@ class KrisKringleServiceAPI extends ServiceAPI
 
             case 'updateKrisKringle':
             case 'addKrisKringleMember':
+            case 'addKrisKringleChild':
                 $token = $_POST['selmasuToken'] ?? null;
                 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || !is_string($token) || $token === ''
                     || !hash_equals((string)$this->s()->user()->selmasuToken()->get(), $token)) {
@@ -59,6 +60,13 @@ class KrisKringleServiceAPI extends ServiceAPI
                     header('Cache-Control: private, no-store');
                     $email = $_POST['email'] ?? null;
                     return $this->krisKringleService->addKrisKringleMember($id, is_string($email) ? $email : '');
+                }
+                if ($functionToCall === 'addKrisKringleChild') {
+                    header('Cache-Control: private, no-store');
+                    $name = $_POST['name'] ?? null;
+                    return $this->krisKringleService->addKrisKringleChild(
+                        $id, $this->intArgument('parentUserId'), is_string($name) ? $name : ''
+                    );
                 }
                 $name = $_POST['name'] ?? null;
                 if ($name !== null && !is_string($name)) {

@@ -13,21 +13,22 @@ struct StartView: View, UserServiceDelegate {
     
     var body: some View {
         ZStack {
-            if !isLoggedIn {
-                GeometryReader { geometry in
-                    Image("Background")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                        .clipped()
-                        .accessibilityHidden(true)
-                }
-                .ignoresSafeArea()
-            }
-            
             if isLoading {
-                ProgressView()
-                    .tint(.white)
+                ZStack {
+                    GeometryReader { geometry in
+                        Image("Background")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .clipped()
+                            .accessibilityHidden(true)
+                    }
+                    .ignoresSafeArea()
+
+                    ProgressView()
+                        .tint(.white)
+                        .accessibilityLabel("Loading Kris Kringle")
+                }
             } else if isLoggedIn {
                 MainView(isLoggedIn: $isLoggedIn)
             } else {

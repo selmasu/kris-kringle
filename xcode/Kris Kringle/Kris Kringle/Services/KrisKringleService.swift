@@ -25,10 +25,26 @@ struct KrisKringleSummary: Identifiable {
 }
 
 struct KrisKringleMember: Identifiable {
+    struct Child: Identifiable {
+        let id: Int
+        let name: String
+
+        init(json: JSON) throws {
+            guard let id = json["memberId"].int, id > 0, let name = json["name"].string else {
+                throw KrisKringleService.ServiceError("The server returned an invalid child member.")
+            }
+            self.id = id
+            self.name = name
+        }
+    }
+
     let id: Int
     let name: String
     let email: String?
     let isCreator: Bool
+    let children: [Child]
+
+    var displayName: String { name.isEmpty ? (email ?? "Member") : name }
 
     init(json: JSON) throws {
         guard let id = json["userId"].int, id > 0,
@@ -39,6 +55,7 @@ struct KrisKringleMember: Identifiable {
         self.name = name
         self.email = json["email"].string
         self.isCreator = isCreator
+        self.children = try (json["children"].array ?? []).map { try Child(json: $0) }
     }
 }
 
@@ -79,6 +96,12 @@ enum KrisKringleService {
         return try members(from: result)
     }
 
+    static func addChild(id: Int, parentUserId: Int, name: String) async throws -> [KrisKringleMember] {
+        let fields = ["id": String(id), "parentUserId": String(parentUserId), "name": name]
+        let result = try await request("addKrisKringleChild", parameters: fields)
+        return try members(from: result)
+    }
+
     private static func members(from result: JSON) throws -> [KrisKringleMember] {
         guard let members = result["members"].array else {
             throw ServiceError("The server didn’t return a list of group members.")
@@ -89,7 +112,6 @@ enum KrisKringleService {
     static func picture(id: Int) async throws -> Data {
         try await authenticatedRequest("getKrisKringlePicture", parameters: ["id": String(id)])
             .validate(statusCode: 200..<300)
-            .validate(contentType: ["image/jpeg"])
             .serializingData().value
     }
 

@@ -51,7 +51,7 @@ final class PictureUpload
                 return null;
             }
             $data = @file_get_contents($path, false, null, 0, self::MAX_PICTURE_BYTES + 1);
-            return $data !== false && strlen($data) <= self::MAX_PICTURE_BYTES && strlen($data) === $file->size()->get()
+            return $data !== false && strlen($data) <= self::MAX_PICTURE_BYTES && self::isSupportedJPEG($data)
                 ? $data
                 : null;
         } catch (Exception $error) {
@@ -96,11 +96,16 @@ final class PictureUpload
         if ($data === false || strlen($data) > self::MAX_PICTURE_BYTES) {
             throw new InvalidArgumentException('Choose a photo smaller than 512 KB.');
         }
-        $size = @getimagesizefromstring($data);
-        if (!$size || $size[2] !== IMAGETYPE_JPEG || min($size[0], $size[1]) < 1
-            || max($size[0], $size[1]) > 1024 || substr($data, -2) !== "\xFF\xD9") {
+        if (!self::isSupportedJPEG($data)) {
             throw new InvalidArgumentException('Choose a valid JPEG photo up to 1024 pixels wide or tall.');
         }
         return $data;
+    }
+
+    private static function isSupportedJPEG(string $data): bool
+    {
+        $size = @getimagesizefromstring($data);
+        return $size && $size[2] === IMAGETYPE_JPEG && min($size[0], $size[1]) >= 1
+            && max($size[0], $size[1]) <= 1024 && substr($data, -2) === "\xFF\xD9";
     }
 }

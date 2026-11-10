@@ -36,36 +36,50 @@ struct PhotoPicker: View {
                 .disabled(isSaving)
             }
         }
-        .onChange(of: selection) {
-            isPreparing = selection != nil
-            errorMessage = nil
-        }
-        .onChange(of: picture) {
-            if picture == nil { selection = nil }
-        }
-        .task(id: selection) {
-            guard let item = selection else { return }
-            isPreparing = true
-            defer { if !Task.isCancelled && item == selection { isPreparing = false } }
-            do {
-                guard let data = try await item.loadTransferable(type: Data.self) else {
-                    guard !Task.isCancelled, item == selection else { return }
-                    errorMessage = "Couldn’t open that photo."
-                    return
-                }
-                let jpeg = await Task.detached(priority: .userInitiated) { Self.makeJPEG(from: data) }.value
-                try Task.checkCancellation()
-                guard item == selection else { return }
-                guard let jpeg else {
-                    errorMessage = "Couldn’t prepare that photo. Try a different one."
-                    return
-                }
-                picture = jpeg
-            } catch {
-                guard !Task.isCancelled, item == selection else { return }
-                errorMessage = error.localizedDescription
+        .modifier(PhotoPreparation(
+            selection: $selection, picture: $picture, isPreparing: $isPreparing, errorMessage: $errorMessage
+        ))
+    }
+}
+
+struct PhotoPreparation: ViewModifier {
+    @Binding var selection: PhotosPickerItem?
+    @Binding var picture: Data?
+    @Binding var isPreparing: Bool
+    @Binding var errorMessage: String?
+
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: selection) {
+                isPreparing = selection != nil
+                errorMessage = nil
             }
-        }
+            .onChange(of: picture) {
+                if picture == nil { selection = nil }
+            }
+            .task(id: selection) {
+                guard let item = selection else { return }
+                isPreparing = true
+                defer { if !Task.isCancelled && item == selection { isPreparing = false } }
+                do {
+                    guard let data = try await item.loadTransferable(type: Data.self) else {
+                        guard !Task.isCancelled, item == selection else { return }
+                        errorMessage = "Couldn’t open that photo."
+                        return
+                    }
+                    let jpeg = await Task.detached(priority: .userInitiated) { Self.makeJPEG(from: data) }.value
+                    try Task.checkCancellation()
+                    guard item == selection else { return }
+                    guard let jpeg else {
+                        errorMessage = "Couldn’t prepare that photo. Try a different one."
+                        return
+                    }
+                    picture = jpeg
+                } catch {
+                    guard !Task.isCancelled, item == selection else { return }
+                    errorMessage = error.localizedDescription
+                }
+            }
     }
 
     private nonisolated static func makeJPEG(from data: Data) -> Data? {

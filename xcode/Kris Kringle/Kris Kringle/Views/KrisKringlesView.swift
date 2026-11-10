@@ -18,6 +18,7 @@ struct KrisKringlesView: View {
 
     @State private var state: ListState = .loading
     @State private var isShowingCreate = false
+    @State private var photos = KrisKringlePhotoCache()
 
     var body: some View {
         Group {
@@ -36,10 +37,10 @@ struct KrisKringlesView: View {
             case .loaded(let groups):
                 List(groups) { group in
                     NavigationLink {
-                        KrisKringleDetailView(group: group, onUpdate: upsertGroup)
+                        KrisKringleDetailView(group: group, photos: photos, onUpdate: upsertGroup)
                     } label: {
                         HStack(spacing: 12) {
-                            KrisKringlePhoto(group: group)
+                            KrisKringlePhoto(group: group, cache: photos)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(group.name).font(.headline)
                                 Text("\(group.year, format: .number.grouping(.never)) · \(group.createdBy == Globals.userId ? "Created by you" : "Invited")")
@@ -78,7 +79,10 @@ struct KrisKringlesView: View {
             if case .loading = state { await loadGroups() }
         }
         .sheet(isPresented: $isShowingCreate) {
-            CreateKrisKringleView(onSave: upsertGroup)
+            CreateKrisKringleView { group, picture in
+                photos.store(picture, for: group)
+                upsertGroup(group)
+            }
         }
     }
 
@@ -105,28 +109,89 @@ struct KrisKringlesView: View {
     }
 }
 
+final class KrisKringlePhotoCache {
+    private let images = NSCache<NSString, UIImage>()
+
+    init() {
+        images.countLimit = 8
+    }
+
+    func image(for group: KrisKringleSummary) -> UIImage? {
+        images.object(forKey: key(for: group))
+    }
+
+    @discardableResult
+    func store(_ data: Data?, for group: KrisKringleSummary) -> UIImage? {
+        guard !group.pictureVersion.isEmpty, let data, let image = UIImage(data: data) else { return nil }
+        images.setObject(image, forKey: key(for: group))
+        return image
+    }
+
+    private func key(for group: KrisKringleSummary) -> NSString {
+        "\(group.id):\(group.pictureVersion)" as NSString
+    }
+}
+
 struct KrisKringlePhoto: View {
     let group: KrisKringleSummary
-    var size: CGFloat = 44
+    let cache: KrisKringlePhotoCache
+    var width: CGFloat? = 44
+    var height: CGFloat = 44
+    var draft: UIImage?
+    var onTap: (() -> Void)?
+    var showLoadError = false
     @State private var image: UIImage?
+    @State private var loadFailed = false
+    @State private var retryCount = 0
 
     var body: some View {
-        Group {
-            if let image {
-                Image(uiImage: image).resizable().scaledToFill()
+        VStack(spacing: 6) {
+            if let onTap {
+                Button(action: onTap) { photo }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(group.pictureVersion.isEmpty && draft == nil ? "Add Group Photo" : "Change Group Photo")
             } else {
-                Image(systemName: "gift").foregroundStyle(Theme.green)
+                photo
+            }
+
+            if showLoadError && loadFailed && draft == nil {
+                Button("Couldn’t Load Photo. Retry") { retryCount += 1 }
+                    .buttonStyle(.borderless)
+                    .font(.footnote)
             }
         }
-        .frame(width: size, height: size)
-        .clipShape(RoundedRectangle(cornerRadius: 9))
-        .accessibilityHidden(true)
-        .task(id: group.pictureVersion) {
-            image = nil
-            guard !group.pictureVersion.isEmpty,
-                  let data = try? await KrisKringleService.picture(id: group.id),
-                  !Task.isCancelled else { return }
-            image = UIImage(data: data)
+        .task(id: [String(group.id), group.pictureVersion, String(retryCount)]) {
+            await loadPhoto()
+        }
+    }
+
+    private var photo: some View {
+        Theme.green.opacity(0.1)
+            .frame(width: width, height: height)
+            .overlay {
+                if let displayedImage = draft ?? image {
+                    Image(uiImage: displayedImage).resizable().scaledToFill()
+                } else {
+                    Image(systemName: "gift").foregroundStyle(Theme.green)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 9))
+            .contentShape(Rectangle())
+            .accessibilityHidden(true)
+    }
+
+    private func loadPhoto() async {
+        loadFailed = false
+        image = cache.image(for: group)
+        guard image == nil, !group.pictureVersion.isEmpty else { return }
+
+        do {
+            let data = try await KrisKringleService.picture(id: group.id)
+            try Task.checkCancellation()
+            image = cache.store(data, for: group)
+            loadFailed = image == nil
+        } catch {
+            if !Task.isCancelled { loadFailed = true }
         }
     }
 }
@@ -138,7 +203,7 @@ private struct CreateKrisKringleView: View {
     @State private var isPreparingPhoto = false
     @State private var isSaving = false
     @State private var errorMessage: String?
-    let onSave: (KrisKringleSummary) -> Void
+    let onSave: (KrisKringleSummary, Data?) -> Void
 
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var canSave: Bool {
@@ -187,7 +252,7 @@ private struct CreateKrisKringleView: View {
             defer { isSaving = false }
             do {
                 let result = try await KrisKringleService.create(name: groupName, picture: selectedPicture)
-                onSave(result)
+                onSave(result, selectedPicture)
                 dismiss()
             } catch {
                 errorMessage = error.localizedDescription

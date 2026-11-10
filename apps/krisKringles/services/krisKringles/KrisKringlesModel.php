@@ -66,23 +66,39 @@ class KrisKringleModel extends Model
     protected function getKrisKringleMembersFromDB(int $id, int $owner, bool $showEmails): array
     {
         $memberTable = $this->tables()->krisKringleMember();
-        $userIds = $this->adb->fetchAllValues('userId', "SELECT userId FROM $memberTable WHERE krisKringleId = $id");
-        $userIds[] = $owner;
-        $ids = implode(',', array_map('intval', $userIds));
+        $userIds = [$owner];
+        $childrenByParent = [];
+        $rows = $this->adb->fetchAll("SELECT krisKringleMemberId, userId, parentUserId, name
+            FROM $memberTable WHERE krisKringleId = $id ORDER BY krisKringleMemberId");
+        foreach ($rows as $row) {
+            $userId = (int)$row['userId'];
+            $parentId = (int)$row['parentUserId'];
+            if ($userId > 0) {
+                $userIds[] = $userId;
+            } elseif ($parentId > 0) {
+                $childrenByParent[$parentId][] = [
+                    'memberId' => (int)$row['krisKringleMemberId'],
+                    'name' => $row['name'],
+                ];
+            }
+        }
+        $ids = implode(',', $userIds);
         $userTable = $this->coreTables()->user();
         $emailColumn = $showEmails ? ', email' : '';
         $users = $this->db->fetchAll("SELECT userId, displayName, firstName, lastName$emailColumn
             FROM $userTable WHERE userId IN ($ids) AND deleted = 0
             ORDER BY (userId = $owner) DESC, displayName, firstName, userId");
-        return array_map(static function (array $user) use ($owner, $showEmails) {
+        return array_map(static function (array $user) use ($owner, $showEmails, $childrenByParent) {
+            $userId = (int)$user['userId'];
             $name = trim($user['displayName'] ?? '');
             if ($name === '') {
                 $name = trim(($user['firstName'] ?? '') . ' ' . ($user['lastName'] ?? ''));
             }
             $member = [
-                'userId' => (int)$user['userId'],
+                'userId' => $userId,
                 'name' => $name,
-                'isCreator' => (int)$user['userId'] === $owner,
+                'isCreator' => $userId === $owner,
+                'children' => $childrenByParent[$userId] ?? [],
             ];
             if ($showEmails) {
                 $member['email'] = $user['email'];
@@ -106,6 +122,41 @@ class KrisKringleModel extends Model
         if (!$exists && !$this->adb->executePrepared(
             "INSERT INTO $memberTable (krisKringleId, userId) VALUES (?, ?)",
             [$id, $userId]
+        )) {
+            $this->adb->query('ROLLBACK');
+            return false;
+        }
+        $this->adb->query('COMMIT');
+        return true;
+    }
+
+    protected function addKrisKringleChildInDB(int $id, int $owner, int $parentId, string $name): bool
+    {
+        $memberTable = $this->tables()->krisKringleMember();
+        $this->adb->query("SELECT parentUserId, name FROM $memberTable LIMIT 0");
+        $this->adb->query('START TRANSACTION');
+        if (!$this->getOwnedKrisKringleFromDB($id, $owner, true)) {
+            $this->adb->query('ROLLBACK');
+            return false;
+        }
+
+        $parentIsMember = $parentId === $owner || (bool)$this->adb->query("SELECT userId FROM $memberTable
+            WHERE krisKringleId = $id AND userId = $parentId LIMIT 1")->fetchValue('userId');
+        $userTable = $this->coreTables()->user();
+        if (!$parentIsMember || !$this->db->query("SELECT userId FROM $userTable
+            WHERE userId = $parentId AND deleted = 0")->fetchValue('userId')) {
+            $this->adb->query('ROLLBACK');
+            return false;
+        }
+
+        // Keep an exact name retry under the same parent idempotent.
+        $nameHex = strtoupper(bin2hex($name));
+        $existing = $this->adb->query("SELECT krisKringleMemberId FROM $memberTable
+            WHERE krisKringleId = $id AND userId = 0 AND parentUserId = $parentId
+            AND HEX(name) = '$nameHex' LIMIT 1")->fetchValue('krisKringleMemberId');
+        if (!$existing && !$this->adb->executePrepared(
+            "INSERT INTO $memberTable (krisKringleId, userId, parentUserId, name) VALUES (?, 0, ?, ?)",
+            [$id, $parentId, $name]
         )) {
             $this->adb->query('ROLLBACK');
             return false;

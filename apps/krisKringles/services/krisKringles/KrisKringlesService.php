@@ -86,6 +86,23 @@ class KrisKringleService extends KrisKringleModel {
         return ['members' => $this->getKrisKringleMembersFromDB($id, $owner, true)];
     }
 
+    public function addKrisKringleChild(int $id, int $parentId, string $name): array
+    {
+        $owner = (int)$this->s()->userId();
+        if ($owner <= 0 || $id <= 0 || !$this->getOwnedKrisKringleFromDB($id, $owner)) {
+            return ['error' => 'Only the creator can add children.'];
+        }
+
+        $name = trim($name);
+        if (preg_match('/\A[^\p{Cc}]{1,100}\z/u', $name) !== 1) {
+            return ['error' => 'Enter a child’s name between 1 and 100 characters.'];
+        }
+        if ($parentId <= 0 || !$this->addKrisKringleChildInDB($id, $owner, $parentId, $name)) {
+            return ['error' => 'Couldn’t add this child. Choose a parent who is a member of this Kris Kringle and try again.'];
+        }
+        return ['members' => $this->getKrisKringleMembersFromDB($id, $owner, true)];
+    }
+
     public function updateKrisKringlePicture(int $id, ?array $upload): array
     {
         return $this->updateKrisKringle($id, null, $upload);
