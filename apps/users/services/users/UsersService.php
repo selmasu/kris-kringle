@@ -63,6 +63,53 @@ class UsersService extends UsersModel {
         return ['userId' => 0];
     }
 
+    public function getMyProfile(): array
+    {
+        $userId = $this->s()->userId();
+        if ($userId <= 0) {
+            return ['error' => 'Please sign in again.'];
+        }
+
+        $user = $this->s()->user();
+        $picture = PictureUpload::read($this->s(), $this->getProfilePhotoSerialFromDB($userId));
+        $name = trim($user->displayName()->get() ?? '');
+        return [
+            'name' => $name === '' ? trim($user->name()) : $name,
+            'picture' => $picture === null ? null : base64_encode($picture),
+            'appleLinked' => $this->appleSubjectHashForUser($userId) !== null,
+        ];
+    }
+
+    public function updateMyProfile(?string $name, ?array $upload): array
+    {
+        $userId = $this->s()->userId();
+        if ($userId <= 0) {
+            return ['error' => 'Please sign in again.'];
+        }
+        if ($name !== null) {
+            $name = trim($name);
+            if (!preg_match('/\A[^\p{Cc}]{1,100}\z/u', $name)) {
+                return ['error' => 'Enter a name between 1 and 100 characters.'];
+            }
+        }
+        try {
+            $serial = PictureUpload::save($this->s(), $upload);
+        } catch (InvalidArgumentException | RuntimeException $error) {
+            return ['error' => $error->getMessage()];
+        }
+        if ($name === null && $serial === null) {
+            return ['error' => 'Change your name or choose a photo to save.'];
+        }
+
+        $previousSerial = $this->saveProfileToDB($userId, $name, $serial);
+        if ($previousSerial === null) {
+            PictureUpload::delete($this->s(), $serial ?? 0);
+            return ['error' => 'Couldn’t save your profile. Check your changes and try again.'];
+        }
+        PictureUpload::delete($this->s(), $previousSerial);
+        return ['saved' => true];
+    }
+
     public function updateUser(array $data):array {
         $this->s()->user()->firstName()->set($data['firstName']);
         $this->s()->user()->lastName()->set($data['lastName']);

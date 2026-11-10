@@ -1,7 +1,5 @@
 <?php
 class KrisKringleService extends KrisKringleModel {
-    private const MAX_PICTURE_BYTES = 512 * 1024;
-
     /**
      * @param ListArguments $listArguments
      * @param int $returnType
@@ -33,14 +31,16 @@ class KrisKringleService extends KrisKringleModel {
         }
 
         try {
-            $picture = $this->readPictureUpload($upload);
-        } catch (InvalidArgumentException $error) {
+            $serial = PictureUpload::save($this->s(), $upload) ?? 0;
+        } catch (InvalidArgumentException | RuntimeException $error) {
             return ['error' => $error->getMessage()];
         }
 
         $year = (int)date('Y');
-        $id = $this->createKrisKringleInDB($name, $year, $userId, $picture);
+        $version = $serial > 0 ? bin2hex(random_bytes(16)) : '';
+        $id = $this->createKrisKringleInDB($name, $year, $userId, $serial, $version);
         if ($id <= 0) {
+            PictureUpload::delete($this->s(), $serial);
             return ['error' => 'Couldn’t create your Kris Kringle. Please try again.'];
         }
 
@@ -49,7 +49,7 @@ class KrisKringleService extends KrisKringleModel {
             'name' => $name,
             'year' => $year,
             'createdBy' => $userId,
-            'pictureVersion' => $picture === null ? '' : hash('sha256', $picture)
+            'pictureVersion' => $version
         ]];
     }
 
@@ -61,17 +61,24 @@ class KrisKringleService extends KrisKringleModel {
         }
 
         try {
-            $picture = $this->readPictureUpload($upload);
-        } catch (InvalidArgumentException $error) {
+            $serial = PictureUpload::save($this->s(), $upload);
+        } catch (InvalidArgumentException | RuntimeException $error) {
             return ['error' => $error->getMessage()];
         }
-        if ($picture === null) {
+        if ($serial === null) {
             return ['error' => 'Choose a photo to upload.'];
         }
 
-        $this->updateKrisKringlePictureInDB($id, $userId, $picture);
-        $group = $this->getOwnedKrisKringleFromDB($id, $userId);
-        return $group ? ['data' => $group] : ['error' => 'This Kris Kringle is no longer available.'];
+        $version = bin2hex(random_bytes(16));
+        $group = $this->updateKrisKringlePictureInDB($id, $userId, $serial, $version);
+        if ($group === null) {
+            PictureUpload::delete($this->s(), $serial);
+            return ['error' => 'Couldn’t update the group photo. Please try again.'];
+        }
+        PictureUpload::delete($this->s(), (int)$group['pictureFileSerial']);
+        unset($group['pictureFileSerial']);
+        $group['pictureVersion'] = $version;
+        return ['data' => $group];
     }
 
     public function getKrisKringlePicture(int $id): ?string
@@ -79,29 +86,7 @@ class KrisKringleService extends KrisKringleModel {
         if ($this->s()->userId() <= 0 || $id <= 0) {
             return null;
         }
-        return $this->getVisibleKrisKringlePictureFromDB($id);
-    }
-
-    private function readPictureUpload(?array $upload): ?string
-    {
-        if ($upload === null || ($upload['error'] ?? null) === UPLOAD_ERR_NO_FILE) {
-            return null;
-        }
-        $path = $upload['tmp_name'] ?? null;
-        if (($upload['error'] ?? null) !== UPLOAD_ERR_OK || !is_string($path) || !is_uploaded_file($path)) {
-            throw new InvalidArgumentException('Couldn’t upload the photo. Please try again.');
-        }
-
-        $data = @file_get_contents($path, false, null, 0, self::MAX_PICTURE_BYTES + 1);
-        if ($data === false || strlen($data) > self::MAX_PICTURE_BYTES) {
-            throw new InvalidArgumentException('Choose a photo smaller than 512 KB.');
-        }
-        $size = @getimagesizefromstring($data);
-        if (!$size || $size[2] !== IMAGETYPE_JPEG || min($size[0], $size[1]) < 1
-            || max($size[0], $size[1]) > 1024 || substr($data, -2) !== "\xFF\xD9") {
-            throw new InvalidArgumentException('Choose a valid JPEG photo up to 1024 pixels wide or tall.');
-        }
-        return $data;
+        return PictureUpload::read($this->s(), $this->getVisibleKrisKringlePictureFromDB($id));
     }
 
     /**

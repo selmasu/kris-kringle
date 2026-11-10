@@ -1,6 +1,52 @@
 <?php
 class UsersModel extends Model {
 
+    protected function getProfilePhotoSerialFromDB(int $userId): int
+    {
+        $table = $this->tables()->krisKringleProfilePhoto();
+        return (int)$this->db->query("SELECT pictureFileSerial FROM $table WHERE userId = $userId")->fetchValue('pictureFileSerial');
+    }
+
+    protected function saveProfileToDB(int $userId, ?string $name, ?int $serial): ?int
+    {
+        $photoTable = $this->tables()->krisKringleProfilePhoto();
+        if ($serial !== null) {
+            // Let the framework initialise the schema before starting the transaction.
+            $this->db->query("SELECT pictureFileSerial FROM $photoTable LIMIT 0");
+        }
+
+        $userTable = $this->coreTables()->user();
+        $this->db->query('START TRANSACTION');
+        $active = $this->db->query("SELECT userId FROM $userTable WHERE userId = $userId AND deleted = 0 FOR UPDATE")
+            ->fetchValue('userId');
+        if (!$active) {
+            $this->db->query('ROLLBACK');
+            return null;
+        }
+
+        $previousSerial = $serial === null ? 0 : $this->getProfilePhotoSerialFromDB($userId);
+        if (($name !== null && !$this->db->executePrepared(
+                "UPDATE $userTable SET displayName = ?, updatedBy = ?, updatedDate = NOW() WHERE userId = ?",
+                [$name, $userId, $userId]
+            ))
+            || ($serial !== null && !$this->db->executePrepared(
+                "INSERT INTO $photoTable (userId, pictureFileSerial) VALUES (?, ?)
+                    ON DUPLICATE KEY UPDATE pictureFileSerial = ?",
+                [$userId, $serial, $serial]
+            ))) {
+            $this->db->query('ROLLBACK');
+            return null;
+        }
+        $this->db->query('COMMIT');
+        return $previousSerial;
+    }
+
+    protected function appleSubjectHashForUser(int $userId): ?string
+    {
+        $table = $this->tables()->krisKringleAppleIdentity();
+        return $this->db->query("SELECT subjectHash FROM $table WHERE userId = $userId")->fetchValue('subjectHash');
+    }
+
     /**
 	 * @param User $user
 	 * @return int
@@ -284,6 +330,18 @@ class UsersModel extends Model {
 		if(Settings::$dbMode == Settings::DB_MODE_MULTI){
             $this->db->query( $sql );
         }
+        $userTable = $this->coreTables()->user();
+        $userId = (int)$id;
+        $photoTable = $this->tables()->krisKringleProfilePhoto();
+        $serial = (int)$this->db->query("SELECT profile.pictureFileSerial FROM $photoTable AS profile
+            JOIN $userTable AS account ON account.userId = profile.userId
+            WHERE profile.userId = $userId AND account.deleted = 1")->fetchValue('pictureFileSerial');
+        foreach ([$photoTable, $this->tables()->krisKringleAppleIdentity()] as $table) {
+            $this->db->query("DELETE profile FROM $table AS profile
+                JOIN $userTable AS account ON account.userId = profile.userId
+                WHERE profile.userId = $userId AND account.deleted = 1");
+        }
+        PictureUpload::delete($this->s(), $serial);
 	}
 
     protected function saveFollowToDB(int $followId, bool $follow){

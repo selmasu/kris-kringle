@@ -4,6 +4,7 @@ $appClasses = [
 	'AppServiceAPI' => '/usr/share/selmasu-kris-kringle/core/AppServiceAPI.php',
 	'MenuBuilder' => '/usr/share/selmasu-kris-kringle/core/MenuBuilder.php',
 	'Tables' => '/usr/share/selmasu-kris-kringle/core/Tables.php',
+    'PictureUpload' => '/usr/share/selmasu-kris-kringle/core/PictureUpload.php',
 
 	//Core Pages
 

@@ -66,6 +66,22 @@ class UsersServiceAPI extends ServiceAPI
 			case self::GET_USER:
 				return $this->usersService->getLoggedInUser();
 
+            case 'getMyProfile':
+                header('Cache-Control: private, no-store');
+                return $this->usersService->getMyProfile();
+
+            case 'updateMyProfile':
+                $token = $_POST['selmasuToken'] ?? null;
+                if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || !is_string($token) || $token === ''
+                    || !hash_equals((string)$this->s()->user()->selmasuToken()->get(), $token)) {
+                    return ['error' => 'Please sign in again.'];
+                }
+                $name = $_POST['name'] ?? null;
+                if ($name !== null && !is_string($name)) {
+                    return ['error' => 'Enter a valid name.'];
+                }
+                return $this->usersService->updateMyProfile($name, $_FILES['picture'] ?? null);
+
             case self::UPDATE_USER:
                 return $this->usersService->updateUser($this->arrayArgument(self::DATA));
 				

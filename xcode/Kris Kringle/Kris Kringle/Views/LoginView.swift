@@ -94,7 +94,7 @@ struct LoginView: View, UserServiceDelegate {
                         oneTimeCode = String(oneTimeCode.filter { $0 >= "0" && $0 <= "9" }.prefix(6))
                     }
             } else {
-                Text("We'll email you a one-time code. No password needed.")
+                Text("We'll email you a one-time code.\nNo password needed.")
                     .font(.subheadline)
                     .multilineTextAlignment(.center)
 

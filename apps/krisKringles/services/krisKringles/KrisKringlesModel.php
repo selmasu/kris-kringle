@@ -35,33 +35,47 @@ class KrisKringleModel extends Model
                 ))";
     }
 
-    protected function createKrisKringleInDB(string $name, int $year, int $createdBy, ?string $picture = null):int
+    protected function createKrisKringleInDB(string $name, int $year, int $createdBy, int $serial, string $version):int
     {
-        $version = $picture === null ? '' : hash('sha256', $picture);
-        $image = $picture === null ? 'NULL' : "X'" . bin2hex($picture) . "'";
-        return (int)$this->adb->insertId("INSERT INTO " . $this->tables()->krisKringle() . "
-            (name, `year`, createdBy, createdDate, deleted, pictureVersion, pictureData)
-            VALUES ('" . $this->adb->escapeString($name) . "', " . $year . ", " . $createdBy . ", NOW(), 0, '" . $version . "', " . $image . ")");
+        $table = $this->tables()->krisKringle();
+        // Let the framework initialise the schema before using a prepared insert.
+        $this->adb->query("SELECT pictureVersion, pictureFileSerial FROM $table LIMIT 0");
+        $saved = $this->adb->executePrepared(
+            "INSERT INTO $table (name, `year`, createdBy, createdDate, deleted, pictureVersion, pictureFileSerial)
+                VALUES (?, ?, ?, NOW(), 0, ?, ?)",
+            [$name, $year, $createdBy, $version, $serial]
+        );
+        return $saved ? (int)$this->adb->insertId() : 0;
     }
 
-    protected function getOwnedKrisKringleFromDB(int $id, int $owner): ?array
+    protected function getOwnedKrisKringleFromDB(int $id, int $owner, bool $lock = false): ?array
     {
-        return $this->adb->fetchAssoc("SELECT krisKringleId, name, `year`, createdBy, pictureVersion
-            FROM " . $this->tables()->krisKringle() . "
-            WHERE krisKringleId = " . $id . " AND createdBy = " . $owner . " AND deleted = 0") ?: null;
+        $table = $this->tables()->krisKringle();
+        $lockClause = $lock ? ' FOR UPDATE' : '';
+        return $this->adb->query("SELECT krisKringleId, name, `year`, createdBy, pictureVersion, pictureFileSerial
+            FROM $table WHERE krisKringleId = $id AND createdBy = $owner AND deleted = 0$lockClause")->fetchAssoc();
     }
 
-    protected function updateKrisKringlePictureInDB(int $id, int $owner, string $picture):void
+    protected function updateKrisKringlePictureInDB(int $id, int $owner, int $serial, string $version): ?array
     {
-        $this->adb->query("UPDATE " . $this->tables()->krisKringle() . "
-            SET pictureData = X'" . bin2hex($picture) . "', pictureVersion = '" . hash('sha256', $picture) . "',
-                updatedBy = " . $owner . ", updatedDate = NOW()
-            WHERE krisKringleId = " . $id . " AND createdBy = " . $owner . " AND deleted = 0");
+        $table = $this->tables()->krisKringle();
+        $this->adb->query('START TRANSACTION');
+        $group = $this->getOwnedKrisKringleFromDB($id, $owner, true);
+        if (!$group || !$this->adb->executePrepared(
+            "UPDATE $table SET pictureFileSerial = ?, pictureVersion = ?, updatedBy = ?, updatedDate = NOW()
+                WHERE krisKringleId = ?",
+            [$serial, $version, $owner, $id]
+        )) {
+            $this->adb->query('ROLLBACK');
+            return null;
+        }
+        $this->adb->query('COMMIT');
+        return $group;
     }
 
-    protected function getVisibleKrisKringlePictureFromDB(int $id): ?string
+    protected function getVisibleKrisKringlePictureFromDB(int $id): int
     {
-        return $this->adb->fetchValue('pictureData', 'SELECT krisKringle.pictureData '
-            . $this->visibleGroupsFromWhere() . ' AND krisKringle.krisKringleId = ' . $id) ?: null;
+        return (int)$this->adb->query('SELECT krisKringle.pictureFileSerial '
+            . $this->visibleGroupsFromWhere() . ' AND krisKringle.krisKringleId = ' . $id)->fetchValue('pictureFileSerial');
     }
 }
