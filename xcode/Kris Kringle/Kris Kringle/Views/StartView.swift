@@ -35,6 +35,7 @@ struct StartView: View, UserServiceDelegate {
                 LoginView(isLoggedIn: $isLoggedIn)
             }
         }
+        .preferredColorScheme(isLoggedIn ? .dark : .light)
         .onAppear {
             login()
         }

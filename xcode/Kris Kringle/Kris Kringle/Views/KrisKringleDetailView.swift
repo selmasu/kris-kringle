@@ -72,6 +72,7 @@ struct KrisKringleDetailView: View {
         .modifier(PhotoPreparation(
             selection: $photoSelection, picture: $picture, isPreparing: $isPreparingPhoto, errorMessage: $photoError
         ))
+        .christmasBackground()
         .navigationTitle(group.name)
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -192,6 +193,8 @@ struct KrisKringleDetailView: View {
             }
         } footer: {
             Text("They’ll see this Kris Kringle when they sign in with this email address.")
+                .foregroundStyle(.white)
+                .shadow(color: .black.opacity(0.85), radius: 2)
         }
         .disabled(isBusy)
     }
@@ -317,6 +320,7 @@ private struct AddKrisKringleChildView: View {
                     Text(errorMessage).foregroundStyle(.red)
                 }
             }
+            .christmasBackground()
             .navigationTitle("Add Child")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

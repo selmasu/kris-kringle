@@ -15,7 +15,6 @@ struct Kris_KringleApp: App {
     var body: some Scene {
         WindowGroup {
             StartView()
-                .preferredColorScheme(.light)
                 .onOpenURL { url in
                     GIDSignIn.sharedInstance.handle(url)
                 }

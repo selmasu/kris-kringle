@@ -64,6 +64,7 @@ struct ProfileView: View, UserServiceDelegate {
                             } onCompletion: { result in
                                 finishAppleLink(result)
                             }
+                            .signInWithAppleButtonStyle(.white)
                             .frame(height: 44)
                             .accessibilityLabel("Link Apple Account")
                             if isLinking { ProgressView("Linking Apple account…") }
@@ -73,6 +74,8 @@ struct ProfileView: View, UserServiceDelegate {
                     } footer: {
                         if !profile.appleLinked {
                             Text("Link your Apple account to use it to sign in to this Kris Kringle account.")
+                                .foregroundStyle(.white)
+                                .shadow(color: .black.opacity(0.85), radius: 2)
                         }
                     }
                     .disabled(isBusy)
@@ -93,6 +96,7 @@ struct ProfileView: View, UserServiceDelegate {
                     .disabled(isBusy)
                 }
             }
+            .christmasBackground()
             .navigationTitle("Me")
         }
         .onChange(of: profile?.name, initial: true) {

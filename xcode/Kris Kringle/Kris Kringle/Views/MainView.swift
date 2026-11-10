@@ -53,7 +53,7 @@ struct MainView: View {
                     Text("Me")
                 }
         }
-        .tint(Theme.green)
+        .tint(Theme.christmasAccent)
         .task(id: profileLoadAttempt) {
             profileLoadError = nil
             do {

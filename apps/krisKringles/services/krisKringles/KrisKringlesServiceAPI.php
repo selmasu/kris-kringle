@@ -64,8 +64,9 @@ class KrisKringleServiceAPI extends ServiceAPI
                 if ($functionToCall === 'addKrisKringleChild') {
                     header('Cache-Control: private, no-store');
                     $name = $_POST['name'] ?? null;
+                    $parentId = filter_var($_POST['parentUserId'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
                     return $this->krisKringleService->addKrisKringleChild(
-                        $id, $this->intArgument('parentUserId'), is_string($name) ? $name : ''
+                        $id, $parentId ?: 0, is_string($name) ? $name : ''
                     );
                 }
                 $name = $_POST['name'] ?? null;

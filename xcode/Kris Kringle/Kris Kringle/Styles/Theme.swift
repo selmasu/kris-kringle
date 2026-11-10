@@ -15,5 +15,7 @@ struct Theme {
     static let lightGrey: Color = Color(red: 240/255, green: 240/255, blue: 240/255)
     static let green: Color = Color(red: 2/255, green: 74/255, blue: 41/255)
     
+    static let christmasAccent = Color(red: 1, green: 0.84, blue: 0.57)
+
     static let font = "SF Pro"
 }

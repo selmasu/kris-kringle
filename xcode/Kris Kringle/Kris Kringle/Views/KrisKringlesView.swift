@@ -33,6 +33,7 @@ struct KrisKringlesView: View {
                 } actions: {
                     Button("Create Kris Kringle") { isShowingCreate = true }
                         .buttonStyle(.borderedProminent)
+                        .tint(Theme.green)
                 }
             case .loaded(let groups):
                 List(groups) { group in
@@ -62,9 +63,11 @@ struct KrisKringlesView: View {
                         Task { await loadGroups() }
                     }
                     .buttonStyle(.borderedProminent)
+                        .tint(Theme.green)
                 }
             }
         }
+        .christmasBackground()
         .navigationTitle("Kris Kringles")
         .toolbar {
             if case .loaded(let groups) = state, !groups.isEmpty {
@@ -172,7 +175,7 @@ struct KrisKringlePhoto: View {
                 if let displayedImage = draft ?? image {
                     Image(uiImage: displayedImage).resizable().scaledToFill()
                 } else {
-                    Image(systemName: "gift").foregroundStyle(Theme.green)
+                    Image(systemName: "gift").foregroundStyle(.tint)
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 9))
@@ -221,6 +224,8 @@ private struct CreateKrisKringleView: View {
                         .disabled(isSaving)
                 } footer: {
                     Text("Give your gift exchange a name (up to 100 characters).")
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.85), radius: 2)
                 }
                 Section("Group Photo") {
                     PhotoPicker(picture: $picture, isPreparing: $isPreparingPhoto, isSaving: isSaving)
@@ -228,6 +233,7 @@ private struct CreateKrisKringleView: View {
                 if isSaving { ProgressView("Saving Kris Kringle…") }
                 if let errorMessage { Text(errorMessage).foregroundStyle(.red) }
             }
+            .christmasBackground()
             .navigationTitle("Create Kris Kringle")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
