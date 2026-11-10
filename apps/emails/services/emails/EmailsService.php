@@ -47,7 +47,7 @@ class EmailsService extends EmailsModel
     /**
      * Gets an email
      * @param int $emailId
-     * @return \KrisKringle\Email
+     * @return Email
      */
     public function getEmailObject($emailId)
     {
@@ -93,10 +93,10 @@ class EmailsService extends EmailsModel
     }
 
     /**
-     * @param \KrisKringle\Email $email
+     * @param Email $email
      * @return int
      */
-    public function save(\KrisKringle\Email $email)
+    public function save(Email $email)
     {
         return $this->saveToDB($email);
     }
@@ -137,7 +137,7 @@ class EmailsService extends EmailsModel
             ->orderBy()->set($this->sortToString($listArguments->sort()->get()))
             ->where()->set($where);
 
-        $data = array('data' => $this->getAttachmentsFromDB($query, \Model::RETURN_TYPE_ARRAY), 'total' => $this->getAttachmentsTotalFromDB($query));
+        $data = array('data' => $this->getAttachmentsFromDB($query), 'total' => $this->getAttachmentsTotalFromDB($query));
 
         return $data;
     }
@@ -150,7 +150,7 @@ class EmailsService extends EmailsModel
     {
         $where = ' AND email.emailId = ' . (int)$emailId;
 
-        $query = \SqlQueryBits::create()
+        $query = SqlQueryBits::create()
             ->where()->set($where);
 
         return $this->getAttachmentsFromDB($query, \Model::RETURN_TYPE_OBJECT);
@@ -171,7 +171,7 @@ class EmailsService extends EmailsModel
             $where .= " AND emailLog.logId = " . (int)$listArguments->filters()->intVal('logId');
         }
 
-        $query = \SqlQueryBits::create();
+        $query = SqlQueryBits::create();
         $query->limit()->set($listArguments->take()->get());
         $query->offset()->set($listArguments->skip()->get());
         $query->orderBy()->set($this->sortToString($listArguments->sort()->get()));
@@ -185,7 +185,7 @@ class EmailsService extends EmailsModel
      * @param Selmasu $s
      * @return EmailsService
      */
-    public static function create(Selmasu $s)
+    public static function create(Selmasu $s):EmailsService
     {
         return new self($s);
     }

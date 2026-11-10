@@ -13,7 +13,7 @@ $appClasses = [
     'App' => '/usr/share/selmasu-kris-kringle/core/valueObjects/App.php',
 
     //Emails
-    'Email' => '/usr/share/selmasu-kris-kringle/core/valueObjects/Email.php',
+    '\KrisKringle\Email' => '/usr/share/selmasu-kris-kringle/core/valueObjects/Email.php',
     'EmailsModel' => '/usr/share/selmasu-kris-kringle/apps/emails/services/emails/EmailsModel.php',
     'EmailsService' => '/usr/share/selmasu-kris-kringle/apps/emails/services/emails/EmailsService.php',
     'EmailsServiceAPI' => '/usr/share/selmasu-kris-kringle/apps/emails/services/emails/EmailsServiceAPI.php',
