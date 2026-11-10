@@ -164,16 +164,13 @@ EmailForm.toAddresses = function()
     if( !EmailForm.viewModel.isDynamic() )
     {
         $( '#toAddress' ).html( '' );
-        $.getJSON( '/json/users/users/getAdminUsers', function( users )
-        {
-            for( var i = 0; i < users['data'].length; i++ )
-            {
-	            if( users['data'][i]['email'] )
-	            {
+        $.getJSON( '/json/users/users/getAdminUsers', function( users ) {
+            for( var i = 0; i < users.length; i++ ) {
+	            if( users[i]['email'] ) {
 	                $( '#toAddress' ).append(
 	                    $( document.createElement( 'option' ) )
-	                        .html( users['data'][i]['firstName'] + ' ' + users['data'][i]['lastName'] )
-	                        .val( users['data'][i]['email'] )
+	                        .html( users[i]['firstName'] + ' ' + users[i]['lastName'] )
+	                        .val( users[i]['email'] )
 	                );
 	            }
             }
@@ -186,16 +183,13 @@ EmailForm.toAddresses = function()
 EmailForm.ccAddresses = function()
 {
 	$( '#ccAddress' ).html( '' );
-	$.getJSON( '/json/users/users/getAdminUsers', function( users )
-	{
-		for( var i = 0; i < users['data'].length; i++ )
-		{
-			if( users['data'][i]['email'] )
-			{
+	$.getJSON( '/json/users/users/getAdminUsers', function( users ) {
+		for( var i = 0; i < users.length; i++ ) {
+			if( users[i]['email'] ) {
 				$( '#ccAddress' ).append(
 					$( document.createElement( 'option' ) )
-						.html( users['data'][i]['firstName'] + ' ' + users['data'][i]['lastName'] )
-						.val( users['data'][i]['email'] )
+						.html( users[i]['firstName'] + ' ' + users[i]['lastName'] )
+						.val( users[i]['email'] )
 				);
 			}
 		}
@@ -207,16 +201,13 @@ EmailForm.ccAddresses = function()
 EmailForm.bccAddresses = function()
 {
 	$( '#bccAddress' ).html( '' );
-	$.getJSON( '/json/users/users/getAdminUsers', function( users )
-	{
-		for( var i = 0; i < users['data'].length; i++ )
-		{
-			if( users['data'][i]['email'] )
-			{
+	$.getJSON( '/json/users/users/getAdminUsers', function( users ) {
+		for( var i = 0; i < users.length; i++ ) {
+			if( users[i]['email'] ) {
 				$( '#bccAddress' ).append(
 					$( document.createElement( 'option' ) )
-						.html( users['data'][i]['firstName'] + ' ' + users['data'][i]['lastName'] )
-						.val( users['data'][i]['email'] )
+						.html( users[i]['firstName'] + ' ' + users[i]['lastName'] )
+						.val( users[i]['email'] )
 				);
 			}
 		}
