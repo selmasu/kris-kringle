@@ -160,7 +160,7 @@ function selmasuAutoloader( $className )
 	include '/usr/share/selmasu-framework/framework/classes.php';
 	include '/usr/share/selmasu-kris-kringle/core/classes.php';
 
-    require_once '/usr/share/selmasu-framework/framework/libs/aws/aws-autoloader.php';
+    require_once '/usr/share/selmasu-framework/framework/libs/vendor/autoload.php';
 	
 	if( isset( $classes[$className] ) ) {
 		require_once $classes[$className];
