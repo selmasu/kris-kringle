@@ -125,7 +125,7 @@ EmailForm.save = function( returnToList )
 	data += '&ccAddress=' + encodeURI( $( '#ccAddress' ).data('kendoMultiSelect' ).value().join( ';' ) );
 	data += '&bccAddress=' + encodeURI( $( '#bccAddress' ).data('kendoMultiSelect' ).value().join( ';' ) );
 
-    $.post( "/ajax/settings/emailSave", data, function( emailId )
+    $.post( "/ajax/emailForm/save", data, function( emailId )
     {
         if( parseInt( emailId ) > 0 )
         {
