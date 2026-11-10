@@ -179,6 +179,15 @@ struct LoginView: View, UserServiceDelegate {
                 .padding(.horizontal, 16)
             }
 
+            Text("New here or invited by email?\nContinue with Email.")
+                .font(.footnote.weight(.medium))
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.white)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .frame(maxWidth: 315)
+                .background(.black.opacity(0.65), in: RoundedRectangle(cornerRadius: 12))
+
             Button(action: { appleSignInModel.signInWithApple() }) {
                 HStack {
                     Spacer()
@@ -256,7 +265,16 @@ struct LoginView: View, UserServiceDelegate {
 
     func serviceError(_ error: String) {
         isSubmitting = false
-        alertMessage = error.isEmpty ? "Please try again." : error
+        if error == "appleAccountRequired" {
+            emailSignIn = true
+            codeSent = false
+            oneTimeCode = ""
+            alertMessage = "Apple sign-in requires an existing account with the email Apple shared. Continue with Email using your invitation address."
+        } else if ["validationError", "unknownUserError"].contains(error) {
+            alertMessage = "Couldn’t sign in. Try again or continue with email."
+        } else {
+            alertMessage = error.isEmpty ? "Please try again." : error
+        }
         showAlert = true
     }
 }
@@ -279,6 +297,7 @@ class AppleSignInModel: NSObject, ASAuthorizationControllerDelegate {
     var signInSuccess: Bool = false
     
     func signInWithApple(){
+        signInSuccess = false
         let provider = ASAuthorizationAppleIDProvider()
         let request = provider.createRequest()
         
@@ -289,29 +308,15 @@ class AppleSignInModel: NSObject, ASAuthorizationControllerDelegate {
     }
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
-        switch authorization.credential {
-            case let appleIDCredential as ASAuthorizationAppleIDCredential:
-                if let authorizationCode = appleIDCredential.authorizationCode {
-                    if let authCode = String(data: authorizationCode, encoding: .utf8) {
-                        if let fullName = appleIDCredential.fullName {
-                            authenticationCode = authCode
-                            if let givenName = fullName.givenName {
-                                firstName = givenName
-                            }
-                            if let familyName = fullName.familyName {
-                                lastName = familyName
-                            }
-                        }
-                        
-                        signInSuccess = true
-                    }
-                }
-                
-            default:
-                break
-        }
+        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let code = credential.authorizationCode,
+              let authCode = String(data: code, encoding: .utf8), !authCode.isEmpty else { return }
+        authenticationCode = authCode
+        firstName = credential.fullName?.givenName ?? ""
+        lastName = credential.fullName?.familyName ?? ""
+        signInSuccess = true
     }
-    
+
     func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
         print(error)
     }

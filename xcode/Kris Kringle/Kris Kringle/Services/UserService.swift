@@ -120,7 +120,11 @@ class UserService {
         service = "authentication"
         functionCall = "loginApple"
         
-        callService(Utils.requestParams(["code": code, "firstName": firstName, "lastName": lastName, "clientId": "Kris Kringle"]))
+        guard let clientId = Bundle.main.bundleIdentifier else {
+            delegate.serviceError("Unable to sign in with Apple. Please continue with email.")
+            return
+        }
+        callService(Utils.requestParams(["code": code, "firstName": firstName, "lastName": lastName, "clientId": clientId, "createUser": false]))
     }
     
     func sendOneTimeCode(_ email: String) {
@@ -228,7 +232,7 @@ class UserService {
     }
     
     func callService(_ params: [String:AnyObject]) {
-        let method: HTTPMethod = ["sendOneTimeCode", "loginOneTimeCode"].contains(functionCall) ? .post : .get
+        let method: HTTPMethod = ["sendOneTimeCode", "loginOneTimeCode", "loginApple"].contains(functionCall) ? .post : .get
         AF.request(Utils.requestURL(app, service: service, function: functionCall), method: method, parameters: params)
             .validate(statusCode: 200..<300)
             .responseData { response in
