@@ -164,7 +164,7 @@ EmailForm.toAddresses = function()
     if( !EmailForm.viewModel.isDynamic() )
     {
         $( '#toAddress' ).html( '' );
-        $.getJSON( '/json/framework/user/getAdminUsers', function( users )
+        $.getJSON( '/json/users/users/getAdminUsers', function( users )
         {
             for( var i = 0; i < users['data'].length; i++ )
             {
@@ -186,7 +186,7 @@ EmailForm.toAddresses = function()
 EmailForm.ccAddresses = function()
 {
 	$( '#ccAddress' ).html( '' );
-	$.getJSON( '/json/framework/user/getAdminUsers', function( users )
+	$.getJSON( '/json/users/users/getAdminUsers', function( users )
 	{
 		for( var i = 0; i < users['data'].length; i++ )
 		{
@@ -207,7 +207,7 @@ EmailForm.ccAddresses = function()
 EmailForm.bccAddresses = function()
 {
 	$( '#bccAddress' ).html( '' );
-	$.getJSON( '/json/framework/user/getAdminUsers', function( users )
+	$.getJSON( '/json/users/users/getAdminUsers', function( users )
 	{
 		for( var i = 0; i < users['data'].length; i++ )
 		{
