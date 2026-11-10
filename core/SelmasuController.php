@@ -86,13 +86,8 @@ final class SelmasuController
 		exit;
 	}
 	
-	private function getAppContent()
-	{
-        if( $this->s->pageRequest()->isAdmin()) {
-            return $this->adminContent();
-        }
-
-		return $this->s->parseTemplate( 'app', $this->getPagePlaceholderData() );
+	private function getAppContent() {
+        return $this->adminContent();
 	}
 
     private function adminContent(){
