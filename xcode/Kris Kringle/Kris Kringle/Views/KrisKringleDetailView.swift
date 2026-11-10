@@ -52,20 +52,23 @@ struct KrisKringleDetailView: View {
                 Section("Members") {
                     ForEach(members) { member in
                         memberRow(member)
+                            .christmasGlassRow()
                         ForEach(member.children) { child in
                             Label(child.name, systemImage: "arrow.turn.down.right")
                                 .padding(.leading, 20)
                                 .accessibilityLabel("\(child.name), child of \(member.displayName)")
+                                .christmasGlassRow()
                         }
                     }
                 }
             } else if let loadError {
                 Section {
-                    Text(loadError)
+                    Text(loadError).christmasGlassRow()
                     Button("Try Again") { Task { await load() } }
+                        .christmasGlassRow()
                 }
             } else {
-                ProgressView("Loading Kris Kringle…")
+                ProgressView("Loading Kris Kringle…").christmasGlassRow()
             }
         }
         .photosPicker(isPresented: $isChoosingPhoto, selection: $photoSelection, matching: .images)
@@ -107,8 +110,8 @@ struct KrisKringleDetailView: View {
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
-            if isPreparingPhoto { ProgressView("Preparing photo…") }
-            if let photoError { Text(photoError).foregroundStyle(.red) }
+            if isPreparingPhoto { ProgressView("Preparing photo…").christmasGlassRow() }
+            if let photoError { Text(photoError).foregroundStyle(.red).christmasGlassRow() }
         }
     }
 
@@ -134,7 +137,8 @@ struct KrisKringleDetailView: View {
                 .accessibilityLabel("Save Group Changes")
                 .disabled(!canSave)
             }
-            if let saveError { Text(saveError).foregroundStyle(.red) }
+            .christmasGlassRow()
+            if let saveError { Text(saveError).foregroundStyle(.red).christmasGlassRow() }
         }
         .disabled(isBusy)
     }
@@ -165,17 +169,22 @@ struct KrisKringleDetailView: View {
                     .accessibilityLabel("Add Member")
                     .disabled(!canAdd)
                 }
+                .christmasGlassRow()
             } else {
-                Text("Choose an email address").foregroundStyle(.secondary)
+                Text("Choose an email address")
+                    .foregroundStyle(.secondary)
+                    .christmasGlassRow()
                 ForEach(contactEmails, id: \.self) { address in
                     Button(address) {
                         email = address
                         contactEmails = []
                     }
+                    .christmasGlassRow()
                 }
                 Button("Cancel Email Selection") { contactEmails = [] }
+                    .christmasGlassRow()
             }
-            if let memberError { Text(memberError).foregroundStyle(.red) }
+            if let memberError { Text(memberError).foregroundStyle(.red).christmasGlassRow() }
         } header: {
             HStack {
                 Text("Add a Member")
@@ -310,14 +319,16 @@ private struct AddKrisKringleChildView: View {
         NavigationStack {
             Form {
                 LabeledContent("Parent", value: parent.displayName)
+                    .christmasGlassRow()
                 TextField("Child’s name", text: $name)
                     .textContentType(.name)
                     .textInputAutocapitalization(.words)
                     .submitLabel(.done)
                     .onSubmit(addChild)
                     .disabled(isAdding)
+                    .christmasGlassRow()
                 if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red)
+                    Text(errorMessage).foregroundStyle(.red).christmasGlassRow()
                 }
             }
             .christmasBackground()

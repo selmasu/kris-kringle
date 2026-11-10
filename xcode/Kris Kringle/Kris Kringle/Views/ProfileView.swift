@@ -40,19 +40,24 @@ struct ProfileView: View, UserServiceDelegate {
                                 Spacer()
                             }
                             .listRowSeparator(.hidden)
+                            .christmasGlassRow()
                         }
                         PhotoPicker(picture: $selectedPhoto, isPreparing: $isPreparingPhoto, isSaving: isBusy)
+                            .christmasGlassRow()
                         TextField("Display name", text: $name)
                             .textContentType(.name)
                             .textInputAutocapitalization(.words)
+                            .christmasGlassRow()
                         Button(isSaving ? "Saving…" : "Save Profile") { saveProfile() }
                             .disabled(!canSave || isPreparingPhoto)
+                            .christmasGlassRow()
                     }
                     .disabled(isBusy)
 
                     Section {
                         if profile.appleLinked {
                             Label("Apple Account Linked", systemImage: "checkmark.circle.fill")
+                                .christmasGlassRow()
                         } else {
                             SignInWithAppleButton(.continue) { request in
                                 appleSalt = UUID().uuidString
@@ -64,10 +69,11 @@ struct ProfileView: View, UserServiceDelegate {
                             } onCompletion: { result in
                                 finishAppleLink(result)
                             }
-                            .signInWithAppleButtonStyle(.white)
+                            .signInWithAppleButtonStyle(.black)
                             .frame(height: 44)
                             .accessibilityLabel("Link Apple Account")
-                            if isLinking { ProgressView("Linking Apple account…") }
+                            .christmasGlassRow()
+                            if isLinking { ProgressView("Linking Apple account…").christmasGlassRow() }
                         }
                     } header: {
                         Text(profile.appleLinked ? "Sign in with Apple" : "Link Apple Account")
@@ -81,11 +87,11 @@ struct ProfileView: View, UserServiceDelegate {
                     .disabled(isBusy)
                 } else if let loadError {
                     Section {
-                        Text(loadError)
-                        Button("Try Again", action: retry)
+                        Text(loadError).christmasGlassRow()
+                        Button("Try Again", action: retry).christmasGlassRow()
                     }
                 } else {
-                    ProgressView("Loading profile…")
+                    ProgressView("Loading profile…").christmasGlassRow()
                 }
 
                 Section {
@@ -94,6 +100,7 @@ struct ProfileView: View, UserServiceDelegate {
                         UserService(delegate: self).logout()
                     }
                     .disabled(isBusy)
+                    .christmasGlassRow()
                 }
             }
             .christmasBackground()

@@ -50,6 +50,7 @@ struct KrisKringlesView: View {
                             }
                         }
                     }
+                    .christmasGlassRow()
                 }
                 .refreshable { await loadGroups() }
             case .failed(let message):
@@ -222,6 +223,7 @@ private struct CreateKrisKringleView: View {
                         .submitLabel(.done)
                         .onSubmit(save)
                         .disabled(isSaving)
+                        .christmasGlassRow()
                 } footer: {
                     Text("Give your gift exchange a name (up to 100 characters).")
                         .foregroundStyle(.white)
@@ -229,9 +231,10 @@ private struct CreateKrisKringleView: View {
                 }
                 Section("Group Photo") {
                     PhotoPicker(picture: $picture, isPreparing: $isPreparingPhoto, isSaving: isSaving)
+                        .christmasGlassRow()
                 }
-                if isSaving { ProgressView("Saving Kris Kringle…") }
-                if let errorMessage { Text(errorMessage).foregroundStyle(.red) }
+                if isSaving { ProgressView("Saving Kris Kringle…").christmasGlassRow() }
+                if let errorMessage { Text(errorMessage).foregroundStyle(.red).christmasGlassRow() }
             }
             .christmasBackground()
             .navigationTitle("Create Kris Kringle")
