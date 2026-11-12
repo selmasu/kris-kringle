@@ -9,6 +9,7 @@ struct KrisKringleDetailView: View {
     @State private var group: KrisKringleSummary
     @State private var name: String
     @State private var roster: KrisKringleRoster?
+    @State private var isShowingAddMember = false
     @State private var selectedGroupId: Int?
     @State private var isShowingAddGroup = false
     @State private var newGroupName = ""
@@ -52,9 +53,21 @@ struct KrisKringleDetailView: View {
             if let roster {
                 if isCreator {
                     detailsSection
-                    addMemberSection(roster.groups)
                 }
-                rosterSections(roster)
+                if isCreator && isShowingAddMember {
+                    addMemberSection(roster.groups)
+                } else {
+                    if isCreator {
+                        Section {
+                            Button("Add member", systemImage: "plus") {
+                                isShowingAddMember = true
+                            }
+                            .disabled(isBusy)
+                            .translucentDarkRow()
+                        }
+                    }
+                    rosterSections(roster)
+                }
             } else if let loadError {
                 Section {
                     Text(loadError).translucentDarkRow()
@@ -149,7 +162,7 @@ struct KrisKringleDetailView: View {
                 Text("Group")
                 Spacer()
                 Picker("Group", selection: $selectedGroupId) {
-                    Text("Select a group").tag(nil as Int?)
+                    Text("Group...").tag(nil as Int?)
                     ForEach(groups) { group in
                         Text(group.name).tag(Optional(group.id))
                     }
@@ -209,6 +222,8 @@ struct KrisKringleDetailView: View {
                     .translucentDarkRow()
             }
             if let memberError { Text(memberError).foregroundStyle(.red).translucentDarkRow() }
+            Button("Cancel", action: closeAddMember)
+                .translucentDarkRow()
         } header: {
             HStack {
                 Text("Add a Member")
@@ -357,6 +372,14 @@ struct KrisKringleDetailView: View {
         }
     }
 
+    private func closeAddMember() {
+        isShowingAddMember = false
+        email = ""
+        contactEmails = []
+        newGroupName = ""
+        memberError = nil
+    }
+
     private func addMember() {
         guard canAdd, let selectedGroupId else { return }
         let memberEmail = trimmedEmail
@@ -366,7 +389,7 @@ struct KrisKringleDetailView: View {
             defer { isAdding = false }
             do {
                 roster = try await KrisKringleService.addMember(id: group.id, groupId: selectedGroupId, email: memberEmail)
-                email = ""
+                closeAddMember()
             } catch {
                 memberError = error.localizedDescription
             }

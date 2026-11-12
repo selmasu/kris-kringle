@@ -23,6 +23,6 @@ extension View {
     }
 
     func translucentDarkRow() -> some View {
-        listRowBackground(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.7))
+        listRowBackground(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.3))
     }
 }

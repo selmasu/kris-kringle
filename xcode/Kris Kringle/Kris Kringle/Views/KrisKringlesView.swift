@@ -233,7 +233,7 @@ private struct CreateKrisKringleView: View {
                         .shadow(color: .black.opacity(0.85), radius: 2)
                 }
                 Section {
-                    TextField("First group", text: $firstGroupName, prompt: Text("Marketing"))
+                    TextField("First group", text: $firstGroupName, prompt: Text("Group name"))
                         .textInputAutocapitalization(.words)
                         .submitLabel(.done)
                         .onSubmit(save)
