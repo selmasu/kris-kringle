@@ -41,13 +41,17 @@ class KrisKringleServiceAPI extends ServiceAPI
                     return ['error' => 'Creating a Kris Kringle requires a POST request.'];
                 }
                 $name = $arguments['name'] ?? null;
-                return $this->krisKringleService->createKrisKringle(is_string($name) ? $name : '', $_FILES['picture'] ?? null);
+                $firstGroupName = $arguments['firstGroupName'] ?? null;
+                return $this->krisKringleService->createKrisKringle(
+                    is_string($name) ? $name : '', is_string($firstGroupName) ? $firstGroupName : '', $_FILES['picture'] ?? null
+                );
 
             case 'getKrisKringle':
                 header('Cache-Control: private, no-store');
                 return $this->krisKringleService->getKrisKringle($this->intArgument(self::ID));
 
             case 'updateKrisKringle':
+            case 'addKrisKringleGroup':
             case 'addKrisKringleMember':
             case 'addKrisKringleChild':
                 $token = $_POST['selmasuToken'] ?? null;
@@ -56,10 +60,16 @@ class KrisKringleServiceAPI extends ServiceAPI
                     return ['error' => 'Please sign in again.'];
                 }
                 $id = $this->intArgument(self::ID);
+                if ($functionToCall === 'addKrisKringleGroup') {
+                    header('Cache-Control: private, no-store');
+                    $name = $_POST['name'] ?? null;
+                    return $this->krisKringleService->addKrisKringleGroup($id, is_string($name) ? $name : '');
+                }
                 if ($functionToCall === 'addKrisKringleMember') {
                     header('Cache-Control: private, no-store');
                     $email = $_POST['email'] ?? null;
-                    return $this->krisKringleService->addKrisKringleMember($id, is_string($email) ? $email : '');
+                    $groupId = filter_var($_POST['groupId'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+                    return $this->krisKringleService->addKrisKringleMember($id, $groupId ?: 0, is_string($email) ? $email : '');
                 }
                 if ($functionToCall === 'addKrisKringleChild') {
                     header('Cache-Control: private, no-store');

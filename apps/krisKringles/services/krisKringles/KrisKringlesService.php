@@ -18,7 +18,7 @@ class KrisKringleService extends KrisKringleModel {
         return ['data' => $this->getKrisKringlesFromDB( $query, $returnType ), 'total' => $this->getKrisKringlesTotalFromDB()];
     }
 
-    public function createKrisKringle(string $name, ?array $upload = null):array
+    public function createKrisKringle(string $name, string $firstGroupName, ?array $upload = null):array
     {
         $userId = (int)$this->s()->userId();
         if ($userId <= 0) {
@@ -30,6 +30,11 @@ class KrisKringleService extends KrisKringleModel {
             return ['error' => 'Enter a name between 1 and 100 characters.'];
         }
 
+        $firstGroupName = trim($firstGroupName);
+        if (preg_match('/\A[^\p{Cc}]{1,100}\z/u', $firstGroupName) !== 1) {
+            return ['error' => 'Enter a first group name between 1 and 100 characters.'];
+        }
+
         try {
             $serial = PictureUpload::save($this->s(), $upload) ?? 0;
         } catch (InvalidArgumentException | RuntimeException $error) {
@@ -38,7 +43,7 @@ class KrisKringleService extends KrisKringleModel {
 
         $year = (int)date('Y');
         $version = $serial > 0 ? bin2hex(random_bytes(16)) : '';
-        $id = $this->createKrisKringleInDB($name, $year, $userId, $serial, $version);
+        $id = $this->createKrisKringleInDB($name, $firstGroupName, $year, $userId, $serial, $version);
         if ($id <= 0) {
             PictureUpload::delete($this->s(), $serial);
             return ['error' => 'Couldn’t create your Kris Kringle. Please try again.'];
@@ -61,10 +66,27 @@ class KrisKringleService extends KrisKringleModel {
             return ['error' => 'This Kris Kringle is no longer available.'];
         }
         $owner = (int)$group['createdBy'];
-        return ['data' => $group, 'members' => $this->getKrisKringleMembersFromDB($id, $owner, $owner === $userId)];
+        return ['data' => $group] + $this->roster($id, $owner, $owner === $userId);
     }
 
-    public function addKrisKringleMember(int $id, string $email): array
+    public function addKrisKringleGroup(int $id, string $name): array
+    {
+        $owner = (int)$this->s()->userId();
+        if ($owner <= 0 || $id <= 0 || !$this->getOwnedKrisKringleFromDB($id, $owner)) {
+            return ['error' => 'Only the creator can add groups.'];
+        }
+        $name = trim($name);
+        if (preg_match('/\A[^\p{Cc}]{1,100}\z/u', $name) !== 1) {
+            return ['error' => 'Enter a group name between 1 and 100 characters.'];
+        }
+        $groupId = $this->addKrisKringleGroupInDB($id, $owner, $name);
+        if ($groupId <= 0) {
+            return ['error' => 'Couldn’t add this group. Please try again.'];
+        }
+        return ['groupId' => $groupId] + $this->roster($id, $owner, true);
+    }
+
+    public function addKrisKringleMember(int $id, int $groupId, string $email): array
     {
         $owner = (int)$this->s()->userId();
         if ($owner <= 0 || $id <= 0 || !$this->getOwnedKrisKringleFromDB($id, $owner)) {
@@ -75,15 +97,19 @@ class KrisKringleService extends KrisKringleModel {
         if (strlen($email) > 100 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return ['error' => 'Enter a valid email address.'];
         }
+        if ($groupId <= 0 || !$this->hasKrisKringleGroupInDB($id, $groupId)) {
+            return ['error' => 'Choose a group in this Kris Kringle.'];
+        }
         $user = UsersService::create($this->s())->getOrCreateEmailAccount($email);
         $memberId = $user ? (int)$user->userId()->get() : 0;
         if ($memberId === $owner) {
             return ['error' => 'You’re already in this Kris Kringle.'];
         }
-        if ($memberId <= 0 || !$this->addKrisKringleMemberInDB($id, $owner, $memberId)) {
+        if ($memberId <= 0) {
             return ['error' => 'Couldn’t add this member. Please try again.'];
         }
-        return ['members' => $this->getKrisKringleMembersFromDB($id, $owner, true)];
+        $error = $this->addKrisKringleMemberInDB($id, $owner, $groupId, $memberId);
+        return $error === null ? $this->roster($id, $owner, true) : ['error' => $error];
     }
 
     public function addKrisKringleChild(int $id, int $parentId, string $name): array
@@ -100,7 +126,13 @@ class KrisKringleService extends KrisKringleModel {
         if ($parentId <= 0 || !$this->addKrisKringleChildInDB($id, $owner, $parentId, $name)) {
             return ['error' => 'Couldn’t add this child. Choose a parent who is a member of this Kris Kringle and try again.'];
         }
-        return ['members' => $this->getKrisKringleMembersFromDB($id, $owner, true)];
+        return $this->roster($id, $owner, true);
+    }
+
+    private function roster(int $id, int $owner, bool $showEmails): array
+    {
+        $members = $this->getKrisKringleMembersFromDB($id, $owner, $showEmails);
+        return ['groups' => $this->getKrisKringleGroupsFromDB($id), 'members' => $members];
     }
 
     public function updateKrisKringlePicture(int $id, ?array $upload): array

@@ -35,17 +35,89 @@ class KrisKringleModel extends Model
                 ))";
     }
 
-    protected function createKrisKringleInDB(string $name, int $year, int $createdBy, int $serial, string $version):int
-    {
+    protected function createKrisKringleInDB(
+        string $name, string $firstGroupName, int $year, int $createdBy, int $serial, string $version
+    ): int {
         $table = $this->tables()->krisKringle();
-        // Let the framework initialise the schema before using a prepared insert.
+        $groupTable = $this->tables()->krisKringleGroup();
+        $memberTable = $this->tables()->krisKringleMember();
+        // Schema initialization must finish before the transaction starts.
         $this->adb->query("SELECT pictureVersion, pictureFileSerial FROM $table LIMIT 0");
+        $this->adb->query("SELECT groupId FROM $groupTable LIMIT 0");
+        $this->adb->query("SELECT groupId FROM $memberTable LIMIT 0");
+        $this->adb->query('START TRANSACTION');
         $saved = $this->adb->executePrepared(
             "INSERT INTO $table (name, `year`, createdBy, createdDate, deleted, pictureVersion, pictureFileSerial)
                 VALUES (?, ?, ?, NOW(), 0, ?, ?)",
             [$name, $year, $createdBy, $version, $serial]
         );
+        $id = $saved ? (int)$this->adb->insertId() : 0;
+        $groupId = $id > 0 ? $this->insertKrisKringleGroup($id, $firstGroupName) : 0;
+        if ($groupId <= 0 || !$this->insertKrisKringleMember($id, $groupId, $createdBy)) {
+            $this->adb->query('ROLLBACK');
+            return 0;
+        }
+        $this->adb->query('COMMIT');
+        return $id;
+    }
+
+    protected function getKrisKringleGroupsFromDB(int $id): array
+    {
+        $table = $this->tables()->krisKringleGroup();
+        $groups = $this->adb->fetchAll("SELECT groupId, name FROM $table WHERE krisKringleId = $id ORDER BY groupId");
+        return array_map(static fn (array $group): array => [
+            'groupId' => (int)$group['groupId'],
+            'name' => $group['name'],
+        ], $groups);
+    }
+
+    protected function hasKrisKringleGroupInDB(int $id, int $groupId): bool
+    {
+        $table = $this->tables()->krisKringleGroup();
+        return (bool)$this->adb->query("SELECT groupId FROM $table WHERE krisKringleId = $id AND groupId = $groupId")
+            ->fetchValue('groupId');
+    }
+
+    protected function addKrisKringleGroupInDB(int $id, int $owner, string $name): int
+    {
+        $table = $this->tables()->krisKringleGroup();
+        $this->adb->query("SELECT groupId FROM $table LIMIT 0");
+        $this->adb->query('START TRANSACTION');
+        if (!$this->getOwnedKrisKringleFromDB($id, $owner, true)) {
+            $this->adb->query('ROLLBACK');
+            return 0;
+        }
+        $escapedName = $this->adb->escapeString($name);
+        $groupId = (int)$this->adb->query("SELECT groupId FROM $table
+            WHERE krisKringleId = $id AND LOWER(name) = LOWER('$escapedName') LIMIT 1")->fetchValue('groupId');
+        if ($groupId <= 0) {
+            $groupId = $this->insertKrisKringleGroup($id, $name);
+        }
+        $this->adb->query($groupId > 0 ? 'COMMIT' : 'ROLLBACK');
+        return $groupId;
+    }
+
+    private function insertKrisKringleGroup(int $id, string $name): int
+    {
+        $table = $this->tables()->krisKringleGroup();
+        $saved = $this->adb->executePrepared("INSERT INTO $table (krisKringleId, name) VALUES (?, ?)", [$id, $name]);
         return $saved ? (int)$this->adb->insertId() : 0;
+    }
+
+    private function insertKrisKringleMember(int $id, int $groupId, int $userId): bool
+    {
+        $table = $this->tables()->krisKringleMember();
+        return $this->adb->executePrepared(
+            "INSERT INTO $table (krisKringleId, groupId, userId) VALUES (?, ?, ?)",
+            [$id, $groupId, $userId]
+        );
+    }
+
+    private function getKrisKringleMemberGroupId(int $id, int $userId): int
+    {
+        $table = $this->tables()->krisKringleMember();
+        return (int)$this->adb->query("SELECT groupId FROM $table WHERE krisKringleId = $id AND userId = $userId LIMIT 1")
+            ->fetchValue('groupId');
     }
 
     protected function getOwnedKrisKringleFromDB(int $id, int $owner, bool $lock = false): ?array
@@ -66,15 +138,15 @@ class KrisKringleModel extends Model
     protected function getKrisKringleMembersFromDB(int $id, int $owner, bool $showEmails): array
     {
         $memberTable = $this->tables()->krisKringleMember();
-        $userIds = [$owner];
+        $groupIdsByUser = [];
         $childrenByParent = [];
-        $rows = $this->adb->fetchAll("SELECT krisKringleMemberId, userId, parentUserId, name
+        $rows = $this->adb->fetchAll("SELECT krisKringleMemberId, groupId, userId, parentUserId, name
             FROM $memberTable WHERE krisKringleId = $id ORDER BY krisKringleMemberId");
         foreach ($rows as $row) {
             $userId = (int)$row['userId'];
             $parentId = (int)$row['parentUserId'];
             if ($userId > 0) {
-                $userIds[] = $userId;
+                $groupIdsByUser[$userId] = (int)$row['groupId'];
             } elseif ($parentId > 0) {
                 $childrenByParent[$parentId][] = [
                     'memberId' => (int)$row['krisKringleMemberId'],
@@ -82,13 +154,16 @@ class KrisKringleModel extends Model
                 ];
             }
         }
-        $ids = implode(',', $userIds);
+        if (!$groupIdsByUser) {
+            return [];
+        }
+        $ids = implode(',', array_keys($groupIdsByUser));
         $userTable = $this->coreTables()->user();
         $emailColumn = $showEmails ? ', email' : '';
         $users = $this->db->fetchAll("SELECT userId, displayName, firstName, lastName$emailColumn
             FROM $userTable WHERE userId IN ($ids) AND deleted = 0
             ORDER BY (userId = $owner) DESC, displayName, firstName, userId");
-        return array_map(static function (array $user) use ($owner, $showEmails, $childrenByParent) {
+        return array_map(static function (array $user) use ($owner, $showEmails, $childrenByParent, $groupIdsByUser) {
             $userId = (int)$user['userId'];
             $name = trim($user['displayName'] ?? '');
             if ($name === '') {
@@ -96,6 +171,7 @@ class KrisKringleModel extends Model
             }
             $member = [
                 'userId' => $userId,
+                'groupId' => $groupIdsByUser[$userId],
                 'name' => $name,
                 'isCreator' => $userId === $owner,
                 'children' => $childrenByParent[$userId] ?? [],
@@ -107,43 +183,42 @@ class KrisKringleModel extends Model
         }, $users);
     }
 
-    protected function addKrisKringleMemberInDB(int $id, int $owner, int $userId): bool
+    protected function addKrisKringleMemberInDB(int $id, int $owner, int $groupId, int $userId): ?string
     {
         $memberTable = $this->tables()->krisKringleMember();
-        $this->adb->query("SELECT userId FROM $memberTable LIMIT 0");
+        $this->adb->query("SELECT groupId FROM $memberTable LIMIT 0");
         $this->adb->query('START TRANSACTION');
-        if (!$this->getOwnedKrisKringleFromDB($id, $owner, true)) {
+        if (!$this->getOwnedKrisKringleFromDB($id, $owner, true) || !$this->hasKrisKringleGroupInDB($id, $groupId)) {
             $this->adb->query('ROLLBACK');
-            return false;
+            return 'Choose a group in this Kris Kringle.';
         }
-        // Locking the group serializes duplicate additions, including on existing schemas.
-        $exists = $this->adb->query("SELECT userId FROM $memberTable
-            WHERE krisKringleId = $id AND userId = $userId LIMIT 1")->fetchValue('userId');
-        if (!$exists && !$this->adb->executePrepared(
-            "INSERT INTO $memberTable (krisKringleId, userId) VALUES (?, ?)",
-            [$id, $userId]
-        )) {
+
+        $existingGroupId = $this->getKrisKringleMemberGroupId($id, $userId);
+        if ($existingGroupId > 0 && $existingGroupId !== $groupId) {
             $this->adb->query('ROLLBACK');
-            return false;
+            return 'This member is already in another group in this Kris Kringle.';
+        }
+        if ($existingGroupId === 0 && !$this->insertKrisKringleMember($id, $groupId, $userId)) {
+            $this->adb->query('ROLLBACK');
+            return 'Couldn’t add this member. Please try again.';
         }
         $this->adb->query('COMMIT');
-        return true;
+        return null;
     }
 
     protected function addKrisKringleChildInDB(int $id, int $owner, int $parentId, string $name): bool
     {
         $memberTable = $this->tables()->krisKringleMember();
-        $this->adb->query("SELECT parentUserId, name FROM $memberTable LIMIT 0");
+        $this->adb->query("SELECT groupId, parentUserId, name FROM $memberTable LIMIT 0");
         $this->adb->query('START TRANSACTION');
         if (!$this->getOwnedKrisKringleFromDB($id, $owner, true)) {
             $this->adb->query('ROLLBACK');
             return false;
         }
 
-        $parentIsMember = $parentId === $owner || (bool)$this->adb->query("SELECT userId FROM $memberTable
-            WHERE krisKringleId = $id AND userId = $parentId LIMIT 1")->fetchValue('userId');
+        $groupId = $this->getKrisKringleMemberGroupId($id, $parentId);
         $userTable = $this->coreTables()->user();
-        if (!$parentIsMember || !$this->db->query("SELECT userId FROM $userTable
+        if ($groupId <= 0 || !$this->db->query("SELECT userId FROM $userTable
             WHERE userId = $parentId AND deleted = 0")->fetchValue('userId')) {
             $this->adb->query('ROLLBACK');
             return false;
@@ -155,8 +230,8 @@ class KrisKringleModel extends Model
             WHERE krisKringleId = $id AND userId = 0 AND parentUserId = $parentId
             AND HEX(name) = '$nameHex' LIMIT 1")->fetchValue('krisKringleMemberId');
         if (!$existing && !$this->adb->executePrepared(
-            "INSERT INTO $memberTable (krisKringleId, userId, parentUserId, name) VALUES (?, 0, ?, ?)",
-            [$id, $parentId, $name]
+            "INSERT INTO $memberTable (krisKringleId, groupId, userId, parentUserId, name) VALUES (?, ?, 0, ?, ?)",
+            [$id, $groupId, $parentId, $name]
         )) {
             $this->adb->query('ROLLBACK');
             return false;

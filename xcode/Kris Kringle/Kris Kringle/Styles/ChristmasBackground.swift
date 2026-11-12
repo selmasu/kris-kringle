@@ -22,11 +22,7 @@ extension View {
             .tint(Theme.christmasAccent)
     }
 
-    func christmasGlassRow() -> some View {
-        self
-            .environment(\.colorScheme, .light)
-            .tint(Theme.green)
-            .listItemTint(Theme.green)
-            .listRowBackground(Color.white.opacity(0.8))
+    func translucentDarkRow() -> some View {
+        listRowBackground(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.7))
     }
 }

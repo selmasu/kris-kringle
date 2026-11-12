@@ -8,7 +8,11 @@ struct KrisKringleDetailView: View {
     let photos: KrisKringlePhotoCache
     @State private var group: KrisKringleSummary
     @State private var name: String
-    @State private var members: [KrisKringleMember]?
+    @State private var roster: KrisKringleRoster?
+    @State private var selectedGroupId: Int?
+    @State private var isShowingAddGroup = false
+    @State private var newGroupName = ""
+    @State private var isAddingGroup = false
     @State private var parentForChild: KrisKringleMember?
     @State private var email = ""
     @State private var isChoosingContact = false
@@ -32,43 +36,33 @@ struct KrisKringleDetailView: View {
     }
 
     private var isCreator: Bool { group.createdBy == Globals.userId }
-    private var isBusy: Bool { isSaving || isAdding }
+    private var isBusy: Bool { isSaving || isAdding || isAddingGroup }
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var trimmedEmail: String { email.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var canSave: Bool {
         !isBusy && !isPreparingPhoto && (1...100).contains(trimmedName.unicodeScalars.count)
             && (trimmedName != group.name || picture != nil)
     }
-    private var canAdd: Bool { !isBusy && contactEmails.isEmpty && !trimmedEmail.isEmpty }
+    private var canAdd: Bool { !isBusy && selectedGroupId != nil && contactEmails.isEmpty && !trimmedEmail.isEmpty }
+    private var trimmedNewGroupName: String { newGroupName.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     var body: some View {
         Form {
             photoSection
-            if let members {
+            if let roster {
                 if isCreator {
                     detailsSection
-                    addMemberSection
+                    addMemberSection(roster.groups)
                 }
-                Section("Members") {
-                    ForEach(members) { member in
-                        memberRow(member)
-                            .christmasGlassRow()
-                        ForEach(member.children) { child in
-                            Label(child.name, systemImage: "arrow.turn.down.right")
-                                .padding(.leading, 20)
-                                .accessibilityLabel("\(child.name), child of \(member.displayName)")
-                                .christmasGlassRow()
-                        }
-                    }
-                }
+                rosterSections(roster)
             } else if let loadError {
                 Section {
-                    Text(loadError).christmasGlassRow()
+                    Text(loadError).translucentDarkRow()
                     Button("Try Again") { Task { await load() } }
-                        .christmasGlassRow()
+                        .translucentDarkRow()
                 }
             } else {
-                ProgressView("Loading Kris Kringle…").christmasGlassRow()
+                ProgressView("Loading Kris Kringle…").translucentDarkRow()
             }
         }
         .photosPicker(isPresented: $isChoosingPhoto, selection: $photoSelection, matching: .images)
@@ -79,10 +73,16 @@ struct KrisKringleDetailView: View {
         .navigationTitle(group.name)
         .navigationBarTitleDisplayMode(.inline)
         .task {
-            if members == nil { await load() }
+            if roster == nil { await load() }
         }
         .sheet(item: $parentForChild) { parent in
-            AddKrisKringleChildView(groupId: group.id, parent: parent) { members = $0 }
+            AddKrisKringleChildView(krisKringleId: group.id, parent: parent) { roster = $0 }
+        }
+        .alert("Add Group", isPresented: $isShowingAddGroup) {
+            TextField("Group name", text: $newGroupName)
+                .textInputAutocapitalization(.words)
+            Button("Cancel", role: .cancel) {}
+            Button("Add", action: addGroup)
         }
         .background {
             ContactEmailPicker(isPresented: $isChoosingContact, onFinish: selectContact)
@@ -92,7 +92,7 @@ struct KrisKringleDetailView: View {
 
     private var photoSection: some View {
         let draft = picture.flatMap { UIImage(data: $0) }
-        let canChoosePhoto = isCreator && members != nil
+        let canChoosePhoto = isCreator && roster != nil
         return Section {
             KrisKringlePhoto(
                 group: group, cache: photos, width: nil, height: 220, draft: draft,
@@ -110,13 +110,13 @@ struct KrisKringleDetailView: View {
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
-            if isPreparingPhoto { ProgressView("Preparing photo…").christmasGlassRow() }
-            if let photoError { Text(photoError).foregroundStyle(.red).christmasGlassRow() }
+            if isPreparingPhoto { ProgressView("Preparing photo…").translucentDarkRow() }
+            if let photoError { Text(photoError).foregroundStyle(.red).translucentDarkRow() }
         }
     }
 
     private var detailsSection: some View {
-        Section("Group Details") {
+        Section("Kris Kringle Details") {
             HStack(spacing: 8) {
                 TextField("Name", text: $name)
                     .textInputAutocapitalization(.words)
@@ -134,17 +134,41 @@ struct KrisKringleDetailView: View {
                     .frame(width: 44, height: 44)
                 }
                 .buttonStyle(.borderless)
-                .accessibilityLabel("Save Group Changes")
+                .accessibilityLabel("Save Kris Kringle Changes")
                 .disabled(!canSave)
             }
-            .christmasGlassRow()
-            if let saveError { Text(saveError).foregroundStyle(.red).christmasGlassRow() }
+            .translucentDarkRow()
+            if let saveError { Text(saveError).foregroundStyle(.red).translucentDarkRow() }
         }
         .disabled(isBusy)
     }
 
-    private var addMemberSection: some View {
+    private func addMemberSection(_ groups: [KrisKringleGroup]) -> some View {
         Section {
+            HStack {
+                Text("Group")
+                Spacer()
+                Picker("Group", selection: $selectedGroupId) {
+                    Text("Select a group").tag(nil as Int?)
+                    ForEach(groups) { group in
+                        Text(group.name).tag(Optional(group.id))
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                Button {
+                    isShowingAddGroup = true
+                } label: {
+                    if isAddingGroup {
+                        ProgressView()
+                    } else {
+                        Image(systemName: "plus")
+                    }
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Add Group")
+            }
+            .translucentDarkRow()
             if contactEmails.isEmpty {
                 HStack(spacing: 8) {
                     TextField("Email address", text: $email)
@@ -169,22 +193,22 @@ struct KrisKringleDetailView: View {
                     .accessibilityLabel("Add Member")
                     .disabled(!canAdd)
                 }
-                .christmasGlassRow()
+                .translucentDarkRow()
             } else {
                 Text("Choose an email address")
                     .foregroundStyle(.secondary)
-                    .christmasGlassRow()
+                    .translucentDarkRow()
                 ForEach(contactEmails, id: \.self) { address in
                     Button(address) {
                         email = address
                         contactEmails = []
                     }
-                    .christmasGlassRow()
+                    .translucentDarkRow()
                 }
                 Button("Cancel Email Selection") { contactEmails = [] }
-                    .christmasGlassRow()
+                    .translucentDarkRow()
             }
-            if let memberError { Text(memberError).foregroundStyle(.red).christmasGlassRow() }
+            if let memberError { Text(memberError).foregroundStyle(.red).translucentDarkRow() }
         } header: {
             HStack {
                 Text("Add a Member")
@@ -206,6 +230,30 @@ struct KrisKringleDetailView: View {
                 .shadow(color: .black.opacity(0.85), radius: 2)
         }
         .disabled(isBusy)
+    }
+
+    private func rosterSections(_ roster: KrisKringleRoster) -> some View {
+        let membersByGroup = Dictionary(grouping: roster.members, by: \.groupId)
+        return ForEach(roster.groups) { group in
+            Section(group.name) {
+                if let members = membersByGroup[group.id] {
+                    ForEach(members) { member in
+                        memberRow(member)
+                            .translucentDarkRow()
+                        ForEach(member.children) { child in
+                            Label(child.name, systemImage: "arrow.turn.down.right")
+                                .padding(.leading, 20)
+                                .accessibilityLabel("\(child.name), child of \(member.displayName)")
+                                .translucentDarkRow()
+                        }
+                    }
+                } else {
+                    Text("No members yet")
+                        .foregroundStyle(.secondary)
+                        .translucentDarkRow()
+                }
+            }
+        }
     }
 
     private func memberRow(_ member: KrisKringleMember) -> some View {
@@ -242,7 +290,7 @@ struct KrisKringleDetailView: View {
             let summaryChanged = group.name != detail.group.name || group.pictureVersion != detail.group.pictureVersion
             group = detail.group
             name = group.name
-            members = detail.members
+            roster = detail.roster
             if summaryChanged { onUpdate(group) }
         } catch is CancellationError {
         } catch {
@@ -286,15 +334,38 @@ struct KrisKringleDetailView: View {
         }
     }
 
+    private func addGroup() {
+        guard !isBusy else { return }
+        let groupName = trimmedNewGroupName
+        guard (1...100).contains(groupName.unicodeScalars.count) else {
+            memberError = "Enter a group name between 1 and 100 characters."
+            return
+        }
+
+        isAddingGroup = true
+        memberError = nil
+        Task {
+            defer { isAddingGroup = false }
+            do {
+                let result = try await KrisKringleService.addGroup(id: group.id, name: groupName)
+                roster = result.roster
+                selectedGroupId = result.groupId
+                newGroupName = ""
+            } catch {
+                memberError = error.localizedDescription
+            }
+        }
+    }
+
     private func addMember() {
-        guard canAdd else { return }
+        guard canAdd, let selectedGroupId else { return }
         let memberEmail = trimmedEmail
         isAdding = true
         memberError = nil
         Task {
             defer { isAdding = false }
             do {
-                members = try await KrisKringleService.addMember(id: group.id, email: memberEmail)
+                roster = try await KrisKringleService.addMember(id: group.id, groupId: selectedGroupId, email: memberEmail)
                 email = ""
             } catch {
                 memberError = error.localizedDescription
@@ -304,9 +375,9 @@ struct KrisKringleDetailView: View {
 }
 
 private struct AddKrisKringleChildView: View {
-    let groupId: Int
+    let krisKringleId: Int
     let parent: KrisKringleMember
-    let onAdd: ([KrisKringleMember]) -> Void
+    let onAdd: (KrisKringleRoster) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
     @State private var isAdding = false
@@ -319,16 +390,16 @@ private struct AddKrisKringleChildView: View {
         NavigationStack {
             Form {
                 LabeledContent("Parent", value: parent.displayName)
-                    .christmasGlassRow()
+                    .translucentDarkRow()
                 TextField("Child’s name", text: $name)
                     .textContentType(.name)
                     .textInputAutocapitalization(.words)
                     .submitLabel(.done)
                     .onSubmit(addChild)
                     .disabled(isAdding)
-                    .christmasGlassRow()
+                    .translucentDarkRow()
                 if let errorMessage {
-                    Text(errorMessage).foregroundStyle(.red).christmasGlassRow()
+                    Text(errorMessage).foregroundStyle(.red).translucentDarkRow()
                 }
             }
             .christmasBackground()
@@ -354,8 +425,8 @@ private struct AddKrisKringleChildView: View {
         Task {
             defer { isAdding = false }
             do {
-                let members = try await KrisKringleService.addChild(id: groupId, parentUserId: parent.id, name: childName)
-                onAdd(members)
+                let roster = try await KrisKringleService.addChild(id: krisKringleId, parentUserId: parent.id, name: childName)
+                onAdd(roster)
                 dismiss()
             } catch {
                 errorMessage = error.localizedDescription

@@ -50,7 +50,7 @@ struct KrisKringlesView: View {
                             }
                         }
                     }
-                    .christmasGlassRow()
+                    .translucentDarkRow()
                 }
                 .refreshable { await loadGroups() }
             case .failed(let message):
@@ -153,7 +153,7 @@ struct KrisKringlePhoto: View {
             if let onTap {
                 Button(action: onTap) { photo }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(group.pictureVersion.isEmpty && draft == nil ? "Add Group Photo" : "Change Group Photo")
+                    .accessibilityLabel(group.pictureVersion.isEmpty && draft == nil ? "Add Kris Kringle Photo" : "Change Kris Kringle Photo")
             } else {
                 photo
             }
@@ -203,6 +203,7 @@ struct KrisKringlePhoto: View {
 private struct CreateKrisKringleView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
+    @State private var firstGroupName = ""
     @State private var picture: Data?
     @State private var isPreparingPhoto = false
     @State private var isSaving = false
@@ -210,31 +211,47 @@ private struct CreateKrisKringleView: View {
     let onSave: (KrisKringleSummary, Data?) -> Void
 
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var trimmedFirstGroupName: String { firstGroupName.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var canSave: Bool {
         !isSaving && !isPreparingPhoto && (1...100).contains(trimmedName.unicodeScalars.count)
+            && (1...100).contains(trimmedFirstGroupName.unicodeScalars.count)
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Name", text: $name, prompt: Text("Family Christmas"))
+                    TextField("Name", text: $name, prompt: Text("Christmas Gift Exchange"))
                         .textInputAutocapitalization(.words)
                         .submitLabel(.done)
                         .onSubmit(save)
                         .disabled(isSaving)
-                        .christmasGlassRow()
+                        .translucentDarkRow()
                 } footer: {
                     Text("Give your gift exchange a name (up to 100 characters).")
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.85), radius: 2)
                 }
-                Section("Group Photo") {
-                    PhotoPicker(picture: $picture, isPreparing: $isPreparingPhoto, isSaving: isSaving)
-                        .christmasGlassRow()
+                Section {
+                    TextField("First group", text: $firstGroupName, prompt: Text("Marketing"))
+                        .textInputAutocapitalization(.words)
+                        .submitLabel(.done)
+                        .onSubmit(save)
+                        .disabled(isSaving)
+                        .translucentDarkRow()
+                } header: {
+                    Text("First Group")
+                } footer: {
+                    Text("You’ll be part of this group.")
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.85), radius: 2)
                 }
-                if isSaving { ProgressView("Saving Kris Kringle…").christmasGlassRow() }
-                if let errorMessage { Text(errorMessage).foregroundStyle(.red).christmasGlassRow() }
+                Section("Kris Kringle Photo") {
+                    PhotoPicker(picture: $picture, isPreparing: $isPreparingPhoto, isSaving: isSaving)
+                        .translucentDarkRow()
+                }
+                if isSaving { ProgressView("Saving Kris Kringle…").translucentDarkRow() }
+                if let errorMessage { Text(errorMessage).foregroundStyle(.red).translucentDarkRow() }
             }
             .christmasBackground()
             .navigationTitle("Create Kris Kringle")
@@ -254,13 +271,16 @@ private struct CreateKrisKringleView: View {
     private func save() {
         guard canSave else { return }
         let selectedPicture = picture
-        let groupName = trimmedName
+        let exchangeName = trimmedName
+        let firstGroup = trimmedFirstGroupName
         isSaving = true
         errorMessage = nil
         Task {
             defer { isSaving = false }
             do {
-                let result = try await KrisKringleService.create(name: groupName, picture: selectedPicture)
+                let result = try await KrisKringleService.create(
+                    name: exchangeName, firstGroupName: firstGroup, picture: selectedPicture
+                )
                 onSave(result, selectedPicture)
                 dismiss()
             } catch {
