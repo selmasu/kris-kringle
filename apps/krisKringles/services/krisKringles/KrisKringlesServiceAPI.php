@@ -54,12 +54,32 @@ class KrisKringleServiceAPI extends ServiceAPI
             case 'addKrisKringleGroup':
             case 'addKrisKringleMember':
             case 'addKrisKringleChild':
+            case 'getGiftRecipientOptions':
+            case 'updateGiftAssignment':
                 $token = $_POST['selmasuToken'] ?? null;
                 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || !is_string($token) || $token === ''
                     || !hash_equals((string)$this->s()->user()->selmasuToken()->get(), $token)) {
                     return ['error' => 'Please sign in again.'];
                 }
                 $id = $this->intArgument(self::ID);
+                if ($functionToCall === 'getGiftRecipientOptions' || $functionToCall === 'updateGiftAssignment') {
+                    header('Cache-Control: private, no-store');
+                    $idOptions = ['options' => ['min_range' => 0]];
+                    $giverId = filter_var($_POST['giverId'] ?? 0, FILTER_VALIDATE_INT, $idOptions);
+                    $giverUserId = filter_var($_POST['giverUserId'] ?? 0, FILTER_VALIDATE_INT, $idOptions);
+                    if ($giverId === false || $giverUserId === false || (bool)$giverId === (bool)$giverUserId) {
+                        return ['error' => 'Choose a member of this Kris Kringle.'];
+                    }
+                    if ($functionToCall === 'getGiftRecipientOptions') {
+                        return $this->krisKringleService->getGiftRecipientOptions($id, $giverId, $giverUserId);
+                    }
+                    $recipientId = filter_var($_POST['recipientId'] ?? null, FILTER_VALIDATE_INT, $idOptions);
+                    $expected = filter_var($_POST['expectedRecipientId'] ?? null, FILTER_VALIDATE_INT, $idOptions);
+                    if ($recipientId === false || $expected === false) {
+                        return ['error' => 'Choose a valid gift recipient.'];
+                    }
+                    return $this->krisKringleService->updateGiftAssignment($id, $giverId, $giverUserId, $recipientId, $expected);
+                }
                 if ($functionToCall === 'addKrisKringleGroup') {
                     header('Cache-Control: private, no-store');
                     $name = $_POST['name'] ?? null;

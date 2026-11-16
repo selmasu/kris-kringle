@@ -135,10 +135,10 @@ class KrisKringleModel extends Model
             . " AND krisKringle.krisKringleId = $id")->fetchAssoc();
     }
 
-    protected function getKrisKringleMembersFromDB(int $id, int $owner, bool $showEmails): array
+    protected function getKrisKringleMembersFromDB(int $id, int $owner): array
     {
         $memberTable = $this->tables()->krisKringleMember();
-        $groupIdsByUser = [];
+        $memberRowsByUser = [];
         $childrenByParent = [];
         $rows = $this->adb->fetchAll("SELECT krisKringleMemberId, groupId, userId, parentUserId, name
             FROM $memberTable WHERE krisKringleId = $id ORDER BY krisKringleMemberId");
@@ -146,7 +146,7 @@ class KrisKringleModel extends Model
             $userId = (int)$row['userId'];
             $parentId = (int)$row['parentUserId'];
             if ($userId > 0) {
-                $groupIdsByUser[$userId] = (int)$row['groupId'];
+                $memberRowsByUser[$userId] = $row;
             } elseif ($parentId > 0) {
                 $childrenByParent[$parentId][] = [
                     'memberId' => (int)$row['krisKringleMemberId'],
@@ -154,33 +154,171 @@ class KrisKringleModel extends Model
                 ];
             }
         }
-        if (!$groupIdsByUser) {
+        if (!$memberRowsByUser) {
             return [];
         }
-        $ids = implode(',', array_keys($groupIdsByUser));
+        $ids = implode(',', array_keys($memberRowsByUser));
         $userTable = $this->coreTables()->user();
-        $emailColumn = $showEmails ? ', email' : '';
-        $users = $this->db->fetchAll("SELECT userId, displayName, firstName, lastName$emailColumn
+        $users = $this->db->fetchAll("SELECT userId, displayName, firstName, lastName, email
             FROM $userTable WHERE userId IN ($ids) AND deleted = 0
             ORDER BY (userId = $owner) DESC, displayName, firstName, userId");
-        return array_map(static function (array $user) use ($owner, $showEmails, $childrenByParent, $groupIdsByUser) {
+        return array_map(static function (array $user) use ($owner, $childrenByParent, $memberRowsByUser) {
             $userId = (int)$user['userId'];
             $name = trim($user['displayName'] ?? '');
             if ($name === '') {
                 $name = trim(($user['firstName'] ?? '') . ' ' . ($user['lastName'] ?? ''));
             }
-            $member = [
+            $row = $memberRowsByUser[$userId];
+            return [
                 'userId' => $userId,
-                'groupId' => $groupIdsByUser[$userId],
+                'memberId' => (int)$row['krisKringleMemberId'],
+                'groupId' => (int)$row['groupId'],
                 'name' => $name,
+                'email' => $user['email'],
                 'isCreator' => $userId === $owner,
                 'children' => $childrenByParent[$userId] ?? [],
             ];
-            if ($showEmails) {
-                $member['email'] = $user['email'];
-            }
-            return $member;
         }, $users);
+    }
+
+    protected function resolveGiftGiverId(array $members, int $giverId, int $giverUserId): int
+    {
+        if ($giverId > 0) {
+            return $giverId;
+        }
+        foreach ($members as $member) {
+            if ($member['userId'] === $giverUserId) {
+                return $member['memberId'];
+            }
+        }
+        return 0;
+    }
+
+    protected function giftParticipants(array $members): array
+    {
+        $participants = [];
+        foreach ($members as $member) {
+            $participants[$member['memberId']] = [
+                'groupId' => $member['groupId'],
+                'accountId' => $member['userId'],
+                'name' => $member['name'] !== '' ? $member['name'] : ($member['email'] ?? 'Member'),
+            ];
+            foreach ($member['children'] as $child) {
+                $participants[$child['memberId']] = [
+                    'groupId' => $member['groupId'],
+                    'accountId' => $member['userId'],
+                    'name' => $child['name'],
+                ];
+            }
+        }
+        return $participants;
+    }
+
+    protected function getGiftAssignmentsFromDB(int $id, array $participants): array
+    {
+        $table = $this->tables()->krisKringleAssignment();
+        $assignments = [];
+        foreach ($this->adb->fetchAll("SELECT giverId, recipientId FROM $table WHERE krisKringleId = $id") as $row) {
+            $giverId = (int)$row['giverId'];
+            $recipientId = (int)$row['recipientId'];
+            if (isset($participants[$giverId], $participants[$recipientId])) {
+                $assignments[$giverId] = $recipientId;
+            }
+        }
+        return $assignments;
+    }
+
+    protected function eligibleGiftRecipients(array $participants, array $assignments, int $giverId): array
+    {
+        if (!isset($participants[$giverId]) || isset($assignments[$giverId])) {
+            return [];
+        }
+
+        $givers = array_diff_key($participants, $assignments);
+        $available = array_diff_key($participants, array_flip($assignments));
+        $remainingGivers = $givers;
+        unset($remainingGivers[$giverId]);
+        $remainingCount = count($remainingGivers);
+        $groupCounts = array_count_values(array_column($remainingGivers, 'groupId'));
+        foreach ($available as $recipient) {
+            $groupId = $recipient['groupId'];
+            $groupCounts[$groupId] = ($groupCounts[$groupId] ?? 0) + 1;
+        }
+
+        $giverGroup = $participants[$giverId]['groupId'];
+        $bestCost = PHP_INT_MAX;
+        $options = [];
+        foreach ($available as $recipientId => $recipient) {
+            if ($recipientId === $giverId) {
+                continue;
+            }
+            // A single remaining giver cannot be matched to themselves.
+            if ($remainingCount === 1) {
+                $otherGiver = array_key_first($remainingGivers);
+                if (isset($available[$otherGiver]) && $otherGiver !== $recipientId) {
+                    continue;
+                }
+            }
+
+            $recipientGroup = $recipient['groupId'];
+            --$groupCounts[$recipientGroup];
+            // Any excess over the number of remaining pairs must match within that group.
+            $withinGroup = $giverGroup === $recipientGroup;
+            $sameGroupCount = max(0, max($groupCounts) - $remainingCount) + (int)$withinGroup;
+            ++$groupCounts[$recipientGroup];
+            // Minimize same-group matches overall, then prefer an outside recipient now.
+            $cost = 2 * $sameGroupCount + (int)$withinGroup;
+            if ($cost < $bestCost) {
+                $bestCost = $cost;
+                $options = [];
+            }
+            if ($cost === $bestCost) {
+                $options[] = $recipientId;
+            }
+        }
+        return $options;
+    }
+
+    protected function updateGiftAssignmentInDB(
+        int $id, int $owner, int $giverId, int $giverUserId, int $recipientId, int $expectedRecipientId
+    ): ?string {
+        $table = $this->tables()->krisKringleAssignment();
+        // The framework may create this table on first use, before taking the exchange lock.
+        $this->adb->query("SELECT giverId FROM $table LIMIT 0");
+        $this->adb->query('START TRANSACTION');
+        if (!$this->getOwnedKrisKringleFromDB($id, $owner, true)) {
+            $this->adb->query('ROLLBACK');
+            return 'Only the creator can allocate gifts.';
+        }
+
+        $members = $this->getKrisKringleMembersFromDB($id, $owner);
+        $giverId = $this->resolveGiftGiverId($members, $giverId, $giverUserId);
+        $participants = $this->giftParticipants($members);
+        $assignments = $this->getGiftAssignmentsFromDB($id, $participants);
+        $current = $assignments[$giverId] ?? 0;
+        if (isset($participants[$giverId]) && $current === $recipientId) {
+            $this->adb->query('COMMIT');
+            return null;
+        }
+        if (!isset($participants[$giverId]) || $current !== $expectedRecipientId
+            || ($recipientId > 0 && !in_array($recipientId, $this->eligibleGiftRecipients($participants, $assignments, $giverId), true))) {
+            $this->adb->query('ROLLBACK');
+            return 'This assignment changed or the recipient is no longer available. Refresh the choices and try again.';
+        }
+
+        // A row involving an inactive participant may still hold a unique key.
+        $saved = $this->adb->executePrepared(
+            "DELETE FROM $table WHERE krisKringleId = ? AND (giverId = ? OR recipientId = ?)",
+            [$id, $giverId, $recipientId]
+        );
+        if ($saved && $recipientId > 0) {
+            $saved = $this->adb->executePrepared(
+                "INSERT INTO $table (krisKringleId, giverId, recipientId) VALUES (?, ?, ?)",
+                [$id, $giverId, $recipientId]
+            );
+        }
+        $this->adb->query($saved ? 'COMMIT' : 'ROLLBACK');
+        return $saved ? null : 'Couldn’t save this assignment. Please try again.';
     }
 
     protected function addKrisKringleMemberInDB(int $id, int $owner, int $groupId, int $userId): ?string

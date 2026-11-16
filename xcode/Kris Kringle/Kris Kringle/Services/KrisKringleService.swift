@@ -52,6 +52,7 @@ struct KrisKringleMember: Identifiable {
     }
 
     let id: Int
+    let memberId: Int?
     let groupId: Int
     let name: String
     let email: String?
@@ -67,6 +68,8 @@ struct KrisKringleMember: Identifiable {
             throw KrisKringleService.ServiceError("The server returned an invalid group member.")
         }
         self.id = id
+        let memberId = json["memberId"].int ?? Int(json["memberId"].stringValue)
+        self.memberId = memberId.flatMap { $0 > 0 ? $0 : nil }
         self.name = name
         self.groupId = groupId
         self.email = json["email"].string
@@ -75,9 +78,66 @@ struct KrisKringleMember: Identifiable {
     }
 }
 
+enum KrisKringleGiftGiverID: Hashable {
+    case member(Int)
+    case user(Int)
+
+    fileprivate var parameter: (name: String, value: String) {
+        switch self {
+        case .member(let id): ("giverId", String(id))
+        case .user(let id): ("giverUserId", String(id))
+        }
+    }
+}
+
+struct KrisKringleGiftAssignment {
+    let giverId: Int
+    let recipientName: String
+
+    init(json: JSON) throws {
+        guard let giverId = json["giverId"].int, let recipientName = json["recipientName"].string else {
+            throw KrisKringleService.ServiceError("The server returned an invalid gift assignment.")
+        }
+        self.giverId = giverId
+        self.recipientName = recipientName
+    }
+}
+
+struct KrisKringleGiftRecipient: Identifiable {
+    let id: Int
+    let groupId: Int
+    let name: String
+
+    init(json: JSON) throws {
+        guard let id = json["memberId"].int, let groupId = json["groupId"].int,
+              let name = json["name"].string else {
+            throw KrisKringleService.ServiceError("The server returned an invalid gift recipient.")
+        }
+        self.id = id
+        self.groupId = groupId
+        self.name = name
+    }
+}
+
+struct KrisKringleGiftOptions {
+    let recipients: [KrisKringleGiftRecipient]
+    let recipientId: Int?
+    let recipientName: String?
+
+    init(json: JSON) throws {
+        guard let options = json["options"].array else {
+            throw KrisKringleService.ServiceError("The server didn’t return gift recipient options.")
+        }
+        recipients = try options.map { try KrisKringleGiftRecipient(json: $0) }
+        recipientId = json["recipientId"].int
+        recipientName = json["recipientName"].string
+    }
+}
+
 struct KrisKringleRoster {
     let groups: [KrisKringleGroup]
     let members: [KrisKringleMember]
+    let assignments: [Int: KrisKringleGiftAssignment]
 
     init(json: JSON) throws {
         guard let groups = json["groups"].array, let members = json["members"].array else {
@@ -85,6 +145,8 @@ struct KrisKringleRoster {
         }
         self.groups = try groups.map { try KrisKringleGroup(json: $0) }
         self.members = try members.map { try KrisKringleMember(json: $0) }
+        let assignments = try (json["assignments"].array ?? []).map { try KrisKringleGiftAssignment(json: $0) }
+        self.assignments = Dictionary(assignments.map { ($0.giverId, $0) }, uniquingKeysWith: { first, _ in first })
     }
 }
 
@@ -139,6 +201,23 @@ enum KrisKringleService {
         let fields = ["id": String(id), "parentUserId": String(parentUserId), "name": name]
         let result = try await request("addKrisKringleChild", parameters: fields)
         return try KrisKringleRoster(json: result)
+    }
+
+    static func giftRecipientOptions(id: Int, giverId: KrisKringleGiftGiverID) async throws -> KrisKringleGiftOptions {
+        let giver = giverId.parameter
+        let fields = ["id": String(id), giver.name: giver.value]
+        return try await KrisKringleGiftOptions(json: request("getGiftRecipientOptions", parameters: fields))
+    }
+
+    static func updateGiftAssignment(
+        id: Int, giverId: KrisKringleGiftGiverID, recipientId: Int?, expectedRecipientId: Int?
+    ) async throws -> KrisKringleRoster {
+        let giver = giverId.parameter
+        let fields = [
+            "id": String(id), giver.name: giver.value, "recipientId": String(recipientId ?? 0),
+            "expectedRecipientId": String(expectedRecipientId ?? 0)
+        ]
+        return try await KrisKringleRoster(json: request("updateGiftAssignment", parameters: fields))
     }
 
     static func picture(id: Int) async throws -> Data {

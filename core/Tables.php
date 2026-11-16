@@ -29,6 +29,7 @@ final class Tables
         return [
             'krisKringle' => 'krisKringle',
             'krisKringleGroup' => 'krisKringleGroup',
+            'krisKringleAssignment' => 'krisKringleAssignment',
             'krisKringleMember' => 'krisKringleMember',
             'krisKringleProfilePhoto' => 'krisKringleProfilePhoto',
             'krisKringleAppleIdentity' => 'krisKringleAppleIdentity'
@@ -45,6 +46,7 @@ final class Tables
         return [
             'krisKringle' => $this->krisKringleSchema(),
             'krisKringleGroup' => $this->krisKringleGroupSchema(),
+            'krisKringleAssignment' => $this->krisKringleAssignmentSchema(),
             'krisKringleMember' => $this->krisKringleMemberSchema(),
             'krisKringleProfilePhoto' => $this->krisKringleProfilePhotoSchema(),
             'krisKringleAppleIdentity' => $this->krisKringleAppleIdentitySchema()
@@ -63,6 +65,10 @@ final class Tables
 
     public function krisKringleGroup(){
         return $this->tables['krisKringleGroup'];
+    }
+
+    public function krisKringleAssignment(){
+        return $this->tables['krisKringleAssignment'];
     }
 
     public function krisKringleMember(){
@@ -108,6 +114,14 @@ final class Tables
             ->addField(TableField::create()->name()->set('groupId')->type()->set(TableField::TYPE_BIGINT)->autoIncrement()->set(true)->primaryKey()->set(true))
             ->addField(TableField::create()->name()->set('krisKringleId')->type()->set(TableField::TYPE_BIGINT)->key()->set(true))
             ->addField(TableField::create()->name()->set('name')->type()->set(TableField::TYPE_VARCHAR_100));
+    }
+
+    private function krisKringleAssignmentSchema(){
+        return TableSchema::create()
+            ->name()->set('krisKringleAssignment')
+            ->addField(TableField::create()->name()->set('giverId')->type()->set(TableField::TYPE_BIGINT)->primaryKey()->set(true))
+            ->addField(TableField::create()->name()->set('recipientId')->type()->set(TableField::TYPE_BIGINT)->unique()->set(true))
+            ->addField(TableField::create()->name()->set('krisKringleId')->type()->set(TableField::TYPE_BIGINT)->key()->set(true));
     }
 
     private function krisKringleMemberSchema(){

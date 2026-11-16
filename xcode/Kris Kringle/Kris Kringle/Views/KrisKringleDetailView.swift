@@ -15,6 +15,7 @@ struct KrisKringleDetailView: View {
     @State private var newGroupName = ""
     @State private var isAddingGroup = false
     @State private var parentForChild: KrisKringleMember?
+    @State private var giftGiver: GiftGiver?
     @State private var email = ""
     @State private var isChoosingContact = false
     @State private var contactEmails: [String] = []
@@ -90,6 +91,9 @@ struct KrisKringleDetailView: View {
         }
         .sheet(item: $parentForChild) { parent in
             AddKrisKringleChildView(krisKringleId: group.id, parent: parent) { roster = $0 }
+        }
+        .sheet(item: $giftGiver) { giver in
+            GiftRecipientView(krisKringleId: group.id, giver: giver, groups: roster?.groups ?? []) { roster = $0 }
         }
         .alert("Add Group", isPresented: $isShowingAddGroup) {
             TextField("Group name", text: $newGroupName)
@@ -256,10 +260,13 @@ struct KrisKringleDetailView: View {
                         memberRow(member)
                             .translucentDarkRow()
                         ForEach(member.children) { child in
-                            Label(child.name, systemImage: "arrow.turn.down.right")
-                                .padding(.leading, 20)
-                                .accessibilityLabel("\(child.name), child of \(member.displayName)")
-                                .translucentDarkRow()
+                            VStack(alignment: .leading, spacing: 4) {
+                                Label(child.name, systemImage: "arrow.turn.down.right")
+                                    .accessibilityLabel("\(child.name), child of \(member.displayName)")
+                                giftAssignment(for: GiftGiver(id: .member(child.id), name: child.name))
+                            }
+                            .padding(.leading, 20)
+                            .translucentDarkRow()
                         }
                     }
                 } else {
@@ -278,6 +285,8 @@ struct KrisKringleDetailView: View {
                 if !member.name.isEmpty, let email = member.email, !email.isEmpty {
                     Text(email).font(.subheadline).foregroundStyle(.secondary)
                 }
+                let giverId = member.memberId.map(KrisKringleGiftGiverID.member) ?? .user(member.id)
+                giftAssignment(for: GiftGiver(id: giverId, name: member.displayName))
             }
             Spacer()
             if member.isCreator {
@@ -294,6 +303,30 @@ struct KrisKringleDetailView: View {
                 .accessibilityLabel("Add Child under \(member.displayName)")
                 .disabled(isBusy)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func giftAssignment(for giver: GiftGiver) -> some View {
+        let assignment = giver.memberId.flatMap { roster?.assignments[$0] }
+        if isCreator {
+            Button {
+                giftGiver = giver
+            } label: {
+                if let assignment {
+                    Label("Buying for \(assignment.recipientName)", systemImage: "gift")
+                } else {
+                    Label("Choose recipient", systemImage: "gift")
+                }
+            }
+            .font(.subheadline)
+            .buttonStyle(.borderless)
+            .accessibilityHint("Manage the gift recipient for \(giver.name)")
+            .disabled(isBusy)
+        } else if let assignment {
+            Label("Buying for \(assignment.recipientName)", systemImage: "gift")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -392,6 +425,136 @@ struct KrisKringleDetailView: View {
                 closeAddMember()
             } catch {
                 memberError = error.localizedDescription
+            }
+        }
+    }
+}
+
+private struct GiftGiver: Identifiable {
+    let id: KrisKringleGiftGiverID
+    let name: String
+
+    var memberId: Int? {
+        if case .member(let memberId) = id { return memberId }
+        return nil
+    }
+}
+
+private struct GiftRecipientView: View {
+    let krisKringleId: Int
+    let giver: GiftGiver
+    let groups: [KrisKringleGroup]
+    let onUpdate: (KrisKringleRoster) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var options: KrisKringleGiftOptions?
+    @State private var selectedId: Int?
+    @State private var isSaving = false
+    @State private var isConfirmingClear = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                LabeledContent("Buying a gift", value: giver.name)
+                    .translucentDarkRow()
+
+                if let options {
+                    if let recipientId = options.recipientId, let name = options.recipientName {
+                        LabeledContent("Recipient", value: name)
+                            .translucentDarkRow()
+                        Button("Clear assignment", role: .destructive) { isConfirmingClear = true }
+                            .translucentDarkRow()
+                            .confirmationDialog("Clear this gift assignment?", isPresented: $isConfirmingClear, titleVisibility: .visible) {
+                                Button("Clear assignment", role: .destructive) {
+                                    save(recipientId: nil, expectedRecipientId: recipientId)
+                                }
+                            }
+                    } else if options.recipients.isEmpty {
+                        Text("No recipients available. Add another member or clear an existing assignment to open up choices.")
+                            .translucentDarkRow()
+                    } else {
+                        Section("Choose a recipient") {
+                            ForEach(options.recipients) { recipient in
+                                Button {
+                                    selectedId = recipient.id
+                                } label: {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(recipient.name)
+                                            if let group = groups.first(where: { $0.id == recipient.groupId }) {
+                                                Text(group.name)
+                                                    .font(.subheadline)
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        }
+                                        Spacer()
+                                        if selectedId == recipient.id {
+                                            Image(systemName: "checkmark")
+                                                .accessibilityHidden(true)
+                                        }
+                                    }
+                                }
+                                .accessibilityAddTraits(selectedId == recipient.id ? .isSelected : [])
+                                .translucentDarkRow()
+                            }
+                        }
+                    }
+                } else if errorMessage == nil {
+                    ProgressView("Loading recipients…").translucentDarkRow()
+                }
+
+                if let errorMessage {
+                    Text(errorMessage).foregroundStyle(.red).translucentDarkRow()
+                    Button("Refresh choices") { Task { await loadOptions() } }
+                        .translucentDarkRow()
+                }
+            }
+            .disabled(isSaving)
+            .christmasBackground()
+            .navigationTitle("Gift Recipient")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { dismiss() }.disabled(isSaving)
+                }
+                if let selectedId, errorMessage == nil {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save") { save(recipientId: selectedId, expectedRecipientId: nil) }
+                            .disabled(isSaving)
+                    }
+                }
+            }
+        }
+        .interactiveDismissDisabled(isSaving)
+        .task { await loadOptions() }
+    }
+
+    private func loadOptions() async {
+        errorMessage = nil
+        selectedId = nil
+        options = nil
+        do {
+            options = try await KrisKringleService.giftRecipientOptions(id: krisKringleId, giverId: giver.id)
+        } catch is CancellationError {
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func save(recipientId: Int?, expectedRecipientId: Int?) {
+        guard !isSaving else { return }
+        isSaving = true
+        Task {
+            defer { isSaving = false }
+            do {
+                let roster = try await KrisKringleService.updateGiftAssignment(
+                    id: krisKringleId, giverId: giver.id, recipientId: recipientId, expectedRecipientId: expectedRecipientId
+                )
+                onUpdate(roster)
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
             }
         }
     }

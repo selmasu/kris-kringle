@@ -66,7 +66,7 @@ class KrisKringleService extends KrisKringleModel {
             return ['error' => 'This Kris Kringle is no longer available.'];
         }
         $owner = (int)$group['createdBy'];
-        return ['data' => $group] + $this->roster($id, $owner, $owner === $userId);
+        return ['data' => $group] + $this->roster($id, $owner, $userId);
     }
 
     public function addKrisKringleGroup(int $id, string $name): array
@@ -83,7 +83,7 @@ class KrisKringleService extends KrisKringleModel {
         if ($groupId <= 0) {
             return ['error' => 'Couldn’t add this group. Please try again.'];
         }
-        return ['groupId' => $groupId] + $this->roster($id, $owner, true);
+        return ['groupId' => $groupId] + $this->roster($id, $owner, $owner);
     }
 
     public function addKrisKringleMember(int $id, int $groupId, string $email): array
@@ -109,7 +109,7 @@ class KrisKringleService extends KrisKringleModel {
             return ['error' => 'Couldn’t add this member. Please try again.'];
         }
         $error = $this->addKrisKringleMemberInDB($id, $owner, $groupId, $memberId);
-        return $error === null ? $this->roster($id, $owner, true) : ['error' => $error];
+        return $error === null ? $this->roster($id, $owner, $owner) : ['error' => $error];
     }
 
     public function addKrisKringleChild(int $id, int $parentId, string $name): array
@@ -126,13 +126,70 @@ class KrisKringleService extends KrisKringleModel {
         if ($parentId <= 0 || !$this->addKrisKringleChildInDB($id, $owner, $parentId, $name)) {
             return ['error' => 'Couldn’t add this child. Choose a parent who is a member of this Kris Kringle and try again.'];
         }
-        return $this->roster($id, $owner, true);
+        return $this->roster($id, $owner, $owner);
     }
 
-    private function roster(int $id, int $owner, bool $showEmails): array
+    public function getGiftRecipientOptions(int $id, int $giverId, int $giverUserId): array
     {
-        $members = $this->getKrisKringleMembersFromDB($id, $owner, $showEmails);
-        return ['groups' => $this->getKrisKringleGroupsFromDB($id), 'members' => $members];
+        $owner = (int)$this->s()->userId();
+        if ($owner <= 0 || $id <= 0 || !$this->getOwnedKrisKringleFromDB($id, $owner)) {
+            return ['error' => 'Only the creator can allocate gifts.'];
+        }
+        $members = $this->getKrisKringleMembersFromDB($id, $owner);
+        $giverId = $this->resolveGiftGiverId($members, $giverId, $giverUserId);
+        $participants = $this->giftParticipants($members);
+        if (!isset($participants[$giverId])) {
+            return ['error' => 'Choose a member of this Kris Kringle.'];
+        }
+        $assignments = $this->getGiftAssignmentsFromDB($id, $participants);
+        $options = [];
+        foreach ($this->eligibleGiftRecipients($participants, $assignments, $giverId) as $recipientId) {
+            $options[] = [
+                'memberId' => $recipientId,
+                'name' => $participants[$recipientId]['name'],
+                'groupId' => $participants[$recipientId]['groupId'],
+            ];
+        }
+        $recipientId = $assignments[$giverId] ?? null;
+        return [
+            'options' => $options,
+            'recipientId' => $recipientId,
+            'recipientName' => $recipientId === null ? null : $participants[$recipientId]['name'],
+        ];
+    }
+
+    public function updateGiftAssignment(
+        int $id, int $giverId, int $giverUserId, int $recipientId, int $expectedRecipientId
+    ): array {
+        $owner = (int)$this->s()->userId();
+        if ($owner <= 0 || $id <= 0 || !$this->getOwnedKrisKringleFromDB($id, $owner)) {
+            return ['error' => 'Only the creator can allocate gifts.'];
+        }
+        $error = $this->updateGiftAssignmentInDB($id, $owner, $giverId, $giverUserId, $recipientId, $expectedRecipientId);
+        return $error === null ? $this->roster($id, $owner, $owner) : ['error' => $error];
+    }
+
+    private function roster(int $id, int $owner, int $viewer): array
+    {
+        $members = $this->getKrisKringleMembersFromDB($id, $owner);
+        $participants = $this->giftParticipants($members);
+        $assignments = [];
+        foreach ($this->getGiftAssignmentsFromDB($id, $participants) as $giverId => $recipientId) {
+            if ($viewer === $owner || $viewer === $participants[$giverId]['accountId']) {
+                $assignments[] = [
+                    'giverId' => $giverId,
+                    'recipientId' => $recipientId,
+                    'recipientName' => $participants[$recipientId]['name'],
+                ];
+            }
+        }
+        if ($viewer !== $owner) {
+            foreach ($members as &$member) {
+                unset($member['email']);
+            }
+            unset($member);
+        }
+        return ['groups' => $this->getKrisKringleGroupsFromDB($id), 'members' => $members, 'assignments' => $assignments];
     }
 
     public function updateKrisKringlePicture(int $id, ?array $upload): array
