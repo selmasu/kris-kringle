@@ -409,11 +409,6 @@ class UsersService extends UsersModel {
             return ['sent' => false, 'error' => 'Please enter a valid email address'];
         }
 
-        if($emailAddress == 'tester@testing.com'){
-            $this->setOneTimeCodeInDB($emailAddress);
-            return ['sent' => true, 'error' => '', 'retryAfter' => 60, 'expiresIn' => 300];
-        }
-
         $lock = $this->emailAccountLock($emailAddress);
         if ((int)$this->db->fetchValue('acquired', "SELECT GET_LOCK('" . $lock . "', 5) AS acquired") !== 1) {
             return ['sent' => false, 'error' => 'Unable to send a code. Please try again'];
@@ -433,26 +428,28 @@ class UsersService extends UsersModel {
             $this->db->query("DO RELEASE_LOCK('" . $lock . "')");
         }
 
-        $email = EmailsService::create($this->s())->getEmailObject(\KrisKringle\Email::TYPE_ONE_TIME_CODE);
-        if (!$email) {
-            $email = \KrisKringle\Email::create();
-            $email->subject()->set('Your Kris Kringle sign-in code');
-            $email->htmlBody()->set('<p>Your sign-in code is <strong>[[Access Code]]</strong>.</p><p>Use it to sign in or create your account. It expires in five minutes.</p><p>If you did not request this code, you can ignore this email.</p>');
-        }
+        if($emailAddress != 'tester@testing.com') {
+            $email = EmailsService::create($this->s())->getEmailObject(\KrisKringle\Email::TYPE_ONE_TIME_CODE);
+            if (!$email) {
+                $email = \KrisKringle\Email::create();
+                $email->subject()->set('Your Kris Kringle sign-in code');
+                $email->htmlBody()->set('<p>Your sign-in code is <strong>[[Access Code]]</strong>.</p><p>Use it to sign in or create your account. It expires in five minutes.</p><p>If you did not request this code, you can ignore this email.</p>');
+            }
 
-        $email->fromAddress()->set('noreply@' . Settings::$mailgunDomain);
-        $email->fromName()->set('Kris Kringle');
-        $email->toAddress()->set($emailAddress);
-        $email->htmlBody()->strReplace('[[First Name]]', htmlspecialchars($user->firstName()->get(), ENT_QUOTES, 'UTF-8'));
-        $email->htmlBody()->strReplace('[[Access Code]]', $oneTimeCode);
-        $email->plainBody()->set('Your Kris Kringle sign-in code is ' . $oneTimeCode . '. It expires in five minutes.');
-        $email->active()->set(true);
-        $email->app()->set('authentication');
-        $email->id()->set('OTC_' . $user->userId()->get() . '_' . bin2hex(random_bytes(8)));
+            $email->fromAddress()->set('noreply@' . Settings::$mailgunDomain);
+            $email->fromName()->set('Kris Kringle');
+            $email->toAddress()->set($emailAddress);
+            $email->htmlBody()->strReplace('[[First Name]]', htmlspecialchars($user->firstName()->get(), ENT_QUOTES, 'UTF-8'));
+            $email->htmlBody()->strReplace('[[Access Code]]', $oneTimeCode);
+            $email->plainBody()->set('Your Kris Kringle sign-in code is ' . $oneTimeCode . '. It expires in five minutes.');
+            $email->active()->set(true);
+            $email->app()->set('authentication');
+            $email->id()->set('OTC_' . $user->userId()->get() . '_' . bin2hex(random_bytes(8)));
 
-        if (!EmailService::create($this->s())->sendMail($email)) {
-            $this->clearOneTimeCodeInDB($user->userId()->get(), $oneTimeCode);
-            return ['sent' => false, 'error' => 'Could not send email, please try again in one minute'];
+            if (!EmailService::create($this->s())->sendMail($email)) {
+                $this->clearOneTimeCodeInDB($user->userId()->get(), $oneTimeCode);
+                return ['sent' => false, 'error' => 'Could not send email, please try again in one minute'];
+            }
         }
 
         return ['sent' => true, 'error' => '', 'retryAfter' => 60, 'expiresIn' => 300];
