@@ -15,7 +15,9 @@ struct KrisKringleDetailView: View {
     @State private var newGroupName = ""
     @State private var isAddingGroup = false
     @State private var parentForChild: KrisKringleMember?
+    @State private var editingMember: EditableMember?
     @State private var giftGiver: GiftGiver?
+    @State private var firstName = ""
     @State private var email = ""
     @State private var isChoosingContact = false
     @State private var contactEmails: [String] = []
@@ -91,6 +93,9 @@ struct KrisKringleDetailView: View {
         }
         .sheet(item: $parentForChild) { parent in
             AddKrisKringleChildView(krisKringleId: group.id, parent: parent) { roster = $0 }
+        }
+        .sheet(item: $editingMember) { member in
+            EditKrisKringleMemberView(krisKringleId: group.id, member: member) { roster = $0 }
         }
         .sheet(item: $giftGiver) { giver in
             GiftRecipientView(krisKringleId: group.id, giver: giver, groups: roster?.groups ?? []) { roster = $0 }
@@ -186,6 +191,10 @@ struct KrisKringleDetailView: View {
                 .accessibilityLabel("Add Group")
             }
             .translucentDarkRow()
+            TextField("First name (optional)", text: $firstName)
+                .textContentType(.givenName)
+                .textInputAutocapitalization(.words)
+                .translucentDarkRow()
             if contactEmails.isEmpty {
                 HStack(spacing: 8) {
                     TextField("Email address", text: $email)
@@ -261,8 +270,19 @@ struct KrisKringleDetailView: View {
                             .translucentDarkRow()
                         ForEach(member.children) { child in
                             VStack(alignment: .leading, spacing: 4) {
-                                Label(child.name, systemImage: "arrow.turn.down.right")
-                                    .accessibilityLabel("\(child.name), child of \(member.displayName)")
+                                if isCreator {
+                                    Button {
+                                        editingMember = EditableMember(child: child)
+                                    } label: {
+                                        Label(child.name, systemImage: "arrow.turn.down.right")
+                                            .foregroundStyle(.primary)
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .accessibilityLabel("Edit \(child.name), child of \(member.displayName)")
+                                    .disabled(isBusy)
+                                } else {
+                                    Label(child.name, systemImage: "arrow.turn.down.right")
+                                }
                                 giftAssignment(for: GiftGiver(id: .member(child.id), name: child.name))
                             }
                             .padding(.leading, 20)
@@ -281,9 +301,20 @@ struct KrisKringleDetailView: View {
     private func memberRow(_ member: KrisKringleMember) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(member.displayName)
-                if !member.name.isEmpty, let email = member.email, !email.isEmpty {
-                    Text(email).font(.subheadline).foregroundStyle(.secondary)
+                if isCreator {
+                    Button {
+                        editingMember = EditableMember(member: member)
+                    } label: {
+                        Text(member.displayName)
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Edit \(member.displayName)")
+                    .disabled(isBusy)
+                } else {
+                    Text(member.displayName)
                 }
                 let giverId = member.memberId.map(KrisKringleGiftGiverID.member) ?? .user(member.id)
                 giftAssignment(for: GiftGiver(id: giverId, name: member.displayName))
@@ -407,6 +438,7 @@ struct KrisKringleDetailView: View {
 
     private func closeAddMember() {
         isShowingAddMember = false
+        firstName = ""
         email = ""
         contactEmails = []
         newGroupName = ""
@@ -416,15 +448,140 @@ struct KrisKringleDetailView: View {
     private func addMember() {
         guard canAdd, let selectedGroupId else { return }
         let memberEmail = trimmedEmail
+        let memberFirstName = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
         isAdding = true
         memberError = nil
         Task {
             defer { isAdding = false }
             do {
-                roster = try await KrisKringleService.addMember(id: group.id, groupId: selectedGroupId, email: memberEmail)
+                roster = try await KrisKringleService.addMember(
+                    id: group.id, groupId: selectedGroupId, email: memberEmail, firstName: memberFirstName
+                )
                 closeAddMember()
             } catch {
                 memberError = error.localizedDescription
+            }
+        }
+    }
+}
+
+private struct EditableMember: Identifiable {
+    let memberId: Int?
+    let userId: Int
+    let name: String
+    let email: String?
+    let isCreator: Bool
+
+    var id: String { memberId.map { "member-\($0)" } ?? "user-\(userId)" }
+    var isChild: Bool { userId == 0 }
+
+    init(member: KrisKringleMember) {
+        memberId = member.memberId
+        userId = member.id
+        name = member.name
+        email = member.email
+        isCreator = member.isCreator
+    }
+
+    init(child: KrisKringleMember.Child) {
+        memberId = child.id
+        userId = 0
+        name = child.name
+        email = nil
+        isCreator = false
+    }
+}
+
+private struct EditKrisKringleMemberView: View {
+    let krisKringleId: Int
+    let member: EditableMember
+    let onUpdate: (KrisKringleRoster) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var name: String
+    @State private var email: String
+    @State private var isSaving = false
+    @State private var errorMessage: String?
+
+    init(krisKringleId: Int, member: EditableMember, onUpdate: @escaping (KrisKringleRoster) -> Void) {
+        self.krisKringleId = krisKringleId
+        self.member = member
+        self.onUpdate = onUpdate
+        _name = State(initialValue: member.name)
+        _email = State(initialValue: member.email ?? "")
+    }
+
+    private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var trimmedEmail: String { email.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var canSave: Bool {
+        !isSaving && trimmedName.unicodeScalars.count <= 100
+            && (member.isChild ? !trimmedName.isEmpty : !trimmedEmail.isEmpty)
+            && (trimmedName != member.name || trimmedEmail != (member.email ?? ""))
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                TextField(member.isChild ? "Name" : "First name (optional)", text: $name)
+                    .textContentType(.givenName)
+                    .textInputAutocapitalization(.words)
+                    .translucentDarkRow()
+                if !member.isChild {
+                    Section {
+                        if member.isCreator {
+                            LabeledContent("Email address", value: email)
+                                .translucentDarkRow()
+                        } else {
+                            TextField("Email address", text: $email)
+                                .textContentType(.emailAddress)
+                                .keyboardType(.emailAddress)
+                                .textInputAutocapitalization(.never)
+                                .autocorrectionDisabled()
+                                .translucentDarkRow()
+                        }
+                    } footer: {
+                        Text(member.isCreator
+                             ? "The creator’s email is linked to their sign-in account."
+                             : "This email determines who can sign in to view this member’s gifts and their children’s gifts.")
+                    }
+                }
+                if let errorMessage {
+                    Text(errorMessage).foregroundStyle(.red).translucentDarkRow()
+                }
+            }
+            .disabled(isSaving)
+            .christmasBackground()
+            .navigationTitle("Edit Member")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }.disabled(isSaving)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(isSaving ? "Saving…" : "Save", action: save).disabled(!canSave)
+                }
+            }
+        }
+        .interactiveDismissDisabled(isSaving)
+    }
+
+    private func save() {
+        guard canSave else { return }
+        let updatedName = trimmedName
+        let updatedEmail = trimmedEmail
+        isSaving = true
+        errorMessage = nil
+        Task {
+            defer { isSaving = false }
+            do {
+                let roster = try await KrisKringleService.updateMember(
+                    id: krisKringleId, memberId: member.memberId, userId: member.userId,
+                    firstName: updatedName, email: updatedEmail
+                )
+                onUpdate(roster)
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
             }
         }
     }
@@ -471,7 +628,7 @@ private struct GiftRecipientView: View {
                                 }
                             }
                     } else if options.recipients.isEmpty {
-                        Text("No recipients available. Add another member or clear an existing assignment to open up choices.")
+                        Text("No valid recipients available. Members cannot buy for themselves or each other. Add another member or clear an existing assignment to open up choices.")
                             .translucentDarkRow()
                     } else {
                         Section("Choose a recipient") {

@@ -86,7 +86,7 @@ class KrisKringleService extends KrisKringleModel {
         return ['groupId' => $groupId] + $this->roster($id, $owner, $owner);
     }
 
-    public function addKrisKringleMember(int $id, int $groupId, string $email): array
+    public function addKrisKringleMember(int $id, int $groupId, string $email, string $firstName = ''): array
     {
         $owner = (int)$this->s()->userId();
         if ($owner <= 0 || $id <= 0 || !$this->getOwnedKrisKringleFromDB($id, $owner)) {
@@ -100,6 +100,11 @@ class KrisKringleService extends KrisKringleModel {
         if ($groupId <= 0 || !$this->hasKrisKringleGroupInDB($id, $groupId)) {
             return ['error' => 'Choose a group in this Kris Kringle.'];
         }
+        $firstName = trim($firstName);
+        if (preg_match('/\A[^\p{Cc}]{0,100}\z/u', $firstName) !== 1) {
+            return ['error' => 'Enter a first name up to 100 characters.'];
+        }
+
         $user = UsersService::create($this->s())->getOrCreateEmailAccount($email);
         $memberId = $user ? (int)$user->userId()->get() : 0;
         if ($memberId === $owner) {
@@ -108,7 +113,53 @@ class KrisKringleService extends KrisKringleModel {
         if ($memberId <= 0) {
             return ['error' => 'Couldn’t add this member. Please try again.'];
         }
-        $error = $this->addKrisKringleMemberInDB($id, $owner, $groupId, $memberId);
+        $error = $this->addKrisKringleMemberInDB($id, $owner, $groupId, $memberId, $firstName);
+        return $error === null ? $this->roster($id, $owner, $owner) : ['error' => $error];
+    }
+
+    public function updateKrisKringleMember(
+        int $id, int $memberId, int $userId, int $expectedUserId, string $name, string $email
+    ): array {
+        $owner = (int)$this->s()->userId();
+        if ($owner <= 0 || $id <= 0 || !$this->getOwnedKrisKringleFromDB($id, $owner)) {
+            return ['error' => 'Only the creator can edit members.'];
+        }
+        $member = $this->getEditableKrisKringleMemberFromDB($id, $memberId, $userId);
+        if (!$member || ((int)$member['userId'] === 0) !== ($expectedUserId === 0)) {
+            return ['error' => 'This member is no longer available. Refresh the roster and try again.'];
+        }
+        $name = trim($name);
+        $child = $expectedUserId === 0;
+        if (preg_match($child ? '/\A[^\p{Cc}]{1,100}\z/u' : '/\A[^\p{Cc}]{0,100}\z/u', $name) !== 1) {
+            return ['error' => $child ? 'Enter a child’s name between 1 and 100 characters.' : 'Enter a first name up to 100 characters.'];
+        }
+
+        $targetUserId = 0;
+        if (!$child) {
+            $email = strtolower(trim($email));
+            if (strlen($email) > 100 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return ['error' => 'Enter a valid email address.'];
+            }
+            $currentUserId = (int)$member['userId'];
+            $userTable = $this->coreTables()->user();
+            $currentEmail = (string)$this->db->query("SELECT email FROM $userTable WHERE userId = $currentUserId AND deleted = 0")
+                ->fetchValue('email');
+            if ($email === strtolower(trim($currentEmail))) {
+                $targetUserId = $currentUserId;
+            } else {
+                if ($currentUserId === $owner) {
+                    return ['error' => 'The creator’s sign-in email cannot be changed from the member list.'];
+                }
+                $user = UsersService::create($this->s())->getOrCreateEmailAccount($email);
+                $targetUserId = $user ? (int)$user->userId()->get() : 0;
+                if ($targetUserId <= 0) {
+                    return ['error' => 'Couldn’t link this email address. Please try again.'];
+                }
+            }
+        }
+        $error = $this->updateKrisKringleMemberInDB(
+            $id, $owner, (int)$member['krisKringleMemberId'], $expectedUserId, $targetUserId, $name
+        );
         return $error === null ? $this->roster($id, $owner, $owner) : ['error' => $error];
     }
 

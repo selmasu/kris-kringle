@@ -191,9 +191,24 @@ enum KrisKringleService {
         return (groupId, try KrisKringleRoster(json: result))
     }
 
-    static func addMember(id: Int, groupId: Int, email: String) async throws -> KrisKringleRoster {
-        let fields = ["id": String(id), "groupId": String(groupId), "email": email]
+    static func addMember(id: Int, groupId: Int, email: String, firstName: String) async throws -> KrisKringleRoster {
+        let fields = ["id": String(id), "groupId": String(groupId), "email": email, "firstName": firstName]
         let result = try await request("addKrisKringleMember", parameters: fields)
+        return try KrisKringleRoster(json: result)
+    }
+
+    static func updateMember(
+        id: Int, memberId: Int?, userId: Int, firstName: String, email: String
+    ) async throws -> KrisKringleRoster {
+        var fields = [
+            "id": String(id), "firstName": firstName, "email": email, "expectedUserId": String(userId)
+        ]
+        if let memberId {
+            fields["memberId"] = String(memberId)
+        } else {
+            fields["userId"] = String(userId)
+        }
+        let result = try await request("updateKrisKringleMember", parameters: fields)
         return try KrisKringleRoster(json: result)
     }
 

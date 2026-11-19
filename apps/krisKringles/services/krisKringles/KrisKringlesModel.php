@@ -44,7 +44,7 @@ class KrisKringleModel extends Model
         // Schema initialization must finish before the transaction starts.
         $this->adb->query("SELECT pictureVersion, pictureFileSerial FROM $table LIMIT 0");
         $this->adb->query("SELECT groupId FROM $groupTable LIMIT 0");
-        $this->adb->query("SELECT groupId FROM $memberTable LIMIT 0");
+        $this->adb->query("SELECT groupId, name FROM $memberTable LIMIT 0");
         $this->adb->query('START TRANSACTION');
         $saved = $this->adb->executePrepared(
             "INSERT INTO $table (name, `year`, createdBy, createdDate, deleted, pictureVersion, pictureFileSerial)
@@ -104,12 +104,12 @@ class KrisKringleModel extends Model
         return $saved ? (int)$this->adb->insertId() : 0;
     }
 
-    private function insertKrisKringleMember(int $id, int $groupId, int $userId): bool
+    private function insertKrisKringleMember(int $id, int $groupId, int $userId, ?string $firstName = null): bool
     {
         $table = $this->tables()->krisKringleMember();
         return $this->adb->executePrepared(
-            "INSERT INTO $table (krisKringleId, groupId, userId) VALUES (?, ?, ?)",
-            [$id, $groupId, $userId]
+            "INSERT INTO $table (krisKringleId, groupId, userId, name) VALUES (?, ?, ?, ?)",
+            [$id, $groupId, $userId, $firstName]
         );
     }
 
@@ -164,11 +164,14 @@ class KrisKringleModel extends Model
             ORDER BY (userId = $owner) DESC, displayName, firstName, userId");
         return array_map(static function (array $user) use ($owner, $childrenByParent, $memberRowsByUser) {
             $userId = (int)$user['userId'];
-            $name = trim($user['displayName'] ?? '');
+            $row = $memberRowsByUser[$userId];
+            $name = trim($row['name'] ?? '');
+            if ($name === '') {
+                $name = trim($user['displayName'] ?? '');
+            }
             if ($name === '') {
                 $name = trim(($user['firstName'] ?? '') . ' ' . ($user['lastName'] ?? ''));
             }
-            $row = $memberRowsByUser[$userId];
             return [
                 'userId' => $userId,
                 'memberId' => (int)$row['krisKringleMemberId'],
@@ -233,50 +236,121 @@ class KrisKringleModel extends Model
         if (!isset($participants[$giverId]) || isset($assignments[$giverId])) {
             return [];
         }
+        foreach ($assignments as $giver => $recipient) {
+            if ($giver === $recipient || ($assignments[$recipient] ?? null) === $giver) {
+                return [];
+            }
+        }
 
         $givers = array_diff_key($participants, $assignments);
         $available = array_diff_key($participants, array_flip($assignments));
-        $remainingGivers = $givers;
-        unset($remainingGivers[$giverId]);
-        $remainingCount = count($remainingGivers);
-        $groupCounts = array_count_values(array_column($remainingGivers, 'groupId'));
-        foreach ($available as $recipient) {
-            $groupId = $recipient['groupId'];
-            $groupCounts[$groupId] = ($groupCounts[$groupId] ?? 0) + 1;
+        $minimum = $this->sameGroupLowerBound($givers, $available);
+        $complete = false;
+        while ($minimum <= count($givers)) {
+            if ($this->canCompleteGiftAllocation($givers, $available, $assignments, $minimum)) {
+                $complete = true;
+                break;
+            }
+            ++$minimum;
+        }
+        if (!$complete) {
+            return [];
         }
 
-        $giverGroup = $participants[$giverId]['groupId'];
-        $bestCost = PHP_INT_MAX;
-        $options = [];
+        unset($givers[$giverId]);
+        $outside = [];
+        $inside = [];
         foreach ($available as $recipientId => $recipient) {
-            if ($recipientId === $giverId) {
+            if ($recipientId === $giverId || ($assignments[$recipientId] ?? null) === $giverId) {
                 continue;
             }
-            // A single remaining giver cannot be matched to themselves.
-            if ($remainingCount === 1) {
-                $otherGiver = array_key_first($remainingGivers);
-                if (isset($available[$otherGiver]) && $otherGiver !== $recipientId) {
-                    continue;
+            $withinGroup = $participants[$giverId]['groupId'] === $recipient['groupId'];
+            $remaining = $available;
+            unset($remaining[$recipientId]);
+            $nextAssignments = $assignments;
+            $nextAssignments[$giverId] = $recipientId;
+            if ($this->canCompleteGiftAllocation($givers, $remaining, $nextAssignments, $minimum - (int)$withinGroup)) {
+                if ($withinGroup) {
+                    $inside[] = $recipientId;
+                } else {
+                    $outside[] = $recipientId;
                 }
             }
+        }
+        return $outside ?: $inside;
+    }
 
-            $recipientGroup = $recipient['groupId'];
-            --$groupCounts[$recipientGroup];
-            // Any excess over the number of remaining pairs must match within that group.
-            $withinGroup = $giverGroup === $recipientGroup;
-            $sameGroupCount = max(0, max($groupCounts) - $remainingCount) + (int)$withinGroup;
-            ++$groupCounts[$recipientGroup];
-            // Minimize same-group matches overall, then prefer an outside recipient now.
-            $cost = 2 * $sameGroupCount + (int)$withinGroup;
-            if ($cost < $bestCost) {
-                $bestCost = $cost;
-                $options = [];
+    private function sameGroupLowerBound(array $givers, array $recipients): int
+    {
+        $counts = array_count_values(array_column($givers, 'groupId'));
+        foreach ($recipients as $recipient) {
+            $groupId = $recipient['groupId'];
+            $counts[$groupId] = ($counts[$groupId] ?? 0) + 1;
+        }
+        return max(0, ($counts ? max($counts) : 0) - count($givers));
+    }
+
+    private function canCompleteGiftAllocation(
+        array $givers, array $recipients, array $assignments, int $sameGroupBudget
+    ): bool {
+        if ($sameGroupBudget < $this->sameGroupLowerBound($givers, $recipients)) {
+            return false;
+        }
+        if (!$givers) {
+            return true;
+        }
+
+        // Choose the most constrained giver first to find dead ends early.
+        $nextGiver = null;
+        $nextOptions = [];
+        $reachable = [];
+        $forcedSameGroup = 0;
+        foreach ($givers as $giverId => $giver) {
+            $outside = [];
+            $inside = [];
+            foreach ($recipients as $recipientId => $recipient) {
+                if ($giverId === $recipientId || ($assignments[$recipientId] ?? null) === $giverId) {
+                    continue;
+                }
+                if ($giver['groupId'] === $recipient['groupId']) {
+                    if ($sameGroupBudget > 0) {
+                        $inside[] = $recipientId;
+                    }
+                } else {
+                    $outside[] = $recipientId;
+                }
             }
-            if ($cost === $bestCost) {
-                $options[] = $recipientId;
+            $options = array_merge($outside, $inside);
+            if (!$options) {
+                return false;
+            }
+            $forcedSameGroup += (int)!$outside;
+            foreach ($options as $recipientId) {
+                $reachable[$recipientId] = true;
+            }
+            if ($nextGiver === null || count($options) < count($nextOptions)) {
+                $nextGiver = $giverId;
+                $nextOptions = $options;
             }
         }
-        return $options;
+        if ($forcedSameGroup > $sameGroupBudget || count($reachable) < count($givers)) {
+            return false;
+        }
+
+        $groupId = $givers[$nextGiver]['groupId'];
+        unset($givers[$nextGiver]);
+        foreach ($nextOptions as $recipientId) {
+            $nextRecipients = $recipients;
+            unset($nextRecipients[$recipientId]);
+            $assignments[$nextGiver] = $recipientId;
+            $withinGroup = $groupId === $recipients[$recipientId]['groupId'];
+            if ($this->canCompleteGiftAllocation(
+                $givers, $nextRecipients, $assignments, $sameGroupBudget - (int)$withinGroup
+            )) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected function updateGiftAssignmentInDB(
@@ -296,6 +370,10 @@ class KrisKringleModel extends Model
         $participants = $this->giftParticipants($members);
         $assignments = $this->getGiftAssignmentsFromDB($id, $participants);
         $current = $assignments[$giverId] ?? 0;
+        if ($recipientId > 0 && ($assignments[$recipientId] ?? null) === $giverId) {
+            $this->adb->query('ROLLBACK');
+            return 'These members cannot buy gifts for each other. Choose another recipient.';
+        }
         if (isset($participants[$giverId]) && $current === $recipientId) {
             $this->adb->query('COMMIT');
             return null;
@@ -321,10 +399,11 @@ class KrisKringleModel extends Model
         return $saved ? null : 'Couldn’t save this assignment. Please try again.';
     }
 
-    protected function addKrisKringleMemberInDB(int $id, int $owner, int $groupId, int $userId): ?string
-    {
+    protected function addKrisKringleMemberInDB(
+        int $id, int $owner, int $groupId, int $userId, string $firstName
+    ): ?string {
         $memberTable = $this->tables()->krisKringleMember();
-        $this->adb->query("SELECT groupId FROM $memberTable LIMIT 0");
+        $this->adb->query("SELECT groupId, name FROM $memberTable LIMIT 0");
         $this->adb->query('START TRANSACTION');
         if (!$this->getOwnedKrisKringleFromDB($id, $owner, true) || !$this->hasKrisKringleGroupInDB($id, $groupId)) {
             $this->adb->query('ROLLBACK');
@@ -336,12 +415,64 @@ class KrisKringleModel extends Model
             $this->adb->query('ROLLBACK');
             return 'This member is already in another group in this Kris Kringle.';
         }
-        if ($existingGroupId === 0 && !$this->insertKrisKringleMember($id, $groupId, $userId)) {
-            $this->adb->query('ROLLBACK');
-            return 'Couldn’t add this member. Please try again.';
+        if ($existingGroupId === 0) {
+            $saved = $this->insertKrisKringleMember($id, $groupId, $userId, $firstName === '' ? null : $firstName);
+        } else {
+            $saved = $firstName === '' || $this->adb->executePrepared(
+                "UPDATE $memberTable SET name = ? WHERE krisKringleId = ? AND groupId = ? AND userId = ?",
+                [$firstName, $id, $groupId, $userId]
+            );
         }
-        $this->adb->query('COMMIT');
-        return null;
+        $this->adb->query($saved ? 'COMMIT' : 'ROLLBACK');
+        return $saved ? null : 'Couldn’t save this member. Please try again.';
+    }
+
+    protected function getEditableKrisKringleMemberFromDB(int $id, int $memberId, int $userId = 0): ?array
+    {
+        $table = $this->tables()->krisKringleMember();
+        $condition = $memberId > 0 ? "krisKringleMemberId = $memberId" : "userId = $userId AND userId > 0";
+        return $this->adb->query("SELECT krisKringleMemberId, userId, parentUserId, name
+            FROM $table WHERE krisKringleId = $id AND $condition LIMIT 1")->fetchAssoc();
+    }
+
+    protected function updateKrisKringleMemberInDB(
+        int $id, int $owner, int $memberId, int $expectedUserId, int $targetUserId, string $name
+    ): ?string {
+        $table = $this->tables()->krisKringleMember();
+        $this->adb->query('START TRANSACTION');
+        if (!$this->getOwnedKrisKringleFromDB($id, $owner, true)) {
+            $this->adb->query('ROLLBACK');
+            return 'Only the creator can edit members.';
+        }
+        $member = $this->getEditableKrisKringleMemberFromDB($id, $memberId);
+        if (!$member) {
+            $this->adb->query('ROLLBACK');
+            return 'This member is no longer available.';
+        }
+        $currentUserId = (int)$member['userId'];
+        if ($currentUserId === $targetUserId && (string)$member['name'] === $name) {
+            $this->adb->query('COMMIT');
+            return null;
+        }
+        if ($currentUserId !== $expectedUserId || ($currentUserId === $owner && $targetUserId !== $owner)) {
+            $this->adb->query('ROLLBACK');
+            return 'This member changed. Refresh the roster and try again.';
+        }
+        if ($targetUserId > 0 && $this->adb->query("SELECT krisKringleMemberId FROM $table
+            WHERE krisKringleId = $id AND userId = $targetUserId AND krisKringleMemberId <> $memberId LIMIT 1")
+            ->fetchValue('krisKringleMemberId')) {
+            $this->adb->query('ROLLBACK');
+            return 'That email address already belongs to another member in this Kris Kringle.';
+        }
+
+        $saved = $this->adb->executePrepared("UPDATE $table SET name = ?, userId = ?
+            WHERE krisKringleId = ? AND krisKringleMemberId = ?", [$name, $targetUserId, $id, $memberId]);
+        if ($saved && $currentUserId > 0 && $currentUserId !== $targetUserId) {
+            $saved = $this->adb->executePrepared("UPDATE $table SET parentUserId = ?
+                WHERE krisKringleId = ? AND userId = 0 AND parentUserId = ?", [$targetUserId, $id, $currentUserId]);
+        }
+        $this->adb->query($saved ? 'COMMIT' : 'ROLLBACK');
+        return $saved ? null : 'Couldn’t save this member. Please try again.';
     }
 
     protected function addKrisKringleChildInDB(int $id, int $owner, int $parentId, string $name): bool

@@ -53,6 +53,7 @@ class KrisKringleServiceAPI extends ServiceAPI
             case 'updateKrisKringle':
             case 'addKrisKringleGroup':
             case 'addKrisKringleMember':
+            case 'updateKrisKringleMember':
             case 'addKrisKringleChild':
             case 'getGiftRecipientOptions':
             case 'updateGiftAssignment':
@@ -80,6 +81,22 @@ class KrisKringleServiceAPI extends ServiceAPI
                     }
                     return $this->krisKringleService->updateGiftAssignment($id, $giverId, $giverUserId, $recipientId, $expected);
                 }
+                if ($functionToCall === 'updateKrisKringleMember') {
+                    header('Cache-Control: private, no-store');
+                    $options = ['options' => ['min_range' => 0]];
+                    $memberId = filter_var($_POST['memberId'] ?? 0, FILTER_VALIDATE_INT, $options);
+                    $userId = filter_var($_POST['userId'] ?? 0, FILTER_VALIDATE_INT, $options);
+                    $expectedUserId = filter_var($_POST['expectedUserId'] ?? null, FILTER_VALIDATE_INT, $options);
+                    $name = $_POST['firstName'] ?? null;
+                    $email = $_POST['email'] ?? null;
+                    if ($memberId === false || $userId === false || $expectedUserId === false
+                        || (bool)$memberId === (bool)$userId || !is_string($name) || !is_string($email)) {
+                        return ['error' => 'Enter valid member details.'];
+                    }
+                    return $this->krisKringleService->updateKrisKringleMember(
+                        $id, $memberId, $userId, $expectedUserId, $name, $email
+                    );
+                }
                 if ($functionToCall === 'addKrisKringleGroup') {
                     header('Cache-Control: private, no-store');
                     $name = $_POST['name'] ?? null;
@@ -88,8 +105,14 @@ class KrisKringleServiceAPI extends ServiceAPI
                 if ($functionToCall === 'addKrisKringleMember') {
                     header('Cache-Control: private, no-store');
                     $email = $_POST['email'] ?? null;
+                    $firstName = $_POST['firstName'] ?? '';
+                    if (!is_string($firstName)) {
+                        return ['error' => 'Enter a valid first name.'];
+                    }
                     $groupId = filter_var($_POST['groupId'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-                    return $this->krisKringleService->addKrisKringleMember($id, $groupId ?: 0, is_string($email) ? $email : '');
+                    return $this->krisKringleService->addKrisKringleMember(
+                        $id, $groupId ?: 0, is_string($email) ? $email : '', $firstName
+                    );
                 }
                 if ($functionToCall === 'addKrisKringleChild') {
                     header('Cache-Control: private, no-store');
