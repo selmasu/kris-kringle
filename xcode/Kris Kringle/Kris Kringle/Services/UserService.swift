@@ -239,7 +239,8 @@ class UserService {
                 switch response.result {
                 case .success(let data):
                     do {
-                        self.serviceResult(try JSON(data: data))
+                        let options: JSONSerialization.ReadingOptions = self.functionCall == "logout" ? .fragmentsAllowed : []
+                        self.serviceResult(try JSON(data: data, options: options))
                     } catch {
                         self.delegate.serviceError("The server returned an unexpected response. Please try again.")
                     }
@@ -270,7 +271,15 @@ class UserService {
         } else if functionCall == "signUp" {
             onSignUp(result)
         } else if functionCall == "logout" {
+            guard result.type == .null || result["loggedOut"].bool == true else {
+                let error = result["error"].string ?? result["errorMessage"].string
+                delegate.serviceError(error ?? "Unable to log out. Please try again.")
+                return
+            }
+            Globals.user?.token = ""
             clearLastToLogin()
+            Globals.user(nil)
+            Globals.loggedIn(false)
             delegate.userServiceDidComplete(.logout, data: UserServiceData())
         } else if functionCall == "deleteMyAccount" {
             clearLastToLogin()

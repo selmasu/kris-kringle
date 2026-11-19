@@ -243,17 +243,119 @@ class KrisKringleModel extends Model
             $participants[$member['memberId']] = [
                 'groupId' => $member['groupId'],
                 'accountId' => $member['userId'],
+                'identity' => $this->giftPersonKey($member['userId'], 0, ''),
                 'name' => $member['name'] !== '' ? $member['name'] : ($member['email'] ?? 'Member'),
             ];
             foreach ($member['children'] as $child) {
                 $participants[$child['memberId']] = [
                     'groupId' => $member['groupId'],
                     'accountId' => $member['userId'],
+                    'identity' => $this->giftPersonKey(0, $member['userId'], $child['name']),
                     'name' => $child['name'],
                 ];
             }
         }
         return $participants;
+    }
+
+    private function giftPersonKey(int $userId, int $parentUserId, string $name): string
+    {
+        return $userId > 0 ? "user:$userId" : "child:$parentUserId:" . strtolower(trim($name));
+    }
+
+    protected function getPastGiftMatchesFromDB(int $year, array $participants): array
+    {
+        if (!$participants) {
+            return [];
+        }
+        $currentIds = [];
+        foreach ($participants as $memberId => $participant) {
+            $currentIds[$participant['identity']][] = $memberId;
+        }
+        $accounts = implode(',', array_unique(array_map('intval', array_column($participants, 'accountId'))));
+        $gifts = $this->tables()->krisKringleAssignment();
+        $members = $this->tables()->krisKringleMember();
+        $exchanges = $this->tables()->krisKringle();
+        $history = $this->adb->fetchAll("SELECT giver.userId AS giverUserId, giver.parentUserId AS giverParentId,
+                giver.name AS giverName, recipient.userId AS recipientUserId,
+                recipient.parentUserId AS recipientParentId, recipient.name AS recipientName
+            FROM $gifts AS gift
+            JOIN $exchanges AS pastExchange ON pastExchange.krisKringleId = gift.krisKringleId
+            JOIN $members AS giver ON giver.krisKringleMemberId = gift.giverId AND giver.krisKringleId = gift.krisKringleId
+            JOIN $members AS recipient ON recipient.krisKringleMemberId = gift.recipientId AND recipient.krisKringleId = gift.krisKringleId
+            WHERE pastExchange.year < $year
+                AND (giver.userId IN ($accounts) OR giver.parentUserId IN ($accounts))
+                AND (recipient.userId IN ($accounts) OR recipient.parentUserId IN ($accounts))");
+        $excluded = [];
+        foreach ($history as $pair) {
+            $giver = $this->giftPersonKey((int)$pair['giverUserId'], (int)$pair['giverParentId'], $pair['giverName'] ?? '');
+            $recipient = $this->giftPersonKey(
+                (int)$pair['recipientUserId'], (int)$pair['recipientParentId'], $pair['recipientName'] ?? ''
+            );
+            foreach ($currentIds[$giver] ?? [] as $giverId) {
+                foreach ($currentIds[$recipient] ?? [] as $recipientId) {
+                    $excluded[$giverId][$recipientId] = true;
+                }
+            }
+        }
+        return $excluded;
+    }
+
+    protected function updateAllGiftRecipientsInDB(int $id, int $owner, bool $clear): ?string
+    {
+        $table = $this->tables()->krisKringleAssignment();
+        $this->adb->query("SELECT giverId FROM $table LIMIT 0");
+        $this->adb->query('START TRANSACTION');
+        $exchange = $this->getOwnedKrisKringleFromDB($id, $owner, true);
+        if (!$exchange) {
+            $this->adb->query('ROLLBACK');
+            return 'Only the creator can set or clear gift recipients.';
+        }
+
+        $assignments = [];
+        if (!$clear) {
+            $participants = $this->giftParticipants($this->getKrisKringleMembersFromDB($id, $owner));
+            if (count($participants) < 3) {
+                $this->adb->query('ROLLBACK');
+                return 'At least three members are needed to avoid reciprocal assignments.';
+            }
+            $excluded = $this->getPastGiftMatchesFromDB((int)$exchange['year'], $participants);
+            $ids = array_keys($participants);
+            shuffle($ids);
+            $shuffled = [];
+            foreach ($ids as $memberId) {
+                $shuffled[$memberId] = $participants[$memberId];
+            }
+            shuffle($ids);
+            $recipients = [];
+            foreach ($ids as $memberId) {
+                $recipients[$memberId] = $participants[$memberId];
+            }
+            $assignments = null;
+            for ($budget = $this->sameGroupLowerBound($shuffled, $recipients); $budget <= count($participants); ++$budget) {
+                $assignments = $this->completeGiftAllocation($shuffled, $recipients, [], $budget, $excluded);
+                if ($assignments !== null) {
+                    break;
+                }
+            }
+            if ($assignments === null) {
+                $this->adb->query('ROLLBACK');
+                return 'No complete allocation is possible without reciprocal or previous-year matches. Add members or adjust the roster and try again.';
+            }
+        }
+
+        $saved = $this->adb->executePrepared("DELETE FROM $table WHERE krisKringleId = ?", [$id]);
+        foreach ($assignments as $giverId => $recipientId) {
+            if (!$saved) {
+                break;
+            }
+            $saved = $this->adb->executePrepared(
+                "INSERT INTO $table (krisKringleId, giverId, recipientId) VALUES (?, ?, ?)",
+                [$id, $giverId, $recipientId]
+            );
+        }
+        $this->adb->query($saved ? 'COMMIT' : 'ROLLBACK');
+        return $saved ? null : 'Couldn’t update the gift recipients. Please try again.';
     }
 
     protected function getGiftAssignmentsFromDB(int $id, array $participants): array
@@ -270,7 +372,7 @@ class KrisKringleModel extends Model
         return $assignments;
     }
 
-    protected function eligibleGiftRecipients(array $participants, array $assignments, int $giverId): array
+    protected function eligibleGiftRecipients(array $participants, array $assignments, int $giverId, array $excluded = []): array
     {
         if (!isset($participants[$giverId]) || isset($assignments[$giverId])) {
             return [];
@@ -286,7 +388,7 @@ class KrisKringleModel extends Model
         $minimum = $this->sameGroupLowerBound($givers, $available);
         $complete = false;
         while ($minimum <= count($givers)) {
-            if ($this->canCompleteGiftAllocation($givers, $available, $assignments, $minimum)) {
+            if ($this->completeGiftAllocation($givers, $available, $assignments, $minimum, $excluded) !== null) {
                 $complete = true;
                 break;
             }
@@ -300,7 +402,7 @@ class KrisKringleModel extends Model
         $outside = [];
         $inside = [];
         foreach ($available as $recipientId => $recipient) {
-            if ($recipientId === $giverId || ($assignments[$recipientId] ?? null) === $giverId) {
+            if ($recipientId === $giverId || ($assignments[$recipientId] ?? null) === $giverId || isset($excluded[$giverId][$recipientId])) {
                 continue;
             }
             $withinGroup = $participants[$giverId]['groupId'] === $recipient['groupId'];
@@ -308,7 +410,7 @@ class KrisKringleModel extends Model
             unset($remaining[$recipientId]);
             $nextAssignments = $assignments;
             $nextAssignments[$giverId] = $recipientId;
-            if ($this->canCompleteGiftAllocation($givers, $remaining, $nextAssignments, $minimum - (int)$withinGroup)) {
+            if ($this->completeGiftAllocation($givers, $remaining, $nextAssignments, $minimum - (int)$withinGroup, $excluded) !== null) {
                 if ($withinGroup) {
                     $inside[] = $recipientId;
                 } else {
@@ -329,26 +431,26 @@ class KrisKringleModel extends Model
         return max(0, ($counts ? max($counts) : 0) - count($givers));
     }
 
-    private function canCompleteGiftAllocation(
-        array $givers, array $recipients, array $assignments, int $sameGroupBudget
-    ): bool {
+    protected function completeGiftAllocation(
+        array $givers, array $recipients, array $assignments, int $sameGroupBudget, array $excluded = []
+    ): ?array {
         if ($sameGroupBudget < $this->sameGroupLowerBound($givers, $recipients)) {
-            return false;
+            return null;
         }
         if (!$givers) {
-            return true;
+            return $assignments;
         }
 
         // Choose the most constrained giver first to find dead ends early.
         $nextGiver = null;
         $nextOptions = [];
-        $reachable = [];
+        $optionsByGiver = [];
         $forcedSameGroup = 0;
         foreach ($givers as $giverId => $giver) {
             $outside = [];
             $inside = [];
             foreach ($recipients as $recipientId => $recipient) {
-                if ($giverId === $recipientId || ($assignments[$recipientId] ?? null) === $giverId) {
+                if ($giverId === $recipientId || ($assignments[$recipientId] ?? null) === $giverId || isset($excluded[$giverId][$recipientId])) {
                     continue;
                 }
                 if ($giver['groupId'] === $recipient['groupId']) {
@@ -361,19 +463,17 @@ class KrisKringleModel extends Model
             }
             $options = array_merge($outside, $inside);
             if (!$options) {
-                return false;
+                return null;
             }
             $forcedSameGroup += (int)!$outside;
-            foreach ($options as $recipientId) {
-                $reachable[$recipientId] = true;
-            }
+            $optionsByGiver[$giverId] = $options;
             if ($nextGiver === null || count($options) < count($nextOptions)) {
                 $nextGiver = $giverId;
                 $nextOptions = $options;
             }
         }
-        if ($forcedSameGroup > $sameGroupBudget || count($reachable) < count($givers)) {
-            return false;
+        if ($forcedSameGroup > $sameGroupBudget || !$this->hasGiftMatching($optionsByGiver)) {
+            return null;
         }
 
         $groupId = $givers[$nextGiver]['groupId'];
@@ -383,9 +483,37 @@ class KrisKringleModel extends Model
             unset($nextRecipients[$recipientId]);
             $assignments[$nextGiver] = $recipientId;
             $withinGroup = $groupId === $recipients[$recipientId]['groupId'];
-            if ($this->canCompleteGiftAllocation(
-                $givers, $nextRecipients, $assignments, $sameGroupBudget - (int)$withinGroup
-            )) {
+            $complete = $this->completeGiftAllocation(
+                $givers, $nextRecipients, $assignments, $sameGroupBudget - (int)$withinGroup, $excluded
+            );
+            if ($complete !== null) {
+                return $complete;
+            }
+        }
+        return null;
+    }
+
+    private function hasGiftMatching(array $optionsByGiver): bool
+    {
+        $matched = [];
+        foreach ($optionsByGiver as $giverId => $options) {
+            $seen = [];
+            if (!$this->matchGiftRecipient($giverId, $optionsByGiver, $matched, $seen)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function matchGiftRecipient(int $giverId, array $optionsByGiver, array &$matched, array &$seen): bool
+    {
+        foreach ($optionsByGiver[$giverId] as $recipientId) {
+            if (isset($seen[$recipientId])) {
+                continue;
+            }
+            $seen[$recipientId] = true;
+            if (!isset($matched[$recipientId]) || $this->matchGiftRecipient($matched[$recipientId], $optionsByGiver, $matched, $seen)) {
+                $matched[$recipientId] = $giverId;
                 return true;
             }
         }
@@ -407,6 +535,8 @@ class KrisKringleModel extends Model
         $members = $this->getKrisKringleMembersFromDB($id, $owner);
         $giverId = $this->resolveGiftGiverId($members, $giverId, $giverUserId);
         $participants = $this->giftParticipants($members);
+        $exchange = $this->getOwnedKrisKringleFromDB($id, $owner);
+        $excluded = $this->getPastGiftMatchesFromDB((int)$exchange['year'], $participants);
         $assignments = $this->getGiftAssignmentsFromDB($id, $participants);
         $current = $assignments[$giverId] ?? 0;
         if ($recipientId > 0 && ($assignments[$recipientId] ?? null) === $giverId) {
@@ -418,7 +548,7 @@ class KrisKringleModel extends Model
             return null;
         }
         if (!isset($participants[$giverId]) || $current !== $expectedRecipientId
-            || ($recipientId > 0 && !in_array($recipientId, $this->eligibleGiftRecipients($participants, $assignments, $giverId), true))) {
+            || ($recipientId > 0 && !in_array($recipientId, $this->eligibleGiftRecipients($participants, $assignments, $giverId, $excluded), true))) {
             $this->adb->query('ROLLBACK');
             return 'This assignment changed or the recipient is no longer available. Refresh the choices and try again.';
         }

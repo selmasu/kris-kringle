@@ -24,7 +24,7 @@ class Globals{
         _globals._loggedIn = loggedIn
     }
     
-    class func user( _ user:User){
+    class func user( _ user:User?){
         _globals._user = user
     }
     

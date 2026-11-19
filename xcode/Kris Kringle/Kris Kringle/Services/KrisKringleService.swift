@@ -220,6 +220,11 @@ enum KrisKringleService {
         return try KrisKringleRoster(json: result)
     }
 
+    static func updateAllGiftRecipients(id: Int, clear: Bool) async throws -> KrisKringleRoster {
+        let result = try await request(clear ? "clearGiftRecipients" : "setGiftRecipients", parameters: ["id": String(id)])
+        return try KrisKringleRoster(json: result)
+    }
+
     static func giftRecipientOptions(id: Int, giverId: KrisKringleGiftGiverID) async throws -> KrisKringleGiftOptions {
         let giver = giverId.parameter
         let fields = ["id": String(id), giver.name: giver.value]

@@ -57,12 +57,18 @@ class KrisKringleServiceAPI extends ServiceAPI
             case 'addKrisKringleChild':
             case 'getGiftRecipientOptions':
             case 'updateGiftAssignment':
+            case 'setGiftRecipients':
+            case 'clearGiftRecipients':
                 $token = $_POST['selmasuToken'] ?? null;
                 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || !is_string($token) || $token === ''
                     || !hash_equals((string)$this->s()->user()->selmasuToken()->get(), $token)) {
                     return ['error' => 'Please sign in again.'];
                 }
                 $id = $this->intArgument(self::ID);
+                if ($functionToCall === 'setGiftRecipients' || $functionToCall === 'clearGiftRecipients') {
+                    header('Cache-Control: private, no-store');
+                    return $this->krisKringleService->updateAllGiftRecipients($id, $functionToCall === 'clearGiftRecipients');
+                }
                 if ($functionToCall === 'getGiftRecipientOptions' || $functionToCall === 'updateGiftAssignment') {
                     header('Cache-Control: private, no-store');
                     $idOptions = ['options' => ['min_range' => 0]];

@@ -28,6 +28,9 @@ struct KrisKringleDetailView: View {
     @State private var photoError: String?
     @State private var isSaving = false
     @State private var isAdding = false
+    @State private var isUpdatingRecipients = false
+    @State private var isConfirmingClearRecipients = false
+    @State private var recipientError: String?
     @State private var loadError: String?
     @State private var saveError: String?
     @State private var memberError: String?
@@ -40,27 +43,31 @@ struct KrisKringleDetailView: View {
     }
 
     private var isCreator: Bool { group.createdBy == Globals.userId }
-    private var isBusy: Bool { isSaving || isAdding || isAddingGroup }
+    private var isBusy: Bool { isSaving || isAdding || isAddingGroup || isUpdatingRecipients }
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var trimmedEmail: String { email.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var canSave: Bool {
-        !isBusy && !isPreparingPhoto && (1...100).contains(trimmedName.unicodeScalars.count)
+        isCreator && !isBusy && !isPreparingPhoto && (1...100).contains(trimmedName.unicodeScalars.count)
             && (trimmedName != group.name || picture != nil)
     }
-    private var canAdd: Bool { !isBusy && selectedGroupId != nil && contactEmails.isEmpty && !trimmedEmail.isEmpty }
+    private var canAdd: Bool { isCreator && !isBusy && selectedGroupId != nil && contactEmails.isEmpty && !trimmedEmail.isEmpty }
     private var trimmedNewGroupName: String { newGroupName.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     var body: some View {
         Form {
             photoSection
+            if isUpdatingRecipients {
+                ProgressView("Updating gift recipients…").translucentDarkRow()
+            }
+            if let recipientError {
+                Text(recipientError).foregroundStyle(.red).translucentDarkRow()
+            }
             if let roster {
                 if isCreator {
                     detailsSection
-                }
-                if isCreator && isShowingAddMember {
-                    addMemberSection(roster.groups)
-                } else {
-                    if isCreator {
+                    if isShowingAddMember {
+                        addMemberSection(roster.groups)
+                    } else {
                         Section {
                             Button("Add member", systemImage: "plus") {
                                 isShowingAddMember = true
@@ -68,7 +75,9 @@ struct KrisKringleDetailView: View {
                             .disabled(isBusy)
                             .translucentDarkRow()
                         }
+                        rosterSections(roster)
                     }
+                } else {
                     rosterSections(roster)
                 }
             } else if let loadError {
@@ -88,17 +97,47 @@ struct KrisKringleDetailView: View {
         .christmasBackground()
         .navigationTitle(group.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if isCreator {
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu {
+                        Button("Set Gift Recipients", systemImage: "gift") {
+                            updateAllRecipients(clear: false)
+                        }
+                        Button("Clear Gift Recipients", systemImage: "trash", role: .destructive) {
+                            isConfirmingClearRecipients = true
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                    }
+                    .accessibilityLabel("Gift Recipients")
+                    .disabled(isBusy || roster == nil)
+                }
+            }
+        }
+        .confirmationDialog("Clear Gift Recipients?", isPresented: $isConfirmingClearRecipients, titleVisibility: .visible) {
+            Button("Clear Gift Recipients", role: .destructive) { updateAllRecipients(clear: true) }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This removes every gift assignment from this Kris Kringle.")
+        }
         .task {
             if roster == nil { await load() }
         }
         .sheet(item: $parentForChild) { parent in
-            AddKrisKringleChildView(krisKringleId: group.id, parent: parent) { roster = $0 }
+            if isCreator {
+                AddKrisKringleChildView(krisKringleId: group.id, parent: parent) { roster = $0 }
+            }
         }
         .sheet(item: $editingMember) { member in
-            EditKrisKringleMemberView(krisKringleId: group.id, member: member) { roster = $0 }
+            if isCreator {
+                EditKrisKringleMemberView(krisKringleId: group.id, member: member) { roster = $0 }
+            }
         }
         .sheet(item: $giftGiver) { giver in
-            GiftRecipientView(krisKringleId: group.id, giver: giver, groups: roster?.groups ?? []) { roster = $0 }
+            if isCreator {
+                GiftRecipientView(krisKringleId: group.id, giver: giver, groups: roster?.groups ?? []) { roster = $0 }
+            }
         }
         .alert("Add Group", isPresented: $isShowingAddGroup) {
             TextField("Group name", text: $newGroupName)
@@ -122,7 +161,7 @@ struct KrisKringleDetailView: View {
             )
             .disabled(canChoosePhoto && (isBusy || isPreparingPhoto))
             .contextMenu {
-                if picture != nil && !isBusy {
+                if isCreator && picture != nil && !isBusy {
                     Button("Discard Photo", systemImage: "xmark", role: .destructive) {
                         picture = nil
                         photoError = nil
@@ -365,6 +404,20 @@ struct KrisKringleDetailView: View {
         }
     }
 
+    private func updateAllRecipients(clear: Bool) {
+        guard isCreator, !isBusy, roster != nil else { return }
+        isUpdatingRecipients = true
+        recipientError = nil
+        Task {
+            defer { isUpdatingRecipients = false }
+            do {
+                roster = try await KrisKringleService.updateAllGiftRecipients(id: group.id, clear: clear)
+            } catch {
+                recipientError = error.localizedDescription
+            }
+        }
+    }
+
     private func load() async {
         loadError = nil
         do {
@@ -418,7 +471,7 @@ struct KrisKringleDetailView: View {
     }
 
     private func addGroup() {
-        guard !isBusy else { return }
+        guard isCreator, !isBusy else { return }
         let groupName = trimmedNewGroupName
         guard (1...100).contains(groupName.unicodeScalars.count) else {
             memberError = "Enter a group name between 1 and 100 characters."

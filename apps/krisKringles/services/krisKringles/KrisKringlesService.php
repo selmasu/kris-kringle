@@ -203,12 +203,14 @@ class KrisKringleService extends KrisKringleModel {
         $members = $this->getKrisKringleMembersFromDB($id, $owner);
         $giverId = $this->resolveGiftGiverId($members, $giverId, $giverUserId);
         $participants = $this->giftParticipants($members);
+        $exchange = $this->getOwnedKrisKringleFromDB($id, $owner);
+        $excluded = $this->getPastGiftMatchesFromDB((int)$exchange['year'], $participants);
         if (!isset($participants[$giverId])) {
             return ['error' => 'Choose a member of this Kris Kringle.'];
         }
         $assignments = $this->getGiftAssignmentsFromDB($id, $participants);
         $options = [];
-        foreach ($this->eligibleGiftRecipients($participants, $assignments, $giverId) as $recipientId) {
+        foreach ($this->eligibleGiftRecipients($participants, $assignments, $giverId, $excluded) as $recipientId) {
             $options[] = [
                 'memberId' => $recipientId,
                 'name' => $participants[$recipientId]['name'],
@@ -234,19 +236,27 @@ class KrisKringleService extends KrisKringleModel {
         return $error === null ? $this->roster($id, $owner, $owner) : ['error' => $error];
     }
 
+    public function updateAllGiftRecipients(int $id, bool $clear): array
+    {
+        $owner = (int)$this->s()->userId();
+        if ($owner <= 0 || $id <= 0) {
+            return ['error' => 'Only the creator can set or clear gift recipients.'];
+        }
+        $error = $this->updateAllGiftRecipientsInDB($id, $owner, $clear);
+        return $error === null ? $this->roster($id, $owner, $owner) : ['error' => $error];
+    }
+
     private function roster(int $id, int $owner, int $viewer): array
     {
         $members = $this->getKrisKringleMembersFromDB($id, $owner);
         $participants = $this->giftParticipants($members);
         $assignments = [];
         foreach ($this->getGiftAssignmentsFromDB($id, $participants) as $giverId => $recipientId) {
-            if ($viewer === $owner || $viewer === $participants[$giverId]['accountId']) {
-                $assignments[] = [
-                    'giverId' => $giverId,
-                    'recipientId' => $recipientId,
-                    'recipientName' => $participants[$recipientId]['name'],
-                ];
-            }
+            $assignments[] = [
+                'giverId' => $giverId,
+                'recipientId' => $recipientId,
+                'recipientName' => $participants[$recipientId]['name'],
+            ];
         }
         if ($viewer !== $owner) {
             foreach ($members as &$member) {

@@ -36,46 +36,62 @@ struct KrisKringlesView: View {
                         .tint(Theme.green)
                 }
             case .loaded(let groups):
+                let currentYear = Calendar.current.component(.year, from: Date())
+                let highlights = groups.filter { $0.year == currentYear && $0.recipientName != nil }
                 List {
-                    ForEach(groups.filter { $0.year == Calendar.current.component(.year, from: Date()) && $0.recipientName != nil }) { group in
-                        NavigationLink {
-                            KrisKringleDetailView(group: group, photos: photos, onUpdate: upsertGroup)
-                        } label: {
-                            VStack(alignment: .leading, spacing: 16) {
-                                Image(systemName: "gift.fill")
-                                    .font(.largeTitle)
-                                    .foregroundStyle(Theme.christmasAccent)
-                                    .accessibilityHidden(true)
-                                Text("You're buying for \(group.recipientName ?? "")")
-                                    .font(.largeTitle.bold())
-                                    .foregroundStyle(.white)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                Text(group.name)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.white.opacity(0.8))
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.vertical, 20)
-                        }
-                        .translucentDarkRow()
-                    }
-                    ForEach(groups) { group in
-                        NavigationLink {
-                            KrisKringleDetailView(group: group, photos: photos, onUpdate: upsertGroup)
-                        } label: {
-                            HStack(spacing: 12) {
-                                KrisKringlePhoto(group: group, cache: photos)
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(group.name).font(.headline)
-                                    Text("\(group.year, format: .number.grouping(.never)) · \(group.createdBy == Globals.userId ? "Created by you" : "Invited")")
+                    if !highlights.isEmpty {
+                        Section {
+                            ForEach(highlights) { group in
+                                VStack(alignment: .leading, spacing: 16) {
+                                    Image(systemName: "gift.fill")
+                                        .font(.largeTitle)
+                                        .foregroundStyle(Theme.christmasAccent)
+                                        .frame(maxWidth: .infinity)
+                                        .accessibilityHidden(true)
+                                    Text("You're buying for \(group.recipientName ?? "")")
+                                        .font(.title.bold())
+                                        .foregroundStyle(.white)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Text(group.name)
                                         .font(.subheadline)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(.white.opacity(0.8))
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(24)
+                                .background(
+                                    Color(uiColor: .secondarySystemGroupedBackground).opacity(0.3),
+                                    in: RoundedRectangle(cornerRadius: 16)
+                                )
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .strokeBorder(Theme.christmasAccent.opacity(0.6), lineWidth: 1)
+                                }
+                                .listRowInsets(EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12))
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                            }
+                        }
+                    }
+                    Section {
+                        ForEach(groups) { group in
+                            NavigationLink {
+                                KrisKringleDetailView(group: group, photos: photos, onUpdate: upsertGroup)
+                            } label: {
+                                HStack(spacing: 12) {
+                                    KrisKringlePhoto(group: group, cache: photos)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(group.name).font(.headline)
+                                        Text("\(group.year, format: .number.grouping(.never)) · \(group.createdBy == Globals.userId ? "Created by you" : "Invited")")
+                                            .font(.subheadline)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
                             }
+                            .translucentDarkRow()
                         }
-                        .translucentDarkRow()
                     }
                 }
+                .listSectionSpacing(24)
                 .refreshable { await loadGroups() }
             case .failed(let message):
                 ContentUnavailableView {
