@@ -6,9 +6,11 @@ import UIKit
 struct KrisKringleDetailView: View {
     let onUpdate: (KrisKringleSummary) -> Void
     let photos: KrisKringlePhotoCache
+    @Binding private var currentUserPhoto: UIImage?
     @State private var group: KrisKringleSummary
     @State private var name: String
     @State private var roster: KrisKringleRoster?
+    @State private var memberPhotos = NSCache<NSString, UIImage>()
     @State private var isShowingAddMember = false
     @State private var selectedGroupId: Int?
     @State private var isShowingAddGroup = false
@@ -35,9 +37,13 @@ struct KrisKringleDetailView: View {
     @State private var saveError: String?
     @State private var memberError: String?
 
-    init(group: KrisKringleSummary, photos: KrisKringlePhotoCache, onUpdate: @escaping (KrisKringleSummary) -> Void) {
+    init(
+        group: KrisKringleSummary, photos: KrisKringlePhotoCache,
+        currentUserPhoto: Binding<UIImage?> = .constant(nil), onUpdate: @escaping (KrisKringleSummary) -> Void
+    ) {
         self.onUpdate = onUpdate
         self.photos = photos
+        _currentUserPhoto = currentUserPhoto
         _group = State(initialValue: group)
         _name = State(initialValue: group.name)
     }
@@ -99,7 +105,7 @@ struct KrisKringleDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if isCreator {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button("Set Gift Recipients", systemImage: "gift") {
                             updateAllRecipients(clear: false)
@@ -122,7 +128,7 @@ struct KrisKringleDetailView: View {
             Text("This removes every gift assignment from this Kris Kringle.")
         }
         .task {
-            if roster == nil { await load() }
+            await load()
         }
         .sheet(item: $parentForChild) { parent in
             if isCreator {
@@ -340,8 +346,12 @@ struct KrisKringleDetailView: View {
     }
 
     private func memberRow(_ member: KrisKringleMember) -> some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                KrisKringleMemberAvatar(
+                    krisKringleId: group.id, member: member, cache: memberPhotos,
+                    currentUserPhoto: member.id == Globals.userId ? currentUserPhoto : nil
+                )
                 if isCreator {
                     Button {
                         editingMember = EditableMember(member: member)
@@ -359,24 +369,24 @@ struct KrisKringleDetailView: View {
                     Text(member.displayName)
                         .foregroundStyle(.white)
                 }
-                let giverId = member.memberId.map(KrisKringleGiftGiverID.member) ?? .user(member.id)
-                giftAssignment(for: GiftGiver(id: giverId, name: member.displayName))
-            }
-            Spacer()
-            if member.isCreator {
-                Text("Creator").font(.subheadline).foregroundStyle(.secondary)
-            }
-            if isCreator {
-                Button {
-                    parentForChild = member
-                } label: {
-                    Image(systemName: "person.badge.plus")
-                        .frame(width: 44, height: 44)
+                Spacer()
+                if member.isCreator {
+                    Text("Creator").font(.subheadline).foregroundStyle(.secondary)
                 }
-                .buttonStyle(.borderless)
-                .accessibilityLabel("Add Child under \(member.displayName)")
-                .disabled(isBusy)
+                if isCreator {
+                    Button {
+                        parentForChild = member
+                    } label: {
+                        Image(systemName: "person.badge.plus")
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Add Child under \(member.displayName)")
+                    .disabled(isBusy)
+                }
             }
+            let giverId = member.memberId.map(KrisKringleGiftGiverID.member) ?? .user(member.id)
+            giftAssignment(for: GiftGiver(id: giverId, name: member.displayName))
         }
     }
 
@@ -424,8 +434,9 @@ struct KrisKringleDetailView: View {
             let detail = try await KrisKringleService.detail(id: group.id)
             try Task.checkCancellation()
             let summaryChanged = group.name != detail.group.name || group.pictureVersion != detail.group.pictureVersion
+            let isNameEdited = name != group.name
             group = detail.group
-            name = group.name
+            if !isNameEdited { name = group.name }
             roster = detail.roster
             if summaryChanged { onUpdate(group) }
         } catch is CancellationError {
@@ -517,6 +528,64 @@ struct KrisKringleDetailView: View {
                 closeAddMember()
             } catch {
                 memberError = error.localizedDescription
+            }
+        }
+    }
+}
+
+private struct KrisKringleMemberAvatar: View {
+    let krisKringleId: Int
+    let member: KrisKringleMember
+    let cache: NSCache<NSString, UIImage>
+    let currentUserPhoto: UIImage?
+    @State private var image: UIImage?
+
+    private var photoKey: String {
+        "\(member.id):\(member.pictureVersion):\(member.pictureURL?.absoluteString ?? "")"
+    }
+
+    var body: some View {
+        Group {
+            if let displayedImage = currentUserPhoto ?? image {
+                Image(uiImage: displayedImage)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Circle()
+                    .fill(Theme.green)
+                    .overlay {
+                        Text(member.displayName.trimmingCharacters(in: .whitespacesAndNewlines).first.map { String($0).uppercased() } ?? "?")
+                            .font(.title3.weight(.medium))
+                            .foregroundStyle(.white)
+                    }
+            }
+        }
+        .frame(width: 44, height: 44)
+        .clipShape(Circle())
+        .accessibilityHidden(true)
+        .task(id: photoKey) {
+            let key = photoKey as NSString
+            image = cache.object(forKey: key)
+            guard currentUserPhoto == nil, image == nil, member.hasPicture else { return }
+            let token = Globals.selmasuToken
+            do {
+                let data: Data
+                if !member.pictureVersion.isEmpty {
+                    data = try await KrisKringleService.memberPicture(id: krisKringleId, userId: member.id)
+                } else if let url = member.pictureURL {
+                    let (bytes, response) = try await URLSession.shared.data(from: url)
+                    guard let response = response as? HTTPURLResponse, (200..<300).contains(response.statusCode) else { return }
+                    data = bytes
+                } else {
+                    return
+                }
+                try Task.checkCancellation()
+                guard token == Globals.selmasuToken, data.count <= 512 * 1024,
+                      let loaded = UIImage(data: data) else { return }
+                cache.setObject(loaded, forKey: key, cost: data.count)
+                image = loaded
+            } catch {
+                // Keep the avatar placeholder when the photo is unavailable.
             }
         }
     }

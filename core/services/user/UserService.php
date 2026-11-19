@@ -5,6 +5,39 @@
  */
 class UserService extends UsersService {
 
+    public function googleSignInPolicy(): array
+    {
+        return ['clientIds' => ['255479378047-8l3h729g2p4sari3p68it78m2q6mrvav.apps.googleusercontent.com']];
+    }
+
+    public function getUserByGoogleSubject(string $subject): ?User
+    {
+        $table = $this->tables()->krisKringleGoogleIdentity();
+        $hash = hash('sha256', $subject);
+        $userId = (int)$this->db->query("SELECT userId FROM $table WHERE subjectHash = '$hash'")->fetchValue('userId');
+        return $userId > 0 ? $this->getUserFromDB($userId) : null;
+    }
+
+    public function hasGoogleLink(User $user): bool
+    {
+        return $this->googleSubjectHashForUser((int)$user->userId()->get()) !== null;
+    }
+
+    public function saveGoogleLink(string $subject): bool
+    {
+        $userId = (int)$this->s()->userId();
+        if ($userId <= 0) {
+            return false;
+        }
+        $table = $this->tables()->krisKringleGoogleIdentity();
+        $hash = hash('sha256', $subject);
+        $users = $this->coreTables()->user();
+        $this->db->query("INSERT INTO $table (userId, subjectHash)
+            SELECT account.userId, '$hash' FROM $users AS account WHERE account.userId = $userId AND account.deleted = 0
+            ON DUPLICATE KEY UPDATE userId = $table.userId");
+        return $this->googleSubjectHashForUser($userId) === $hash;
+    }
+
     public function appleSignInPolicy(): array
     {
         return [

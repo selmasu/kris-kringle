@@ -258,12 +258,17 @@ class KrisKringleService extends KrisKringleModel {
                 'recipientName' => $participants[$recipientId]['name'],
             ];
         }
-        if ($viewer !== $owner) {
-            foreach ($members as &$member) {
+        $photos = $this->getMemberPhotoDetailsFromDB(array_column($members, 'userId'));
+        foreach ($members as &$member) {
+            $photo = $photos[$member['userId']] ?? [];
+            $serial = (int)($photo['pictureFileSerial'] ?? 0);
+            $member['pictureVersion'] = $serial > 0 ? (string)$serial : '';
+            $member['pictureURL'] = $serial > 0 ? null : ($photo['picture'] ?? null);
+            if ($viewer !== $owner) {
                 unset($member['email']);
             }
-            unset($member);
         }
+        unset($member);
         return ['groups' => $this->getKrisKringleGroupsFromDB($id), 'members' => $members, 'assignments' => $assignments];
     }
 
@@ -307,6 +312,14 @@ class KrisKringleService extends KrisKringleModel {
         unset($group['pictureFileSerial']);
         $group['name'] = $name ?? $group['name'];
         return ['data' => $group];
+    }
+
+    public function getKrisKringleMemberPicture(int $id, int $userId): ?string
+    {
+        if ($this->s()->userId() <= 0 || $id <= 0 || $userId <= 0 || !$this->getVisibleKrisKringleFromDB($id)) {
+            return null;
+        }
+        return PictureUpload::read($this->s(), $this->getMemberPhotoSerialFromDB($id, $userId));
     }
 
     public function getKrisKringlePicture(int $id): ?string

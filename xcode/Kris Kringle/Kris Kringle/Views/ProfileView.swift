@@ -10,7 +10,8 @@ struct ProfileView: View, UserServiceDelegate {
     var loadError: String?
     var retry: () -> Void
 
-    @State private var name = ""
+    @StateObject private var googleSignInModel = GoogleSignInModel()
+    @State private var name: String?
     @State private var selectedPhoto: Data?
     @State private var isPreparingPhoto = false
     @State private var isSaving = false
@@ -22,7 +23,13 @@ struct ProfileView: View, UserServiceDelegate {
     @State private var showError = false
 
     private var isBusy: Bool { isSaving || isLinking || isLoggingOut }
-    private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var nameBinding: Binding<String> {
+        Binding(
+            get: { name ?? profile?.name ?? "" },
+            set: { name = $0 }
+        )
+    }
+    private var trimmedName: String { nameBinding.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var nameChanged: Bool { trimmedName != profile?.name }
     private var canSave: Bool {
         (!nameChanged || !trimmedName.isEmpty) && (nameChanged || selectedPhoto != nil)
@@ -44,7 +51,7 @@ struct ProfileView: View, UserServiceDelegate {
                         }
                         PhotoPicker(picture: $selectedPhoto, isPreparing: $isPreparingPhoto, isSaving: isBusy)
                             .translucentDarkRow()
-                        TextField("Display name", text: $name)
+                        TextField("Display name", text: nameBinding)
                             .textContentType(.name)
                             .textInputAutocapitalization(.words)
                             .translucentDarkRow()
@@ -85,6 +92,26 @@ struct ProfileView: View, UserServiceDelegate {
                         }
                     }
                     .disabled(isBusy)
+                    Section {
+                        if profile.googleLinked == true {
+                            Label("Google Account Linked", systemImage: "checkmark.circle.fill")
+                                .translucentDarkRow()
+                        } else {
+                            Button(action: linkGoogle) {
+                                HStack(spacing: 12) {
+                                    Image("Google Logo")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 20, height: 20)
+                                    Text("Link Google Account")
+                                }
+                            }
+                            .translucentDarkRow()
+                        }
+                    } header: {
+                        Text("Sign in with Google")
+                    }
+                    .disabled(isBusy)
                 } else if let loadError {
                     Section {
                         Text(loadError).translucentDarkRow()
@@ -105,9 +132,6 @@ struct ProfileView: View, UserServiceDelegate {
             }
             .christmasBackground()
             .navigationTitle("Me")
-        }
-        .onChange(of: profile?.name, initial: true) {
-            name = profile?.name ?? ""
         }
         .alert("Profile", isPresented: $showError) {
             Button("OK", role: .cancel) { }
@@ -153,6 +177,30 @@ struct ProfileView: View, UserServiceDelegate {
             } catch is CancellationError {
             } catch {
                 presentError(error.localizedDescription)
+            }
+        }
+    }
+
+    private func linkGoogle() {
+        guard !isBusy else { return }
+        let sessionToken = Globals.selmasuToken
+        guard !sessionToken.isEmpty else { return }
+        let salt = UUID().uuidString
+        let input = Data("\(sessionToken):\(salt)".utf8)
+        let nonce = SHA256.hash(data: input).map { String(format: "%02x", $0) }.joined()
+        isLinking = true
+        Task {
+            defer { isLinking = false }
+            do {
+                let token = try await googleSignInModel.signIn(nonce: nonce)
+                guard sessionToken == Globals.selmasuToken else { return }
+                try await ProfileService.linkGoogle(idToken: token, salt: salt)
+                profile?.googleLinked = true
+            } catch is CancellationError {
+            } catch {
+                if !GoogleSignInModel.isCancellation(error) {
+                    presentError(error.localizedDescription)
+                }
             }
         }
     }

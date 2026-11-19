@@ -32,7 +32,8 @@ final class Tables
             'krisKringleAssignment' => 'krisKringleAssignment',
             'krisKringleMember' => 'krisKringleMember',
             'krisKringleProfilePhoto' => 'krisKringleProfilePhoto',
-            'krisKringleAppleIdentity' => 'krisKringleAppleIdentity'
+            'krisKringleAppleIdentity' => 'krisKringleAppleIdentity',
+            'krisKringleGoogleIdentity' => 'krisKringleGoogleIdentity'
         ];
     }
 
@@ -49,7 +50,8 @@ final class Tables
             'krisKringleAssignment' => $this->krisKringleAssignmentSchema(),
             'krisKringleMember' => $this->krisKringleMemberSchema(),
             'krisKringleProfilePhoto' => $this->krisKringleProfilePhotoSchema(),
-            'krisKringleAppleIdentity' => $this->krisKringleAppleIdentitySchema()
+            'krisKringleAppleIdentity' => $this->krisKringleAppleIdentitySchema(),
+            'krisKringleGoogleIdentity' => $this->krisKringleGoogleIdentitySchema()
         ];
     }
 
@@ -91,6 +93,17 @@ final class Tables
 
     public function krisKringleAppleIdentity(){
         return $this->tables['krisKringleAppleIdentity'];
+    }
+
+    public function krisKringleGoogleIdentity(){
+        return $this->tables['krisKringleGoogleIdentity'];
+    }
+
+    private function krisKringleGoogleIdentitySchema(){
+        return TableSchema::create()
+            ->name()->set('krisKringleGoogleIdentity')
+            ->addField(TableField::create()->name()->set('userId')->type()->set(TableField::TYPE_BIGINT)->primaryKey()->set(true))
+            ->addField(TableField::create()->name()->set('subjectHash')->type()->set(TableField::TYPE_VARCHAR_100)->unique()->set(true));
     }
 
     private function krisKringleProfilePhotoSchema(){

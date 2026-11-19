@@ -58,10 +58,13 @@ struct KrisKringleMember: Identifiable {
     let groupId: Int
     let name: String
     let email: String?
+    let pictureVersion: String
+    let pictureURL: URL?
     let isCreator: Bool
     let children: [Child]
 
     var displayName: String { name.isEmpty ? (email ?? "Member") : name }
+    var hasPicture: Bool { !pictureVersion.isEmpty || pictureURL != nil }
 
     init(json: JSON) throws {
         guard let id = json["userId"].int, id > 0,
@@ -75,6 +78,9 @@ struct KrisKringleMember: Identifiable {
         self.name = name
         self.groupId = groupId
         self.email = json["email"].string
+        self.pictureVersion = json["pictureVersion"].stringValue
+        let pictureURL = URL(string: json["pictureURL"].stringValue)
+        self.pictureURL = ["https", "http"].contains(pictureURL?.scheme?.lowercased() ?? "") ? pictureURL : nil
         self.isCreator = isCreator
         self.children = try (json["children"].array ?? []).map { try Child(json: $0) }
     }
@@ -240,6 +246,14 @@ enum KrisKringleService {
             "expectedRecipientId": String(expectedRecipientId ?? 0)
         ]
         return try await KrisKringleRoster(json: request("updateGiftAssignment", parameters: fields))
+    }
+
+    static func memberPicture(id: Int, userId: Int) async throws -> Data {
+        try await authenticatedRequest(
+            "getKrisKringleMemberPicture", parameters: ["id": String(id), "userId": String(userId)]
+        )
+        .validate(statusCode: 200..<300)
+        .serializingData().value
     }
 
     static func picture(id: Int) async throws -> Data {

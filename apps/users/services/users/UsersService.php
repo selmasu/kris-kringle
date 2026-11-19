@@ -73,10 +73,17 @@ class UsersService extends UsersModel {
         $user = $this->s()->user();
         $picture = PictureUpload::read($this->s(), $this->getProfilePhotoSerialFromDB($userId));
         $name = trim($user->displayName()->get() ?? '');
+        if ($name === '') {
+            $name = trim($user->name());
+        }
+        if ($name === '') {
+            $name = $this->getKrisKringleProfileNameFromDB($userId);
+        }
         return [
-            'name' => $name === '' ? trim($user->name()) : $name,
+            'name' => $name,
             'picture' => $picture === null ? null : base64_encode($picture),
             'appleLinked' => $this->appleSubjectHashForUser($userId) !== null,
+            'googleLinked' => $this->googleSubjectHashForUser($userId) !== null,
         ];
     }
 

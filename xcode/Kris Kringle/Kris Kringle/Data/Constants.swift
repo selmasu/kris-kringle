@@ -9,7 +9,7 @@ import Foundation
 
 open class Constants {
     class var googleClientId:String {
-        return "382392073189-o25smhd2sfn24fto15uk9l7psudskvdf.apps.googleusercontent.com"
+        return "255479378047-8l3h729g2p4sari3p68it78m2q6mrvav.apps.googleusercontent.com"
     }
     
     class var appURL:String {

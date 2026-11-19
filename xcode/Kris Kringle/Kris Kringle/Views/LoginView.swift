@@ -62,11 +62,6 @@ struct LoginView: View, UserServiceDelegate {
                     signInWithApple()
                 }
             }
-            .onChange(of: googleSignInModel.signInSuccess) {
-                if googleSignInModel.signInSuccess {
-                    signInWithGoogle()
-                }
-            }
         }
     }
 
@@ -201,7 +196,7 @@ struct LoginView: View, UserServiceDelegate {
                 .padding(.horizontal, 16)
             }
 
-            Button(action: { googleSignInModel.signIn() }) {
+            Button(action: signInWithGoogle) {
                 HStack {
                     Spacer()
                     Image("Google Logo")
@@ -247,8 +242,20 @@ struct LoginView: View, UserServiceDelegate {
     }
 
     private func signInWithGoogle() {
+        guard !isSubmitting else { return }
         isSubmitting = true
-        UserService(delegate: self).loginGoogle(googleSignInModel.idToken)
+        Task {
+            do {
+                let token = try await googleSignInModel.signIn()
+                UserService(delegate: self).loginGoogle(token)
+            } catch {
+                isSubmitting = false
+                if !GoogleSignInModel.isCancellation(error) {
+                    alertMessage = error.localizedDescription
+                    showAlert = true
+                }
+            }
+        }
     }
 
     func userServiceDidComplete(_ type: UserServiceType, data: UserServiceData) {
@@ -265,7 +272,12 @@ struct LoginView: View, UserServiceDelegate {
 
     func serviceError(_ error: String) {
         isSubmitting = false
-        if error == "appleAccountRequired" {
+        if error == "googleAccountRequired" {
+            emailSignIn = true
+            codeSent = false
+            oneTimeCode = ""
+            alertMessage = "Continue with Email using your invitation address, then link Google in Me."
+        } else if error == "appleAccountRequired" {
             emailSignIn = true
             codeSent = false
             oneTimeCode = ""

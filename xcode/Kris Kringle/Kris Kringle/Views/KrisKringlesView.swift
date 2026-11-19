@@ -10,6 +10,7 @@ import Foundation
 import UIKit
 
 struct KrisKringlesView: View {
+    @Binding var profilePhoto: UIImage?
     private enum ListState {
         case loading
         case loaded([KrisKringleSummary])
@@ -48,10 +49,16 @@ struct KrisKringlesView: View {
                                         .foregroundStyle(Theme.christmasAccent)
                                         .frame(maxWidth: .infinity)
                                         .accessibilityHidden(true)
-                                    Text("You're buying for \(group.recipientName ?? "")")
-                                        .font(.title.bold())
-                                        .foregroundStyle(.white)
-                                        .fixedSize(horizontal: false, vertical: true)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("You're buying for")
+                                            .lineLimit(1)
+                                            .minimumScaleFactor(0.75)
+                                        Text(group.recipientName ?? "")
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                    .font(.title.bold())
+                                    .foregroundStyle(.white)
+                                    .accessibilityElement(children: .combine)
                                     Text(group.name)
                                         .font(.subheadline)
                                         .foregroundStyle(.white.opacity(0.8))
@@ -59,7 +66,7 @@ struct KrisKringlesView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(24)
                                 .background(
-                                    Color(uiColor: .secondarySystemGroupedBackground).opacity(0.3),
+                                    Theme.cardBackground,
                                     in: RoundedRectangle(cornerRadius: 16)
                                 )
                                 .overlay {
@@ -75,7 +82,7 @@ struct KrisKringlesView: View {
                     Section {
                         ForEach(groups) { group in
                             NavigationLink {
-                                KrisKringleDetailView(group: group, photos: photos, onUpdate: upsertGroup)
+                                KrisKringleDetailView(group: group, photos: photos, currentUserPhoto: $profilePhoto, onUpdate: upsertGroup)
                             } label: {
                                 HStack(spacing: 12) {
                                     KrisKringlePhoto(group: group, cache: photos)

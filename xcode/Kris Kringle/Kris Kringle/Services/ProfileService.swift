@@ -5,6 +5,7 @@ struct MyProfile: Decodable {
     var name: String
     var picture: Data?
     var appleLinked: Bool
+    var googleLinked: Bool?
 }
 
 enum ProfileService {
@@ -12,6 +13,7 @@ enum ProfileService {
         var error: String?
         var saved: Bool?
         var appleLinked: Bool?
+        var googleLinked: Bool?
     }
 
     private struct ServiceError: LocalizedError {
@@ -20,7 +22,27 @@ enum ProfileService {
     }
 
     static func load() async throws -> MyProfile {
-        try await request("getMyProfile")
+        let token = Globals.selmasuToken
+        let userId = Globals.userId
+        var profile: MyProfile = try await request("getMyProfile")
+        guard profile.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return profile }
+
+        let groups = try await KrisKringleService.list()
+        try Task.checkCancellation()
+        guard token == Globals.selmasuToken else { throw CancellationError() }
+        for group in groups.sorted(by: { ($0.year, $0.id) > ($1.year, $1.id) }) {
+            let detail = try await KrisKringleService.detail(id: group.id)
+            try Task.checkCancellation()
+            guard token == Globals.selmasuToken else { throw CancellationError() }
+            if let member = detail.roster.members.first(where: { $0.id == userId }) {
+                let name = member.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !name.isEmpty {
+                    profile.name = name
+                    break
+                }
+            }
+        }
+        return profile
     }
 
     static func save(name: String?, picture: Data?) async throws {
@@ -38,6 +60,16 @@ enum ProfileService {
         )
         guard response.appleLinked == true else {
             throw ServiceError(message: "The server couldn’t link your Apple account. Please try again.")
+        }
+    }
+
+    static func linkGoogle(idToken: String, salt: String) async throws {
+        let response: Response = try await request(
+            "linkGoogleAccount", app: "framework", service: "authentication",
+            fields: ["idToken": idToken, "clientId": Constants.googleClientId, "salt": salt]
+        )
+        guard response.googleLinked == true else {
+            throw ServiceError(message: "The server couldn’t link your Google account. Please try again.")
         }
     }
 

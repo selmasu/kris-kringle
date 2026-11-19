@@ -2,12 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>UILaunchScreen</key>
-    <dict>
-        <key>UIImageName</key>
-        <string>Background</string>
-        <key>UIImageRespectsSafeAreaInsets</key>
-        <false/>
-    </dict>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIImageName</key>
+		<string>Background</string>
+		<key>UIImageRespectsSafeAreaInsets</key>
+		<false/>
+	</dict>
+	<key>GIDClientID</key>
+	<string>255479378047-8l3h729g2p4sari3p68it78m2q6mrvav.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.255479378047-8l3h729g2p4sari3p68it78m2q6mrvav</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

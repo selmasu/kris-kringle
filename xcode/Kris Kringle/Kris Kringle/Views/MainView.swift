@@ -30,7 +30,7 @@ struct MainView: View {
     private var tabs: some View {
         TabView(selection: $selection) {
             NavigationStack {
-                KrisKringlesView()
+                KrisKringlesView(profilePhoto: $profilePhoto)
             }
                 .tag(0)
                 .tabItem {
@@ -54,6 +54,9 @@ struct MainView: View {
                 }
         }
         .tint(Theme.christmasAccent)
+        .onChange(of: selection) { _, selection in
+            if selection == 1 { profileLoadAttempt += 1 }
+        }
         .task(id: profileLoadAttempt) {
             profileLoadError = nil
             do {

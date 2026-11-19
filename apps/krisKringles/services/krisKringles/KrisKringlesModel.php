@@ -223,6 +223,31 @@ class KrisKringleModel extends Model
         }, $users);
     }
 
+    protected function getMemberPhotoDetailsFromDB(array $userIds): array
+    {
+        if (!$userIds) {
+            return [];
+        }
+        $ids = implode(',', array_map('intval', $userIds));
+        $users = $this->coreTables()->user();
+        $photos = $this->tables()->krisKringleProfilePhoto();
+        return array_column($this->db->fetchAll("SELECT account.userId, account.picture, photo.pictureFileSerial
+            FROM $users AS account LEFT JOIN $photos AS photo ON photo.userId = account.userId
+            WHERE account.userId IN ($ids) AND account.deleted = 0"), null, 'userId');
+    }
+
+    protected function getMemberPhotoSerialFromDB(int $id, int $userId): int
+    {
+        if ($this->getKrisKringleMemberGroupId($id, $userId) <= 0) {
+            return 0;
+        }
+        $users = $this->coreTables()->user();
+        $photos = $this->tables()->krisKringleProfilePhoto();
+        return (int)$this->db->query("SELECT photo.pictureFileSerial FROM $photos AS photo
+            JOIN $users AS account ON account.userId = photo.userId
+            WHERE account.userId = $userId AND account.deleted = 0")->fetchValue('pictureFileSerial');
+    }
+
     protected function resolveGiftGiverId(array $members, int $giverId, int $giverUserId): int
     {
         if ($giverId > 0) {

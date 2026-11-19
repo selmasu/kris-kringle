@@ -21,7 +21,6 @@ class User: NSManagedObject {
     @NSManaged var picture: String
     @NSManaged var token: String
     @NSManaged var lastToLogin: NSNumber
-    @NSManaged var postSort: NSNumber
     
     var following = false
     var requestStatusId = 0

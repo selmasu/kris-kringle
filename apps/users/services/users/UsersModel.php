@@ -1,6 +1,16 @@
 <?php
 class UsersModel extends Model {
 
+    protected function getKrisKringleProfileNameFromDB(int $userId): string
+    {
+        $members = $this->tables()->krisKringleMember();
+        $exchanges = $this->tables()->krisKringle();
+        return trim((string)$this->adb->query("SELECT member.name FROM $members AS member
+            JOIN $exchanges AS exchange ON exchange.krisKringleId = member.krisKringleId
+            WHERE member.userId = $userId AND exchange.deleted = 0 AND TRIM(member.name) <> ''
+            ORDER BY exchange.year DESC, member.krisKringleMemberId DESC LIMIT 1")->fetchValue('name'));
+    }
+
     protected function getProfilePhotoSerialFromDB(int $userId): int
     {
         $table = $this->tables()->krisKringleProfilePhoto();
@@ -15,6 +25,14 @@ class UsersModel extends Model {
             $this->db->query("SELECT pictureFileSerial FROM $photoTable LIMIT 0");
         }
 
+        $memberTable = $this->tables()->krisKringleMember();
+        if ($name !== null) {
+            $this->adb->query("SELECT name FROM $memberTable LIMIT 0");
+            if ($this->adb !== $this->db) {
+                $database = str_replace('`', '``', $this->adb->database());
+                $memberTable = "`$database`.`$memberTable`";
+            }
+        }
         $userTable = $this->coreTables()->user();
         $this->db->query('START TRANSACTION');
         $active = $this->db->query("SELECT userId FROM $userTable WHERE userId = $userId AND deleted = 0 FOR UPDATE")
@@ -29,6 +47,10 @@ class UsersModel extends Model {
                 "UPDATE $userTable SET displayName = ?, updatedBy = ?, updatedDate = NOW() WHERE userId = ?",
                 [$name, $userId, $userId]
             ))
+            || ($name !== null && !$this->db->executePrepared(
+                "UPDATE $memberTable SET name = ? WHERE userId = ?",
+                [$name, $userId]
+            ))
             || ($serial !== null && !$this->db->executePrepared(
                 "INSERT INTO $photoTable (userId, pictureFileSerial) VALUES (?, ?)
                     ON DUPLICATE KEY UPDATE pictureFileSerial = ?",
@@ -39,6 +61,12 @@ class UsersModel extends Model {
         }
         $this->db->query('COMMIT');
         return $previousSerial;
+    }
+
+    protected function googleSubjectHashForUser(int $userId): ?string
+    {
+        $table = $this->tables()->krisKringleGoogleIdentity();
+        return $this->db->query("SELECT subjectHash FROM $table WHERE userId = $userId")->fetchValue('subjectHash');
     }
 
     protected function appleSubjectHashForUser(int $userId): ?string
@@ -336,7 +364,7 @@ class UsersModel extends Model {
         $serial = (int)$this->db->query("SELECT profile.pictureFileSerial FROM $photoTable AS profile
             JOIN $userTable AS account ON account.userId = profile.userId
             WHERE profile.userId = $userId AND account.deleted = 1")->fetchValue('pictureFileSerial');
-        foreach ([$photoTable, $this->tables()->krisKringleAppleIdentity()] as $table) {
+        foreach ([$photoTable, $this->tables()->krisKringleAppleIdentity(), $this->tables()->krisKringleGoogleIdentity()] as $table) {
             $this->db->query("DELETE profile FROM $table AS profile
                 JOIN $userTable AS account ON account.userId = profile.userId
                 WHERE profile.userId = $userId AND account.deleted = 1");

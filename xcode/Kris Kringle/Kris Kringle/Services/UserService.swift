@@ -232,7 +232,7 @@ class UserService {
     }
     
     func callService(_ params: [String:AnyObject]) {
-        let method: HTTPMethod = ["sendOneTimeCode", "loginOneTimeCode", "loginApple"].contains(functionCall) ? .post : .get
+        let method: HTTPMethod = ["sendOneTimeCode", "loginOneTimeCode", "loginApple", "loginGoogle"].contains(functionCall) ? .post : .get
         AF.request(Utils.requestURL(app, service: service, function: functionCall), method: method, parameters: params)
             .validate(statusCode: 200..<300)
             .responseData { response in

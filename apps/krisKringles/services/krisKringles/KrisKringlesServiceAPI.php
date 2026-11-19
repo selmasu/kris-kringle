@@ -140,11 +140,15 @@ class KrisKringleServiceAPI extends ServiceAPI
                 }
                 return $this->krisKringleService->updateKrisKringlePicture($this->intArgument(self::ID), $_FILES['picture'] ?? null);
 
+            case 'getKrisKringleMemberPicture':
             case self::GET_PICTURE:
-                $picture = $this->krisKringleService->getKrisKringlePicture($this->intArgument(self::ID));
+                $id = $this->intArgument(self::ID);
+                $picture = $functionToCall === 'getKrisKringleMemberPicture'
+                    ? $this->krisKringleService->getKrisKringleMemberPicture($id, $this->intArgument('userId'))
+                    : $this->krisKringleService->getKrisKringlePicture($id);
                 if ($picture === null) {
                     http_response_code(404);
-                    return ['error' => 'Group photo not found.'];
+                    return ['error' => 'Photo not found.'];
                 }
                 header('Content-Type: image/jpeg');
                 header('Content-Length: ' . strlen($picture));
