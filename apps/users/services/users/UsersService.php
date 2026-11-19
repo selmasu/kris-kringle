@@ -411,7 +411,7 @@ class UsersService extends UsersModel {
 
         if($emailAddress == 'tester@testing.com'){
             $this->setOneTimeCodeInDB($emailAddress);
-            return ['sent' => false, 'error' => 'Please enter a valid email address'];
+            return ['sent' => true, 'error' => '', 'retryAfter' => 60, 'expiresIn' => 300];
         }
 
         $lock = $this->emailAccountLock($emailAddress);

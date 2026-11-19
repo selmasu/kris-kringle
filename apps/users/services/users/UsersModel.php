@@ -536,7 +536,7 @@ class UsersModel extends Model {
         if($email == 'tester@testing.com'){
             $code = '000000';
         }
-        
+
         $sql = "
             UPDATE
                 " . $this->coreTables()->user() . "
