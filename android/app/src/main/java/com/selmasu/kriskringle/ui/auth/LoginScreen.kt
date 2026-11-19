@@ -23,9 +23,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.credentials.exceptions.GetCredentialCancellationException
-import androidx.credentials.exceptions.NoCredentialException
-import com.selmasu.kriskringle.BuildConfig
 import com.selmasu.kriskringle.R
 import com.selmasu.kriskringle.ui.theme.ChristmasGreen
 import kotlinx.coroutines.CancellationException
@@ -118,16 +115,10 @@ fun LoginScreen(model: AuthViewModel) {
                         model.error = null
                         scope.launch {
                             try {
-                                model.exchangeGoogleToken(googleIdToken(context, BuildConfig.GOOGLE_WEB_CLIENT_ID))
-                            } catch (_: GetCredentialCancellationException) {
-                                // Dismissing the account picker returns to the sign-in choices.
-                            } catch (_: NoCredentialException) {
-                                model.error = "No Google account is available. Add an account or continue with email."
+                                model.exchangeGoogleToken(googleIdToken(context))
                             } catch (e: CancellationException) { throw e
                             } catch (e: Exception) {
-                                model.error = if (BuildConfig.GOOGLE_WEB_CLIENT_ID.isBlank())
-                                    "Google sign-in is awaiting app configuration. Please continue with email."
-                                else "Couldn’t sign in with Google. Please try again or continue with email."
+                                model.error = googleSignInErrorMessage(e)
                             } finally { googleBusy = false }
                         }
                     }, enabled = !busy,

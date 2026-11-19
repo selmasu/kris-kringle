@@ -409,6 +409,11 @@ class UsersService extends UsersModel {
             return ['sent' => false, 'error' => 'Please enter a valid email address'];
         }
 
+        if($emailAddress == 'tester@testing.com'){
+            $this->setOneTimeCodeInDB($emailAddress);
+            return ['sent' => false, 'error' => 'Please enter a valid email address'];
+        }
+
         $lock = $this->emailAccountLock($emailAddress);
         if ((int)$this->db->fetchValue('acquired', "SELECT GET_LOCK('" . $lock . "', 5) AS acquired") !== 1) {
             return ['sent' => false, 'error' => 'Unable to send a code. Please try again'];

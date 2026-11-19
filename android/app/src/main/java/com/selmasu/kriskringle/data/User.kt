@@ -27,7 +27,20 @@ data class User(
     }
 }
 
-data class MyProfile(val name: String, val picture: ByteArray? = null)
+data class MyProfile(
+    val name: String,
+    val picture: ByteArray? = null,
+    val googleLinked: Boolean? = null,
+) {
+    companion object {
+        fun fromJSON(json: JSONObject, picture: ByteArray? = null): MyProfile = MyProfile(
+            name = json.requiredString("name", "The server returned an invalid profile."),
+            picture = picture,
+            // Older backend versions omit this optional account-link field.
+            googleLinked = json.opt("googleLinked") as? Boolean,
+        )
+    }
+}
 
 internal fun JSONObject.string(key: String): String = if (isNull(key)) "" else optString(key, "")
 internal fun JSONObject.nullableString(key: String): String? = if (isNull(key)) null else optString(key)

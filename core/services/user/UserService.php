@@ -7,7 +7,10 @@ class UserService extends UsersService {
 
     public function googleSignInPolicy(): array
     {
-        return ['clientIds' => ['255479378047-8l3h729g2p4sari3p68it78m2q6mrvav.apps.googleusercontent.com']];
+        return ['clientIds' => [
+            '255479378047-8l3h729g2p4sari3p68it78m2q6mrvav.apps.googleusercontent.com',
+            '255479378047-8e98vs8lm7kar4r641g9hctk4vn594ij.apps.googleusercontent.com',
+        ]];
     }
 
     public function getUserByGoogleSubject(string $subject): ?User
@@ -23,9 +26,9 @@ class UserService extends UsersService {
         return $this->googleSubjectHashForUser((int)$user->userId()->get()) !== null;
     }
 
-    public function saveGoogleLink(string $subject): bool
+    public function saveGoogleLink(string $subject, ?User $account = null): bool
     {
-        $userId = (int)$this->s()->userId();
+        $userId = $account === null ? (int)$this->s()->userId() : (int)$account->userId()->get();
         if ($userId <= 0) {
             return false;
         }

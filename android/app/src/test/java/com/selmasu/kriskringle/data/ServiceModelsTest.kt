@@ -2,6 +2,7 @@ package com.selmasu.kriskringle.data
 
 import com.selmasu.kriskringle.services.RemoteConnection
 import com.selmasu.kriskringle.services.requireAccountDeletionResponse
+import com.selmasu.kriskringle.services.requireGoogleLinkResponse
 import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
@@ -75,6 +76,29 @@ class ServiceModelsTest {
     @Test(expected = IllegalArgumentException::class)
     fun anUnexpectedObjectCannotClearTheAccountSessionAsADeletionSuccess() {
         requireAccountDeletionResponse(RemoteConnection.decodeResponse("{}".toByteArray(), allowNull = true))
+    }
+
+    @Test fun profileRetainsOptionalGoogleLinkStateWhenEditedOrUsingAnOlderBackend() {
+        val legacy = MyProfile.fromJSON(JSONObject("""{"name":"Robin"}"""))
+        assertNull(legacy.googleLinked)
+        val linked = MyProfile.fromJSON(JSONObject("""{"name":"Robin","googleLinked":true}"""))
+        assertEquals(true, linked.copy(name = "Rob").googleLinked)
+        assertEquals(false, MyProfile.fromJSON(JSONObject("""{"name":"Robin","googleLinked":false}""")).googleLinked)
+    }
+
+    @Test fun onlyExplicitGoogleLinkConfirmationSucceeds() {
+        requireGoogleLinkResponse(JSONObject("""{"googleLinked":true}"""))
+        for (response in listOf("{}", "null", "false", "\"true\"")) {
+            val json = if (response == "{}") JSONObject() else JSONObject("{\"googleLinked\":$response}")
+            assertThrows(IllegalArgumentException::class.java) { requireGoogleLinkResponse(json) }
+        }
+    }
+
+    @Test fun googleLinkFailurePreservesTheServersActionableMessage() {
+        val error = assertThrows(IllegalArgumentException::class.java) {
+            requireGoogleLinkResponse(JSONObject("""{"error":"This Google account matches another Kris Kringle account."}"""))
+        }
+        assertEquals("This Google account matches another Kris Kringle account.", error.message)
     }
 
     @Test fun formEncodingPreservesReservedCharactersAndNestedPhpFields() {

@@ -78,12 +78,13 @@ struct ProfileView: View, UserServiceDelegate {
                             }
                             .signInWithAppleButtonStyle(.white)
                             .frame(height: 44)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
                             .accessibilityLabel("Link Apple Account")
                             .translucentDarkRow()
                             if isLinking { ProgressView("Linking Apple account…").translucentDarkRow() }
                         }
                     } header: {
-                        Text(profile.appleLinked ? "Sign in with Apple" : "Link Apple Account")
+                        Text("Sign in with Apple")
                     } footer: {
                         if !profile.appleLinked {
                             Text("Link your Apple account to use it to sign in to this Kris Kringle account.")
@@ -98,18 +99,32 @@ struct ProfileView: View, UserServiceDelegate {
                                 .translucentDarkRow()
                         } else {
                             Button(action: linkGoogle) {
-                                HStack(spacing: 12) {
+                                HStack(spacing: 8) {
                                     Image("Google Logo")
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(width: 20, height: 20)
-                                    Text("Link Google Account")
+                                        .frame(width: 18, height: 18)
+                                    Text("Continue with Google")
+                                        .font(.system(size: 16, weight: .medium))
                                 }
+                                .foregroundStyle(.black)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 44)
+                                .background(.white, in: RoundedRectangle(cornerRadius: 6))
+                                .contentShape(Rectangle())
                             }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Link Google Account")
                             .translucentDarkRow()
                         }
                     } header: {
                         Text("Sign in with Google")
+                    } footer: {
+                        if profile.googleLinked != true {
+                            Text("Link your Google account to use it to sign in to this Kris Kringle account.")
+                                .foregroundStyle(.white)
+                                .shadow(color: .black.opacity(0.85), radius: 2)
+                        }
                     }
                     .disabled(isBusy)
                 } else if let loadError {

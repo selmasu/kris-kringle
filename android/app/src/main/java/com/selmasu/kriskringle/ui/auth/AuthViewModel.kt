@@ -8,7 +8,7 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
-import com.selmasu.kriskringle.BuildConfig
+import com.selmasu.kriskringle.data.Constants
 import com.selmasu.kriskringle.data.Globals
 import com.selmasu.kriskringle.data.UserServiceData
 import com.selmasu.kriskringle.services.UserService
@@ -88,7 +88,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application), U
         if (busy) return
         busy = true
         error = null
-        service().loginGoogle(token, BuildConfig.GOOGLE_WEB_CLIENT_ID)
+        service().loginGoogle(token, Constants.GOOGLE_WEB_CLIENT_ID)
     }
 
     fun signedOut() {
@@ -132,6 +132,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application), U
             } else restoreError = message
         } else {
             error = when (message) {
+                "googleAccountRequired" -> {
+                    emailMode = true
+                    codeSent = false
+                    code = ""
+                    "Continue with Email using your invitation address, then link Google in Me."
+                }
                 "validationError", "unknownUserError" -> "Couldn’t sign in. Try again or continue with email."
                 else -> message.ifBlank { "Please try again." }
             }

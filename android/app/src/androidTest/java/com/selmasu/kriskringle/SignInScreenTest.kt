@@ -49,6 +49,22 @@ class SignInScreenTest {
     }
 
     @Test
+    fun unlinkedGoogleAccountReturnsToEmailWithLinkingInstructions() {
+        compose.runOnIdle {
+            model.code = "123456"
+            model.serviceError("googleAccountRequired")
+        }
+        compose.onNodeWithText("Email address").assertIsDisplayed()
+        compose.onNodeWithText("Continue with Email using your invitation address, then link Google in Me.")
+            .performScrollTo().assertIsDisplayed()
+        compose.runOnIdle {
+            assertFalse(model.signedIn)
+            assertFalse(model.codeSent)
+            org.junit.Assert.assertEquals("", model.code)
+        }
+    }
+
+    @Test
     fun invalidEmailStaysOnEmailFormWithoutStartingRequest() {
         compose.onNodeWithText("Continue with Email").performClick()
         compose.onNodeWithText("Email address").performTextInput("not-an-email")
