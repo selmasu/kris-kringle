@@ -269,19 +269,21 @@ struct KrisKringleDetailView: View {
                         memberRow(member)
                             .translucentDarkRow()
                         ForEach(member.children) { child in
-                            VStack(alignment: .leading, spacing: 4) {
+                            VStack(alignment: .leading, spacing: 12) {
                                 if isCreator {
                                     Button {
                                         editingMember = EditableMember(child: child)
                                     } label: {
                                         Label(child.name, systemImage: "arrow.turn.down.right")
-                                            .foregroundStyle(.primary)
+                                            .foregroundStyle(.white)
                                     }
                                     .buttonStyle(.borderless)
+                                    .tint(.white)
                                     .accessibilityLabel("Edit \(child.name), child of \(member.displayName)")
                                     .disabled(isBusy)
                                 } else {
                                     Label(child.name, systemImage: "arrow.turn.down.right")
+                                        .foregroundStyle(.white)
                                 }
                                 giftAssignment(for: GiftGiver(id: .member(child.id), name: child.name))
                             }
@@ -300,21 +302,23 @@ struct KrisKringleDetailView: View {
 
     private func memberRow(_ member: KrisKringleMember) -> some View {
         HStack {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 12) {
                 if isCreator {
                     Button {
                         editingMember = EditableMember(member: member)
                     } label: {
                         Text(member.displayName)
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.borderless)
+                    .tint(.white)
                     .accessibilityLabel("Edit \(member.displayName)")
                     .disabled(isBusy)
                 } else {
                     Text(member.displayName)
+                        .foregroundStyle(.white)
                 }
                 let giverId = member.memberId.map(KrisKringleGiftGiverID.member) ?? .user(member.id)
                 giftAssignment(for: GiftGiver(id: giverId, name: member.displayName))

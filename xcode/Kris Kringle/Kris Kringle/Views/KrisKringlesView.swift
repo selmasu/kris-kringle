@@ -36,21 +36,45 @@ struct KrisKringlesView: View {
                         .tint(Theme.green)
                 }
             case .loaded(let groups):
-                List(groups) { group in
-                    NavigationLink {
-                        KrisKringleDetailView(group: group, photos: photos, onUpdate: upsertGroup)
-                    } label: {
-                        HStack(spacing: 12) {
-                            KrisKringlePhoto(group: group, cache: photos)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(group.name).font(.headline)
-                                Text("\(group.year, format: .number.grouping(.never)) · \(group.createdBy == Globals.userId ? "Created by you" : "Invited")")
+                List {
+                    ForEach(groups.filter { $0.year == Calendar.current.component(.year, from: Date()) && $0.recipientName != nil }) { group in
+                        NavigationLink {
+                            KrisKringleDetailView(group: group, photos: photos, onUpdate: upsertGroup)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Image(systemName: "gift.fill")
+                                    .font(.largeTitle)
+                                    .foregroundStyle(Theme.christmasAccent)
+                                    .accessibilityHidden(true)
+                                Text("You're buying for \(group.recipientName ?? "")")
+                                    .font(.largeTitle.bold())
+                                    .foregroundStyle(.white)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Text(group.name)
                                     .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.white.opacity(0.8))
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 20)
+                        }
+                        .translucentDarkRow()
+                    }
+                    ForEach(groups) { group in
+                        NavigationLink {
+                            KrisKringleDetailView(group: group, photos: photos, onUpdate: upsertGroup)
+                        } label: {
+                            HStack(spacing: 12) {
+                                KrisKringlePhoto(group: group, cache: photos)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(group.name).font(.headline)
+                                    Text("\(group.year, format: .number.grouping(.never)) · \(group.createdBy == Globals.userId ? "Created by you" : "Invited")")
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
+                        .translucentDarkRow()
                     }
-                    .translucentDarkRow()
                 }
                 .refreshable { await loadGroups() }
             case .failed(let message):
@@ -80,7 +104,7 @@ struct KrisKringlesView: View {
             }
         }
         .task {
-            if case .loading = state { await loadGroups() }
+            await loadGroups()
         }
         .sheet(isPresented: $isShowingCreate) {
             CreateKrisKringleView { group, picture in

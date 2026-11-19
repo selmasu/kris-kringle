@@ -19,6 +19,45 @@ class KrisKringleModel extends Model
         }, $this->adb->fetchAll($sql));
     }
 
+    protected function getMyGiftRecipientsFromDB(array $ids, int $userId): array
+    {
+        if (!$ids) {
+            return [];
+        }
+        $ids = implode(',', array_map('intval', $ids));
+        $assignments = $this->tables()->krisKringleAssignment();
+        $members = $this->tables()->krisKringleMember();
+        $rows = $this->adb->fetchAll("SELECT gift.krisKringleId, recipient.userId, recipient.name
+            FROM $assignments AS gift
+            JOIN $members AS giver ON giver.krisKringleMemberId = gift.giverId AND giver.krisKringleId = gift.krisKringleId
+            JOIN $members AS recipient ON recipient.krisKringleMemberId = gift.recipientId AND recipient.krisKringleId = gift.krisKringleId
+            WHERE gift.krisKringleId IN ($ids) AND giver.userId = $userId");
+        if (!$rows) {
+            return [];
+        }
+        $userIds = implode(',', array_unique(array_map('intval', array_column($rows, 'userId'))));
+        $userTable = $this->coreTables()->user();
+        $users = array_column($this->db->fetchAll("SELECT userId, displayName, firstName, lastName, email
+            FROM $userTable WHERE userId IN ($userIds) AND deleted = 0"), null, 'userId');
+        $recipients = [];
+        foreach ($rows as $row) {
+            $recipientUserId = (int)$row['userId'];
+            if ($recipientUserId > 0 && !isset($users[$recipientUserId])) {
+                continue;
+            }
+            $user = $users[$recipientUserId] ?? [];
+            $name = trim($row['name'] ?? '');
+            if ($name === '') {
+                $name = trim($user['displayName'] ?? '');
+            }
+            if ($name === '') {
+                $name = trim(($user['firstName'] ?? '') . ' ' . ($user['lastName'] ?? ''));
+            }
+            $recipients[(int)$row['krisKringleId']] = $name !== '' ? $name : ($user['email'] ?? 'Member');
+        }
+        return $recipients;
+    }
+
     protected function getKrisKringlesTotalFromDB():int
     {
         return (int)$this->adb->fetchValue('total', 'SELECT COUNT(*) AS total ' . $this->visibleGroupsFromWhere());

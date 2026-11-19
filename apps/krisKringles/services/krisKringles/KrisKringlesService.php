@@ -15,7 +15,15 @@ class KrisKringleService extends KrisKringleModel {
         $query->offset()->set( max(0, (int)$listArguments->skip()->get()) );
         $query->orderBy()->set( 'krisKringle.year DESC, krisKringle.krisKringleId DESC' );
         
-        return ['data' => $this->getKrisKringlesFromDB( $query, $returnType ), 'total' => $this->getKrisKringlesTotalFromDB()];
+        $groups = $this->getKrisKringlesFromDB($query, $returnType);
+        if ($returnType === Model::RETURN_TYPE_ARRAY) {
+            $recipients = $this->getMyGiftRecipientsFromDB(array_column($groups, 'krisKringleId'), (int)$this->s()->userId());
+            foreach ($groups as &$group) {
+                $group['recipientName'] = $recipients[(int)$group['krisKringleId']] ?? null;
+            }
+            unset($group);
+        }
+        return ['data' => $groups, 'total' => $this->getKrisKringlesTotalFromDB()];
     }
 
     public function createKrisKringle(string $name, string $firstGroupName, ?array $upload = null):array
@@ -150,11 +158,17 @@ class KrisKringleService extends KrisKringleModel {
                 if ($currentUserId === $owner) {
                     return ['error' => 'The creator’s sign-in email cannot be changed from the member list.'];
                 }
-                $user = UsersService::create($this->s())->getOrCreateEmailAccount($email);
-                $targetUserId = $user ? (int)$user->userId()->get() : 0;
-                if ($targetUserId <= 0) {
-                    return ['error' => 'Couldn’t link this email address. Please try again.'];
+                try {
+                    $error = UsersService::create($this->s())->withNewEmailAccount(
+                        $email,
+                        fn (User $user): ?string => $this->updateKrisKringleMemberInDB(
+                            $id, $owner, (int)$member['krisKringleMemberId'], $expectedUserId, (int)$user->userId()->get(), $name
+                        )
+                    );
+                } catch (DomainException $error) {
+                    return ['error' => $error->getMessage()];
                 }
+                return $error === null ? $this->roster($id, $owner, $owner) : ['error' => $error];
             }
         }
         $error = $this->updateKrisKringleMemberInDB(

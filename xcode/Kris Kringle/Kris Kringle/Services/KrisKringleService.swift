@@ -8,6 +8,7 @@ struct KrisKringleSummary: Identifiable {
     let year: Int
     let createdBy: Int
     let pictureVersion: String
+    let recipientName: String?
 
     init(json: JSON) throws {
         guard let id = json["krisKringleId"].int ?? Int(json["krisKringleId"].stringValue), id > 0,
@@ -21,6 +22,7 @@ struct KrisKringleSummary: Identifiable {
         self.year = year
         self.createdBy = createdBy
         self.pictureVersion = json["pictureVersion"].stringValue
+        self.recipientName = json["recipientName"].string
     }
 }
 

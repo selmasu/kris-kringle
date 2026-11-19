@@ -333,16 +333,51 @@ class UsersService extends UsersModel {
         }
     }
 
+    public function withNewEmailAccount(string $emailAddress, callable $save): ?string
+    {
+        $emailAddress = strtolower(trim($emailAddress));
+        $lock = $this->emailAccountLock($emailAddress);
+        if ((int)$this->db->fetchValue('acquired', "SELECT GET_LOCK('$lock', 5) AS acquired") !== 1) {
+            return 'Couldn’t save this member. Please try again.';
+        }
+        $user = null;
+        $saved = false;
+        try {
+            $table = $this->coreTables()->user();
+            $escapedEmail = $this->db->escapeString($emailAddress);
+            if ($this->db->query("SELECT userId FROM $table WHERE LOWER(email) = '$escapedEmail' LIMIT 1")
+                ->fetchValue('userId')) {
+                throw new DomainException('That email address is already registered to another account.');
+            }
+            $user = $this->findOrCreateEmailAccount($emailAddress, false);
+            if (!$user) {
+                return 'Couldn’t link this email address. Please try again.';
+            }
+            $error = $save($user);
+            $saved = $error === null;
+            return $error;
+        } finally {
+            try {
+                if ($user && !$saved) {
+                    $this->db->executePrepared("DELETE FROM $table WHERE userId = ? AND email = ?",
+                        [(int)$user->userId()->get(), $emailAddress]);
+                }
+            } finally {
+                $this->db->query("DO RELEASE_LOCK('$lock')");
+            }
+        }
+    }
+
     private function emailAccountLock(string $emailAddress): string
     {
         return 'otp_' . substr(hash('sha256', $emailAddress), 0, 56);
     }
 
-    private function findOrCreateEmailAccount(string $emailAddress): ?User
+    private function findOrCreateEmailAccount(string $emailAddress, bool $allowExisting = true): ?User
     {
         $user = $this->getUserByEmail($emailAddress);
         if ($user) {
-            return $user;
+            return $allowExisting ? $user : null;
         }
 
         $user = User::create();
@@ -357,7 +392,7 @@ class UsersService extends UsersModel {
         }
 
         // Another sign-in provider may have created the address.
-        return $this->getUserByEmail($emailAddress);
+        return $allowExisting ? $this->getUserByEmail($emailAddress) : null;
     }
 
     public function sendOneTimeCode(string $emailAddress):array
