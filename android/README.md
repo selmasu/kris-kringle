@@ -22,7 +22,7 @@ The app uses Android Credential Manager and the Web OAuth client ID in `data/Con
 - Logout clears the server session and Credential Manager's active credential state.
 
 The configured Web client is `255479378047-8e98vs8lm7kar4r641g9hctk4vn594ij.apps.googleusercontent.com`.
-Google Cloud must also have an Android OAuth client for `com.selmasu.kriskringle` in the same project. The registered debug certificate SHA-1 on this machine is:
+Google Cloud must also have an Android OAuth client for `com.selmasu.kriskringle` in the same project. Keep the Web client ID in `Constants.kt`; the Android client ID stays in Google Cloud and is matched automatically using the package and signing certificate. The registered debug certificate SHA-1 on this machine is:
 
 ```text
 73:2E:53:6E:0D:E1:65:B3:42:81:C0:2D:35:64:89:02:F1:F3:7F:9F
