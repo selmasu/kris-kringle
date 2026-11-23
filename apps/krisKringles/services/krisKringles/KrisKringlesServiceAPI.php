@@ -42,8 +42,12 @@ class KrisKringleServiceAPI extends ServiceAPI
                 }
                 $name = $arguments['name'] ?? null;
                 $firstGroupName = $arguments['firstGroupName'] ?? null;
+                $copyFromId = filter_var($arguments['copyFromId'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+                if ($copyFromId === false) {
+                    return ['error' => 'Choose a valid previous Kris Kringle.'];
+                }
                 return $this->krisKringleService->createKrisKringle(
-                    is_string($name) ? $name : '', is_string($firstGroupName) ? $firstGroupName : '', $_FILES['picture'] ?? null
+                    is_string($name) ? $name : '', is_string($firstGroupName) ? $firstGroupName : '', $_FILES['picture'] ?? null, $copyFromId
                 );
 
             case 'getKrisKringle':

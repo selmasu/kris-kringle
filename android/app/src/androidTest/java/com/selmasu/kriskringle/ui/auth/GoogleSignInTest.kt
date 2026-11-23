@@ -30,15 +30,6 @@ class GoogleSignInTest {
     }
 
     @Test
-    fun accountLinkRequestIncludesItsSessionBoundNonce() {
-        val nonce = googleLinkNonce(PUBLIC_SESSION, PUBLIC_SALT)
-        val option = googleCredentialRequest(Constants.GOOGLE_WEB_CLIENT_ID, nonce)
-            .credentialOptions.single() as GetSignInWithGoogleOption
-        assertEquals(Constants.GOOGLE_WEB_CLIENT_ID, option.serverClientId)
-        assertEquals(nonce, option.nonce)
-    }
-
-    @Test
     fun blankAudienceCannotOpenAGoogleRequest() {
         assertThrows(IllegalArgumentException::class.java) { googleCredentialRequest("  ") }
     }
@@ -76,16 +67,6 @@ class GoogleSignInTest {
     }
 
     @Test
-    fun linkNonceMatchesBackendSha256AndBindsBothSessionAndSalt() {
-        val nonce = googleLinkNonce(PUBLIC_SESSION, PUBLIC_SALT)
-        assertEquals("cf94f408e86bb6c2497534025f21eb53597724975e64508840ab1f0140eb956a", nonce)
-        assertTrue(nonce.matches(Regex("[0-9a-f]{64}")))
-        assertNotEquals(nonce, googleLinkNonce("another-public-session", PUBLIC_SALT))
-        assertNotEquals(nonce, googleLinkNonce(PUBLIC_SESSION, "00000000-0000-4000-8000-000000000002"))
-        assertThrows(IllegalArgumentException::class.java) { googleLinkNonce("", PUBLIC_SALT) }
-    }
-
-    @Test
     fun dismissingTheGooglePickerDoesNotPresentAnError() {
         assertNull(googleSignInErrorMessage(GetCredentialCancellationException()))
     }
@@ -114,8 +95,4 @@ class GoogleSignInTest {
         assertFalse(message.contains("internal-fixture-detail"))
     }
 
-    private companion object {
-        const val PUBLIC_SESSION = "public-test-session"
-        const val PUBLIC_SALT = "00000000-0000-4000-8000-000000000001"
-    }
 }

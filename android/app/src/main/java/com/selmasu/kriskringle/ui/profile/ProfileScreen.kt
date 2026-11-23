@@ -1,6 +1,5 @@
 package com.selmasu.kriskringle.ui.profile
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,15 +7,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -41,28 +36,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
-import com.selmasu.kriskringle.R
-import com.selmasu.kriskringle.data.Constants
 import com.selmasu.kriskringle.data.Globals
 import com.selmasu.kriskringle.data.MyProfile
 import com.selmasu.kriskringle.data.UserServiceData
 import com.selmasu.kriskringle.services.UserService
 import com.selmasu.kriskringle.services.UserServiceListener
-import com.selmasu.kriskringle.ui.auth.googleIdToken
-import com.selmasu.kriskringle.ui.auth.googleLinkNonce
-import com.selmasu.kriskringle.ui.auth.googleSignInErrorMessage
 import com.selmasu.kriskringle.ui.components.PhotoPicker
 import com.selmasu.kriskringle.ui.components.ProfileAvatar
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
-import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,14 +65,13 @@ fun ProfileScreen(onSignedOut: () -> Unit, onProfileChanged: () -> Unit = {}) {
     var preparingPhoto by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(true) }
     var saving by remember { mutableStateOf(false) }
-    var linking by remember { mutableStateOf(false) }
     var signingOut by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var success by remember { mutableStateOf<String?>(null) }
     val sessionToken = remember { Globals.token }
-    val busy = loading || saving || linking || signingOut || deleting
+    val busy = loading || saving || signingOut || deleting
 
     DisposableEffect(Unit) {
         onDispose {
@@ -141,44 +126,6 @@ fun ProfileScreen(onSignedOut: () -> Unit, onProfileChanged: () -> Unit = {}) {
             } finally {
                 // Navigation or rotation must not keep the app signed in after server logout succeeds.
                 signedOut()
-            }
-        }
-    }
-
-    fun linkGoogle() {
-        if (loading || saving || linking || signingOut || deleting || preparingPhoto || profile == null) return
-        val linkingSession = Globals.token
-        if (linkingSession.isBlank() || linkingSession != sessionToken) {
-            error = "Please sign in again."
-            return
-        }
-        val salt = UUID.randomUUID().toString()
-        linking = true
-        error = null
-        success = null
-        scope.launch {
-            var waitingForServer = false
-            try {
-                val idToken = googleIdToken(context, Constants.GOOGLE_WEB_CLIENT_ID,
-                    nonce = googleLinkNonce(linkingSession, salt))
-                if (!attached || Globals.token != linkingSession) return@launch
-                request({ it.linkGoogle(idToken, Constants.GOOGLE_WEB_CLIENT_ID, salt) }, { _, _ ->
-                    linking = false
-                    if (Globals.token == linkingSession) {
-                        profile = profile?.copy(googleLinked = true)
-                        profileChanged()
-                    }
-                }, { message ->
-                    linking = false
-                    if (Globals.token == linkingSession) error = message
-                })
-                waitingForServer = true
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (failure: Exception) {
-                if (Globals.token == linkingSession) error = googleSignInErrorMessage(failure)
-            } finally {
-                if (!waitingForServer) linking = false
             }
         }
     }
@@ -244,8 +191,6 @@ fun ProfileScreen(onSignedOut: () -> Unit, onProfileChanged: () -> Unit = {}) {
                         success?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
                     }
                 }
-                GoogleAccountSection(googleLinked = loaded.googleLinked, linking = linking,
-                    enabled = !busy && !preparingPhoto, onLink = ::linkGoogle)
             }
             error?.let { message ->
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))) {
@@ -264,7 +209,7 @@ fun ProfileScreen(onSignedOut: () -> Unit, onProfileChanged: () -> Unit = {}) {
                             request({ it.logout() }, { _, _ -> finishSignOut() },
                                 { message -> signingOut = false; error = message })
                         }, enabled = !busy && !preparingPhoto, modifier = Modifier.fillMaxWidth()
-                    ) { Text(if (signingOut) "Logging Out…" else "Log Out", color = MaterialTheme.colorScheme.error) }
+                    ) { Text(if (signingOut) "Logging Out…" else "Log Out", color = Color.White) }
                     TextButton(
                         onClick = { confirmDelete = true }, enabled = !busy && !preparingPhoto,
                         modifier = Modifier.fillMaxWidth()
@@ -288,42 +233,5 @@ fun ProfileScreen(onSignedOut: () -> Unit, onProfileChanged: () -> Unit = {}) {
                 }) { Text("Delete Account", color = MaterialTheme.colorScheme.error) }
             }, dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } }
         )
-    }
-}
-
-
-@Composable
-internal fun GoogleAccountSection(
-    googleLinked: Boolean?,
-    linking: Boolean,
-    enabled: Boolean,
-    onLink: () -> Unit
-) {
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f))) {
-        Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Sign in with Google", style = MaterialTheme.typography.titleMedium)
-            if (googleLinked == true) {
-                Text("Google Account Linked", color = MaterialTheme.colorScheme.primary)
-            } else {
-                Button(
-                    onClick = onLink, enabled = enabled && !linking,
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
-                        .semantics { contentDescription = "Link Google Account" },
-                    shape = RoundedCornerShape(6.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black,
-                        disabledContainerColor = Color.White.copy(alpha = 0.6f), disabledContentColor = Color.Black.copy(alpha = 0.6f))
-                ) {
-                    Image(painterResource(R.drawable.google_logo), contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Continue with Google")
-                }
-                Text("Link your Google account to use it to sign in to this Kris Kringle account.",
-                    style = MaterialTheme.typography.bodyMedium)
-                if (linking) {
-                    CircularProgressIndicator(Modifier.size(24.dp))
-                    Text("Linking Google account…", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-        }
     }
 }

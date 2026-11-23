@@ -7,7 +7,7 @@ import org.json.JSONObject
 
 /** Account operations required by Kris Kringle, with the original listener/service pattern. */
 class UserService(private val listener: UserServiceListener, private val context: Context) {
-    enum class Type { SIGN_IN, LOGOUT, USER, ONE_TIME_CODE_SENT, PROFILE, UPDATE, DELETE_ACCOUNT, LINK_GOOGLE }
+    enum class Type { SIGN_IN, LOGOUT, USER, ONE_TIME_CODE_SENT, PROFILE, UPDATE, DELETE_ACCOUNT }
     private val connections = mutableListOf<RemoteConnection>()
     private val profileRequests = mutableListOf<KrisKringleService>()
 
@@ -17,19 +17,6 @@ class UserService(private val listener: UserServiceListener, private val context
             return
         }
         login("loginGoogle", mapOf("idToken" to idToken, "clientId" to clientId))
-    }
-
-    fun linkGoogle(idToken: String, clientId: String, salt: String) {
-        if (idToken.isBlank() || clientId.isBlank()) {
-            listener.serviceError("Google sign-in is not configured. Please try again later.")
-            return
-        }
-        request("framework", "authentication", "linkGoogleAccount", mapOf(
-            "idToken" to idToken, "clientId" to clientId, "salt" to salt,
-        )) { response ->
-            requireGoogleLinkResponse(response)
-            listener.userServiceDone(Type.LINK_GOOGLE, UserServiceData(response))
-        }
     }
 
     fun sendOneTimeCode(email: String) = request("users", "users", "sendOneTimeCode",
@@ -163,13 +150,4 @@ class UserService(private val listener: UserServiceListener, private val context
 /** deleteMyAccount is a void PHP endpoint; an object is not its success response. */
 internal fun requireAccountDeletionResponse(response: JSONObject) {
     require(response.optBoolean("_nullResponse")) { "Unable to delete your account. Please try again." }
-}
-
-/** Only the explicit boolean success response confirms a Google account was linked. */
-internal fun requireGoogleLinkResponse(response: JSONObject) {
-    val error = RemoteConnection.serverError(response)
-    require(error == null) { error.orEmpty() }
-    require(response.opt("googleLinked") == true) {
-        "The server couldn’t link your Google account. Please try again."
-    }
 }

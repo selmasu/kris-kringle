@@ -16,9 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.selmasu.kriskringle.data.*
 import com.selmasu.kriskringle.services.*
-import com.selmasu.kriskringle.ui.components.PhotoPicker
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.Calendar
 import kotlin.coroutines.resume
@@ -144,6 +142,7 @@ fun ExchangesScreen(onSessionExpired: () -> Unit = {}, viewerProfile: MyProfile?
         }
         if (creating) {
             CreateExchangeDialog(
+                previousExchanges = previousExchangesForCopy(groups, Calendar.getInstance().get(Calendar.YEAR)),
                 onDismiss = { creating = false },
                 onCreated = { group, picture ->
                     photos.store(group, picture)
@@ -153,37 +152,6 @@ fun ExchangesScreen(onSessionExpired: () -> Unit = {}, viewerProfile: MyProfile?
                 }
             )
         }
-    }
-}
-
-@Composable
-private fun CreateExchangeDialog(onDismiss: () -> Unit, onCreated: (KrisKringleSummary, ByteArray?) -> Unit) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var name by rememberSaveable { mutableStateOf("") }
-    var firstGroup by rememberSaveable { mutableStateOf("") }
-    var picture by remember { mutableStateOf<ByteArray?>(null) }
-    var busy by remember { mutableStateOf(false) }
-    var photoPreparing by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-    ExchangeFormDialog("Create Kris Kringle", busy, onDismiss, "Create", validName(name) && validName(firstGroup) && !photoPreparing, {
-        busy = true
-        error = null
-        scope.launch {
-            try {
-                val summary = exchangeRequest(context) { create(name.trim(), firstGroup.trim(), picture) }.summary
-                    ?: throw IllegalStateException("The server didn’t return the new Kris Kringle.")
-                onCreated(summary, picture)
-            } catch (cancelled: CancellationException) { throw cancelled }
-            catch (failure: Exception) { error = failure.message }
-            finally { busy = false }
-        }
-    }) {
-        OutlinedTextField(name, { name = it }, label = { Text("Name") }, singleLine = true, enabled = !busy, supportingText = { Text("Up to 100 characters") })
-        OutlinedTextField(firstGroup, { firstGroup = it }, label = { Text("First group") }, singleLine = true, enabled = !busy, supportingText = { Text("You’ll be part of this group.") })
-        Text("Kris Kringle photo", style = MaterialTheme.typography.titleSmall)
-        PhotoPicker(picture = picture, onPictureChange = { picture = it }, enabled = !busy, onPreparingChange = { photoPreparing = it })
-        error?.let { ErrorText(it) }
     }
 }
 

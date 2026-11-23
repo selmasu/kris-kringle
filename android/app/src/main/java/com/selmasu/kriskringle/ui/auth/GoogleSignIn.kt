@@ -16,15 +16,13 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.selmasu.kriskringle.data.Constants
-import java.security.MessageDigest
 
 /** The Web OAuth client ID is also the audience the backend verifies. */
 suspend fun googleIdToken(
     activityContext: Context,
-    webClientId: String = Constants.GOOGLE_WEB_CLIENT_ID,
-    nonce: String? = null
+    webClientId: String = Constants.GOOGLE_WEB_CLIENT_ID
 ): String {
-    val request = googleCredentialRequest(webClientId, nonce)
+    val request = googleCredentialRequest(webClientId)
     val activity = activityContext.signInActivity()
         ?: throw IllegalStateException("Google sign-in needs an active screen.")
     val credential = CredentialManager.create(activity).getCredential(
@@ -33,13 +31,11 @@ suspend fun googleIdToken(
     return googleCredentialToken(credential)
 }
 
-internal fun googleCredentialRequest(webClientId: String, nonce: String? = null): GetCredentialRequest {
+internal fun googleCredentialRequest(webClientId: String): GetCredentialRequest {
     require(webClientId.isNotBlank()) {
         "Google sign-in is not configured. Please continue with email."
     }
-    val option = GetSignInWithGoogleOption.Builder(webClientId).apply {
-        nonce?.let { setNonce(it) }
-    }.build()
+    val option = GetSignInWithGoogleOption.Builder(webClientId).build()
     return GetCredentialRequest.Builder().addCredentialOption(option).build()
 }
 
@@ -51,13 +47,6 @@ internal fun googleCredentialToken(credential: Credential): String {
     val token = GoogleIdTokenCredential.createFrom(credential.data).idToken
     require(token.isNotBlank()) { "Google did not return a sign-in token. Please try again." }
     return token
-}
-
-/** Matches the backend's nonce binding for an explicit account link. */
-fun googleLinkNonce(sessionToken: String, salt: String): String {
-    require(sessionToken.isNotEmpty()) { "Please sign in again before linking Google." }
-    return MessageDigest.getInstance("SHA-256").digest("$sessionToken:$salt".toByteArray(Charsets.UTF_8))
-        .joinToString("") { "%02x".format(it.toInt() and 0xff) }
 }
 
 /** Cancellation returns to the current screen without presenting an error. */

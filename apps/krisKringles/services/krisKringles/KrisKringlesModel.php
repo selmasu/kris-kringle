@@ -74,8 +74,17 @@ class KrisKringleModel extends Model
                 ))";
     }
 
+    protected function getCopySourceFromDB(int $id, int $year, bool $lock = false): ?array
+    {
+        $lockClause = $lock ? ' FOR UPDATE' : '';
+        return $this->adb->query("SELECT krisKringle.krisKringleId, krisKringle.createdBy "
+            . $this->visibleGroupsFromWhere()
+            . " AND krisKringle.krisKringleId = $id AND krisKringle.year < $year$lockClause")->fetchAssoc();
+    }
+
     protected function createKrisKringleInDB(
-        string $name, string $firstGroupName, int $year, int $createdBy, int $serial, string $version
+        string $name, string $firstGroupName, int $year, int $createdBy, int $serial, string $version,
+        int $copyFromId = 0
     ): int {
         $table = $this->tables()->krisKringle();
         $groupTable = $this->tables()->krisKringleGroup();
@@ -83,21 +92,72 @@ class KrisKringleModel extends Model
         // Schema initialization must finish before the transaction starts.
         $this->adb->query("SELECT pictureVersion, pictureFileSerial FROM $table LIMIT 0");
         $this->adb->query("SELECT groupId FROM $groupTable LIMIT 0");
-        $this->adb->query("SELECT groupId, name FROM $memberTable LIMIT 0");
+        $this->adb->query("SELECT groupId, parentUserId, name FROM $memberTable LIMIT 0");
         $this->adb->query('START TRANSACTION');
-        $saved = $this->adb->executePrepared(
-            "INSERT INTO $table (name, `year`, createdBy, createdDate, deleted, pictureVersion, pictureFileSerial)
-                VALUES (?, ?, ?, NOW(), 0, ?, ?)",
-            [$name, $year, $createdBy, $version, $serial]
-        );
-        $id = $saved ? (int)$this->adb->insertId() : 0;
-        $groupId = $id > 0 ? $this->insertKrisKringleGroup($id, $firstGroupName) : 0;
-        if ($groupId <= 0 || !$this->insertKrisKringleMember($id, $groupId, $createdBy)) {
+        try {
+            $groups = [];
+            $members = [];
+            if ($copyFromId > 0) {
+                // Lock the source just like roster edits, then recheck access inside the transaction.
+                $source = $this->getCopySourceFromDB($copyFromId, $year, true);
+                if (!$source) {
+                    $this->adb->query('ROLLBACK');
+                    return 0;
+                }
+                $groups = $this->getKrisKringleGroupsFromDB($copyFromId);
+                $members = $this->getKrisKringleMembersFromDB($copyFromId, (int)$source['createdBy']);
+                if (!in_array($createdBy, array_column($members, 'userId'), true)) {
+                    $this->adb->query('ROLLBACK');
+                    return 0;
+                }
+            }
+            $saved = $this->adb->executePrepared(
+                "INSERT INTO $table (name, `year`, createdBy, createdDate, deleted, pictureVersion, pictureFileSerial)
+                    VALUES (?, ?, ?, NOW(), 0, ?, ?)",
+                [$name, $year, $createdBy, $version, $serial]
+            );
+            $id = $saved ? (int)$this->adb->insertId() : 0;
+            if ($copyFromId > 0) {
+                $saved = $id > 0 && $this->copyRosterInDB($id, $groups, $members);
+            } else {
+                $groupId = $id > 0 ? $this->insertKrisKringleGroup($id, $firstGroupName) : 0;
+                $saved = $groupId > 0 && $this->insertKrisKringleMember($id, $groupId, $createdBy);
+            }
+            $this->adb->query($saved ? 'COMMIT' : 'ROLLBACK');
+            return $saved ? $id : 0;
+        } catch (Throwable $error) {
             $this->adb->query('ROLLBACK');
-            return 0;
+            throw $error;
         }
-        $this->adb->query('COMMIT');
-        return $id;
+    }
+
+    private function copyRosterInDB(int $id, array $groups, array $members): bool
+    {
+        $groupIds = [];
+        foreach ($groups as $group) {
+            $groupId = $this->insertKrisKringleGroup($id, $group['name']);
+            if ($groupId <= 0) {
+                return false;
+            }
+            $groupIds[$group['groupId']] = $groupId;
+        }
+        $memberTable = $this->tables()->krisKringleMember();
+        foreach ($members as $member) {
+            $groupId = $groupIds[$member['groupId']] ?? 0;
+            if ($groupId <= 0 || !$this->insertKrisKringleMember($id, $groupId, $member['userId'], $member['name'])) {
+                return false;
+            }
+            foreach ($member['children'] as $child) {
+                if (!$this->adb->executePrepared(
+                    "INSERT INTO $memberTable (krisKringleId, groupId, userId, parentUserId, name) VALUES (?, ?, 0, ?, ?)",
+                    [$id, $groupId, $member['userId'], $child['name']]
+                )) {
+                    return false;
+                }
+            }
+        }
+        // Gift assignments belong to the old exchange and are deliberately left untouched.
+        return true;
     }
 
     protected function getKrisKringleGroupsFromDB(int $id): array

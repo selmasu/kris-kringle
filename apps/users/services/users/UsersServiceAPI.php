@@ -61,6 +61,12 @@ class UsersServiceAPI extends ServiceAPI
 				return $this->usersService->deleteUsers( $this->arrayArgument( self::IDS ) );
 
             case self::DELETE_MY_ACCOUNT:
+                $token = $_POST['selmasuToken'] ?? null;
+                if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || !is_string($token) || $token === ''
+                    || $this->s()->userId() <= 0
+                    || !hash_equals((string)$this->s()->user()->selmasuToken()->get(), $token)) {
+                    return ['error' => 'Please sign in again.'];
+                }
                 return $this->usersService->deleteMyAccount();
 				
 			case self::GET_USER:

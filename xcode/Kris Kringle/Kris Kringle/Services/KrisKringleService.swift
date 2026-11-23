@@ -173,8 +173,9 @@ enum KrisKringleService {
         return try groups.map(KrisKringleSummary.init(json:))
     }
 
-    static func create(name: String, firstGroupName: String, picture: Data? = nil) async throws -> KrisKringleSummary {
-        let fields = ["name": name, "firstGroupName": firstGroupName]
+    static func create(name: String, firstGroupName: String, picture: Data? = nil, copyFromId: Int? = nil) async throws -> KrisKringleSummary {
+        var fields = ["name": name, "firstGroupName": firstGroupName]
+        if let copyFromId { fields["copyFromId"] = String(copyFromId) }
         let result = try await request("createKrisKringle", parameters: fields, picture: picture)
         return try KrisKringleSummary(json: result["data"])
     }

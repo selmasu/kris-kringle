@@ -24,6 +24,12 @@ data class KrisKringleSummary(
     }
 }
 
+/** The list already contains only exchanges available to the signed-in account. */
+internal fun previousExchangesForCopy(
+    exchanges: List<KrisKringleSummary>, currentYear: Int
+): List<KrisKringleSummary> = exchanges.filter { it.year < currentYear }
+    .sortedWith(compareByDescending<KrisKringleSummary> { it.year }.thenByDescending { it.id })
+
 data class KrisKringleGroup(val id: Int, val name: String) {
     companion object {
         fun fromJSON(json: JSONObject): KrisKringleGroup {

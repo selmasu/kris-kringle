@@ -49,13 +49,13 @@ class SignInScreenTest {
     }
 
     @Test
-    fun unlinkedGoogleAccountReturnsToEmailWithLinkingInstructions() {
+    fun unmatchedGoogleAccountReturnsToEmailWithInvitationInstructions() {
         compose.runOnIdle {
             model.code = "123456"
             model.serviceError("googleAccountRequired")
         }
         compose.onNodeWithText("Email address").assertIsDisplayed()
-        compose.onNodeWithText("Continue with Email using your invitation address, then link Google in Me.")
+        compose.onNodeWithText("Continue with Email using your invitation address. Use the same email address for Google sign-in.")
             .performScrollTo().assertIsDisplayed()
         compose.runOnIdle {
             assertFalse(model.signedIn)

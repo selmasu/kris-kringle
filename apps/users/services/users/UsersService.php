@@ -323,7 +323,13 @@ class UsersService extends UsersModel {
 	}
 
     public function deleteMyAccount(){
-        $this->deleteUserFromDB( $this->s()->userId() );
+        $userId = (int)$this->s()->userId();
+        if ($userId <= 0) {
+            return ['error' => 'Please sign in again.'];
+        }
+        if (!$this->deleteUserFromDB($userId)) {
+            return ['error' => 'Unable to delete your account. Please try again.'];
+        }
         $this->s()->session()->destroySession();
     }
 

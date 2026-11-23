@@ -13,12 +13,14 @@ Open this directory in Android Studio, or run with JDK 25 and Android SDK 37 ins
 The debug APK is `app/build/outputs/apk/debug/app-debug.apk`.
 Run `./gradlew :app:connectedDebugAndroidTest` with an emulator to check sign-in navigation and validation without sending an email.
 
+When creating a Kris Kringle, Android offers to copy an available KK from a previous year, including ones you were invited to. Choose a source or start fresh. Copying preserves its groups, members and children, and starts with no gift allocations. The new name and optional photo are entered separately. This requires deploying the `copyFromId` support in the Kris Kringle backend service, API and model together with the Android update.
+
 ## Google sign-in
 
-The app uses Android Credential Manager and the Web OAuth client ID in `data/Constants.kt`. That same audience is sent to the backend's `loginGoogle` and `linkGoogleAccount` endpoints. No client secret is embedded in the app.
+The app uses Android Credential Manager and the Web OAuth client ID in `data/Constants.kt`. That same audience is sent to the backend's `loginGoogle` endpoint. No client secret is embedded in the app.
 
 - **Sign in with Google** signs in to a linked account. The backend can also match an existing account through a verified Gmail or managed Workspace address.
-- Other unlinked accounts continue with their invitation email, then choose **Me → Link Google Account**. Linking binds the Google authorization to the current Kris Kringle session using a SHA-256 nonce, and keeps the current account and profile drafts.
+- Accounts that cannot be matched automatically can continue with their invitation email using a one-time code.
 - Logout clears the server session and Credential Manager's active credential state.
 
 The configured Web client is `255479378047-8e98vs8lm7kar4r641g9hctk4vn594ij.apps.googleusercontent.com`.
@@ -30,7 +32,7 @@ Google Cloud must also have an Android OAuth client for `com.selmasu.kriskringle
 
 Use `./gradlew :app:signingReport` for other signing certificates. Register the release or Play App Signing certificate before shipping a release build.
 
-The backend allowlist in `core/services/user/UserService.php` includes both the iOS client and this Web client. Deploy that backend configuration with the existing Google authentication/linking endpoints before testing against production.
+The backend allowlist in `core/services/user/UserService.php` includes both the iOS client and this Web client. Deploy that backend configuration with the existing Google authentication endpoint before testing against production.
 
 See [Google's Credential Manager integration guide](https://developer.android.com/identity/sign-in/credential-manager-siwg-implementation).
 

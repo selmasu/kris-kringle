@@ -136,7 +136,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application), U
                     emailMode = true
                     codeSent = false
                     code = ""
-                    "Continue with Email using your invitation address, then link Google in Me."
+                    "Continue with Email using your invitation address. Use the same email address for Google sign-in."
                 }
                 "validationError", "unknownUserError" -> "Couldn’t sign in. Try again or continue with email."
                 else -> message.ifBlank { "Please try again." }

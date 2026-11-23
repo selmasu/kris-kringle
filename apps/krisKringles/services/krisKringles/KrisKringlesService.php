@@ -26,7 +26,7 @@ class KrisKringleService extends KrisKringleModel {
         return ['data' => $groups, 'total' => $this->getKrisKringlesTotalFromDB()];
     }
 
-    public function createKrisKringle(string $name, string $firstGroupName, ?array $upload = null):array
+    public function createKrisKringle(string $name, string $firstGroupName, ?array $upload = null, int $copyFromId = 0):array
     {
         $userId = (int)$this->s()->userId();
         if ($userId <= 0) {
@@ -39,8 +39,13 @@ class KrisKringleService extends KrisKringleModel {
         }
 
         $firstGroupName = trim($firstGroupName);
-        if (preg_match('/\A[^\p{Cc}]{1,100}\z/u', $firstGroupName) !== 1) {
+        if ($copyFromId === 0 && preg_match('/\A[^\p{Cc}]{1,100}\z/u', $firstGroupName) !== 1) {
             return ['error' => 'Enter a first group name between 1 and 100 characters.'];
+        }
+
+        $year = (int)date('Y');
+        if ($copyFromId < 0 || ($copyFromId > 0 && !$this->getCopySourceFromDB($copyFromId, $year))) {
+            return ['error' => 'Choose an available Kris Kringle from a previous year.'];
         }
 
         try {
@@ -49,9 +54,13 @@ class KrisKringleService extends KrisKringleModel {
             return ['error' => $error->getMessage()];
         }
 
-        $year = (int)date('Y');
         $version = $serial > 0 ? bin2hex(random_bytes(16)) : '';
-        $id = $this->createKrisKringleInDB($name, $firstGroupName, $year, $userId, $serial, $version);
+        try {
+            $id = $this->createKrisKringleInDB($name, $firstGroupName, $year, $userId, $serial, $version, $copyFromId);
+        } catch (Throwable $error) {
+            PictureUpload::delete($this->s(), $serial);
+            throw $error;
+        }
         if ($id <= 0) {
             PictureUpload::delete($this->s(), $serial);
             return ['error' => 'Couldn’t create your Kris Kringle. Please try again.'];

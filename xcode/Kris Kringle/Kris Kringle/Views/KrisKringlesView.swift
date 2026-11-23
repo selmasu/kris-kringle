@@ -130,11 +130,17 @@ struct KrisKringlesView: View {
             await loadGroups()
         }
         .sheet(isPresented: $isShowingCreate) {
-            CreateKrisKringleView { group, picture in
+            CreateKrisKringleView(previousKrisKringles: previousKrisKringles) { group, picture in
                 photos.store(picture, for: group)
                 upsertGroup(group)
             }
         }
+    }
+
+    private var previousKrisKringles: [KrisKringleSummary] {
+        guard case .loaded(let groups) = state else { return [] }
+        let year = Calendar.current.component(.year, from: Date())
+        return groups.filter { $0.year < year }.sorted { ($0.year, $0.id) > ($1.year, $1.id) }
     }
 
     private func upsertGroup(_ group: KrisKringleSummary) {
@@ -251,17 +257,21 @@ private struct CreateKrisKringleView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
     @State private var firstGroupName = ""
+    @State private var copyFromId = 0
+    @State private var showCopyPrompt = false
+    @State private var hasAskedToCopy = false
     @State private var picture: Data?
     @State private var isPreparingPhoto = false
     @State private var isSaving = false
     @State private var errorMessage: String?
+    let previousKrisKringles: [KrisKringleSummary]
     let onSave: (KrisKringleSummary, Data?) -> Void
 
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var trimmedFirstGroupName: String { firstGroupName.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var canSave: Bool {
         !isSaving && !isPreparingPhoto && (1...100).contains(trimmedName.unicodeScalars.count)
-            && (1...100).contains(trimmedFirstGroupName.unicodeScalars.count)
+            && (copyFromId > 0 || (1...100).contains(trimmedFirstGroupName.unicodeScalars.count))
     }
 
     var body: some View {
@@ -279,19 +289,39 @@ private struct CreateKrisKringleView: View {
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.85), radius: 2)
                 }
-                Section {
-                    TextField("First group", text: $firstGroupName, prompt: Text("Group name"))
-                        .textInputAutocapitalization(.words)
-                        .submitLabel(.done)
-                        .onSubmit(save)
+                if !previousKrisKringles.isEmpty {
+                    Section {
+                        Picker("Copy from", selection: $copyFromId) {
+                            Text("Start fresh").tag(0)
+                            ForEach(previousKrisKringles) { previous in
+                                Text("\(previous.name) (\(String(previous.year)))").tag(previous.id)
+                            }
+                        }
                         .disabled(isSaving)
                         .translucentDarkRow()
-                } header: {
-                    Text("First Group")
-                } footer: {
-                    Text("You’ll be part of this group.")
-                        .foregroundStyle(.white)
-                        .shadow(color: .black.opacity(0.85), radius: 2)
+                    } header: {
+                        Text("Groups and Members")
+                    } footer: {
+                        Text("Copy groups, members and children from a previous year. Gift recipients won’t be copied.")
+                            .foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.85), radius: 2)
+                    }
+                }
+                if copyFromId == 0 {
+                    Section {
+                        TextField("First group", text: $firstGroupName, prompt: Text("Group name"))
+                            .textInputAutocapitalization(.words)
+                            .submitLabel(.done)
+                            .onSubmit(save)
+                            .disabled(isSaving)
+                            .translucentDarkRow()
+                    } header: {
+                        Text("First Group")
+                    } footer: {
+                        Text("You’ll be part of this group.")
+                            .foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.85), radius: 2)
+                    }
                 }
                 Section("Kris Kringle Photo") {
                     PhotoPicker(picture: $picture, isPreparing: $isPreparingPhoto, isSaving: isSaving)
@@ -313,6 +343,17 @@ private struct CreateKrisKringleView: View {
             }
         }
         .interactiveDismissDisabled(isSaving)
+        .task {
+            guard !hasAskedToCopy else { return }
+            hasAskedToCopy = true
+            showCopyPrompt = !previousKrisKringles.isEmpty
+        }
+        .alert("Copy from a previous year?", isPresented: $showCopyPrompt) {
+            Button("Copy Previous Year") { copyFromId = previousKrisKringles.first?.id ?? 0 }
+            Button("Start Fresh", role: .cancel) { copyFromId = 0 }
+        } message: {
+            Text("Reuse groups, members and children from a previous Kris Kringle, without gift assignments. You can choose which year on the next screen.")
+        }
     }
 
     private func save() {
@@ -320,13 +361,14 @@ private struct CreateKrisKringleView: View {
         let selectedPicture = picture
         let exchangeName = trimmedName
         let firstGroup = trimmedFirstGroupName
+        let sourceId = copyFromId > 0 ? copyFromId : nil
         isSaving = true
         errorMessage = nil
         Task {
             defer { isSaving = false }
             do {
                 let result = try await KrisKringleService.create(
-                    name: exchangeName, firstGroupName: firstGroup, picture: selectedPicture
+                    name: exchangeName, firstGroupName: firstGroup, picture: selectedPicture, copyFromId: sourceId
                 )
                 onSave(result, selectedPicture)
                 dismiss()

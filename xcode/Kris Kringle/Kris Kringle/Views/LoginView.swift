@@ -276,7 +276,7 @@ struct LoginView: View, UserServiceDelegate {
             emailSignIn = true
             codeSent = false
             oneTimeCode = ""
-            alertMessage = "Continue with Email using your invitation address, then link Google in Me."
+            alertMessage = "Continue with Email using your invitation address. Use the same email address for Google sign-in."
         } else if error == "appleAccountRequired" {
             emailSignIn = true
             codeSent = false

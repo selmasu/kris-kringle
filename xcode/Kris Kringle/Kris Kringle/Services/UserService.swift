@@ -166,6 +166,8 @@ class UserService {
     }
     
     func deleteAccount() {
+        app = "users"
+        service = "users"
         functionCall = "deleteMyAccount"
         
         callService(Utils.requestParams([:]))
@@ -232,14 +234,14 @@ class UserService {
     }
     
     func callService(_ params: [String:AnyObject]) {
-        let method: HTTPMethod = ["sendOneTimeCode", "loginOneTimeCode", "loginApple", "loginGoogle"].contains(functionCall) ? .post : .get
+        let method: HTTPMethod = ["sendOneTimeCode", "loginOneTimeCode", "loginApple", "loginGoogle", "deleteMyAccount"].contains(functionCall) ? .post : .get
         AF.request(Utils.requestURL(app, service: service, function: functionCall), method: method, parameters: params)
             .validate(statusCode: 200..<300)
             .responseData { response in
                 switch response.result {
                 case .success(let data):
                     do {
-                        let options: JSONSerialization.ReadingOptions = self.functionCall == "logout" ? .fragmentsAllowed : []
+                        let options: JSONSerialization.ReadingOptions = ["logout", "deleteMyAccount"].contains(self.functionCall) ? .fragmentsAllowed : []
                         self.serviceResult(try JSON(data: data, options: options))
                     } catch {
                         self.delegate.serviceError("The server returned an unexpected response. Please try again.")
@@ -282,7 +284,15 @@ class UserService {
             Globals.loggedIn(false)
             delegate.userServiceDidComplete(.logout, data: UserServiceData())
         } else if functionCall == "deleteMyAccount" {
+            guard result.type == .null else {
+                let error = result["error"].string ?? result["errorMessage"].string
+                delegate.serviceError(error ?? "Unable to delete your account. Please try again.")
+                return
+            }
+            Globals.user?.token = ""
             clearLastToLogin()
+            Globals.user(nil)
+            Globals.loggedIn(false)
             delegate.userServiceDidComplete(.deleteAccount, data: UserServiceData())
         } else if functionCall == "getUser" {
             onUser(result)

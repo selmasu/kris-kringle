@@ -18,8 +18,8 @@ class KrisKringleService(private val listener: KrisKringleServiceListener, priva
             .objects().map(KrisKringleSummary::fromJSON))
     }
 
-    fun create(name: String, firstGroupName: String, picture: ByteArray? = null) =
-        request(Type.CREATE, "createKrisKringle", mapOf("name" to name, "firstGroupName" to firstGroupName), picture) {
+    fun create(name: String, firstGroupName: String, picture: ByteArray? = null, copyFromId: Int? = null) =
+        request(Type.CREATE, "createKrisKringle", createKrisKringleFields(name, firstGroupName, copyFromId), picture) {
             KrisKringleServiceData(summary = KrisKringleSummary.fromJSON(it.getJSONObject("data")))
         }
 
@@ -92,4 +92,13 @@ class KrisKringleService(private val listener: KrisKringleServiceListener, priva
             override fun objectRequestComplete(data: JSONObject) = complete(data)
             override fun remoteConnectionError(message: String) = listener.serviceError(message)
         }, context).also(connections::add)
+}
+
+internal fun createKrisKringleFields(name: String, firstGroupName: String, copyFromId: Int?): Map<String, String> {
+    require(copyFromId == null || copyFromId > 0) { "Choose a previous Kris Kringle." }
+    return mapOf("name" to name) + if (copyFromId == null) {
+        mapOf("firstGroupName" to firstGroupName)
+    } else {
+        mapOf("copyFromId" to copyFromId.toString())
+    }
 }

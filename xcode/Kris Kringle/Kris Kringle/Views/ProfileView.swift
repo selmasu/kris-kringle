@@ -10,19 +10,20 @@ struct ProfileView: View, UserServiceDelegate {
     var loadError: String?
     var retry: () -> Void
 
-    @StateObject private var googleSignInModel = GoogleSignInModel()
     @State private var name: String?
     @State private var selectedPhoto: Data?
     @State private var isPreparingPhoto = false
     @State private var isSaving = false
     @State private var isLinking = false
     @State private var isLoggingOut = false
+    @State private var isDeleting = false
+    @State private var confirmDelete = false
     @State private var appleSalt = ""
     @State private var appleSessionToken = ""
     @State private var errorMessage: String?
     @State private var showError = false
 
-    private var isBusy: Bool { isSaving || isLinking || isLoggingOut }
+    private var isBusy: Bool { isSaving || isLinking || isLoggingOut || isDeleting }
     private var nameBinding: Binding<String> {
         Binding(
             get: { name ?? profile?.name ?? "" },
@@ -93,40 +94,6 @@ struct ProfileView: View, UserServiceDelegate {
                         }
                     }
                     .disabled(isBusy)
-                    Section {
-                        if profile.googleLinked == true {
-                            Label("Google Account Linked", systemImage: "checkmark.circle.fill")
-                                .translucentDarkRow()
-                        } else {
-                            Button(action: linkGoogle) {
-                                HStack(spacing: 8) {
-                                    Image("Google Logo")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 18, height: 18)
-                                    Text("Continue with Google")
-                                        .font(.system(size: 16, weight: .medium))
-                                }
-                                .foregroundStyle(.black)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
-                                .background(.white, in: RoundedRectangle(cornerRadius: 6))
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityLabel("Link Google Account")
-                            .translucentDarkRow()
-                        }
-                    } header: {
-                        Text("Sign in with Google")
-                    } footer: {
-                        if profile.googleLinked != true {
-                            Text("Link your Google account to use it to sign in to this Kris Kringle account.")
-                                .foregroundStyle(.white)
-                                .shadow(color: .black.opacity(0.85), radius: 2)
-                        }
-                    }
-                    .disabled(isBusy)
                 } else if let loadError {
                     Section {
                         Text(loadError).translucentDarkRow()
@@ -137,9 +104,15 @@ struct ProfileView: View, UserServiceDelegate {
                 }
 
                 Section {
-                    Button(isLoggingOut ? "Logging Out…" : "Log Out", role: .destructive) {
+                    Button(isLoggingOut ? "Logging Out…" : "Log Out") {
                         isLoggingOut = true
                         UserService(delegate: self).logout()
+                    }
+                    .foregroundStyle(.white)
+                    .disabled(isBusy)
+                    .translucentDarkRow()
+                    Button(isDeleting ? "Deleting Account…" : "Delete Account", role: .destructive) {
+                        confirmDelete = true
                     }
                     .disabled(isBusy)
                     .translucentDarkRow()
@@ -147,6 +120,15 @@ struct ProfileView: View, UserServiceDelegate {
             }
             .christmasBackground()
             .navigationTitle("Me")
+        }
+        .confirmationDialog("Delete your account?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete Account", role: .destructive) {
+                isDeleting = true
+                UserService(delegate: self).deleteAccount()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Your account will be deleted and you’ll be signed out. You won’t be able to sign in to this account again.")
         }
         .alert("Profile", isPresented: $showError) {
             Button("OK", role: .cancel) { }
@@ -196,30 +178,6 @@ struct ProfileView: View, UserServiceDelegate {
         }
     }
 
-    private func linkGoogle() {
-        guard !isBusy else { return }
-        let sessionToken = Globals.selmasuToken
-        guard !sessionToken.isEmpty else { return }
-        let salt = UUID().uuidString
-        let input = Data("\(sessionToken):\(salt)".utf8)
-        let nonce = SHA256.hash(data: input).map { String(format: "%02x", $0) }.joined()
-        isLinking = true
-        Task {
-            defer { isLinking = false }
-            do {
-                let token = try await googleSignInModel.signIn(nonce: nonce)
-                guard sessionToken == Globals.selmasuToken else { return }
-                try await ProfileService.linkGoogle(idToken: token, salt: salt)
-                profile?.googleLinked = true
-            } catch is CancellationError {
-            } catch {
-                if !GoogleSignInModel.isCancellation(error) {
-                    presentError(error.localizedDescription)
-                }
-            }
-        }
-    }
-
     private func finishAppleLink(_ result: Result<ASAuthorization, Error>) {
         guard appleSessionToken == Globals.selmasuToken, !appleSessionToken.isEmpty else {
             isLinking = false
@@ -256,14 +214,18 @@ struct ProfileView: View, UserServiceDelegate {
     }
 
     func userServiceDidComplete(_ type: UserServiceType, data: UserServiceData) {
-        if type == .logout {
+        if type == .logout || type == .deleteAccount {
             isLoggingOut = false
+            isDeleting = false
+            profile = nil
+            selectedPhoto = nil
             isLoggedIn = false
         }
     }
 
     func serviceError(_ error: String) {
         isLoggingOut = false
+        isDeleting = false
         presentError(error)
     }
 

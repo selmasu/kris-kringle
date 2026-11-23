@@ -344,33 +344,55 @@ class UsersModel extends Model {
 	/**
 	 * Updates the specified user to deleted = 1
 	 */
-	protected function deleteUserFromDB( $id )
-	{
-		$sql = "
-			UPDATE
-				" . $this->coreTables()->user() . "
-			SET
-				deleted = 1
-			WHERE
-				userId = " . (int)$id . "
-				AND organisationId = " . (int)$this->s()->user()->organisationId()->get();
-		$this->db->query( $sql );
-		if(Settings::$dbMode == Settings::DB_MODE_MULTI){
-            $this->db->query( $sql );
+    protected function deleteUserFromDB($id): bool
+    {
+        $userId = (int)$id;
+        $organisationId = (int)$this->s()->user()->organisationId()->get();
+        if ($userId <= 0) {
+            return false;
         }
         $userTable = $this->coreTables()->user();
-        $userId = (int)$id;
         $photoTable = $this->tables()->krisKringleProfilePhoto();
-        $serial = (int)$this->db->query("SELECT profile.pictureFileSerial FROM $photoTable AS profile
-            JOIN $userTable AS account ON account.userId = profile.userId
-            WHERE profile.userId = $userId AND account.deleted = 1")->fetchValue('pictureFileSerial');
-        foreach ([$photoTable, $this->tables()->krisKringleAppleIdentity(), $this->tables()->krisKringleGoogleIdentity()] as $table) {
-            $this->db->query("DELETE profile FROM $table AS profile
-                JOIN $userTable AS account ON account.userId = profile.userId
-                WHERE profile.userId = $userId AND account.deleted = 1");
+        $identityTables = [$this->tables()->krisKringleAppleIdentity(), $this->tables()->krisKringleGoogleIdentity()];
+        // Initialise optional schemas before starting the transaction.
+        $this->db->query("SELECT pictureFileSerial FROM $photoTable LIMIT 0");
+        foreach ($identityTables as $table) {
+            $this->db->query("SELECT subjectHash FROM $table LIMIT 0");
+        }
+        $this->db->query('START TRANSACTION');
+        try {
+            $active = $this->db->query("SELECT userId FROM $userTable
+                WHERE userId = $userId AND organisationId = $organisationId AND deleted = 0 FOR UPDATE")
+                ->fetchValue('userId');
+            if (!$active) {
+                $this->db->query('ROLLBACK');
+                return false;
+            }
+            $serial = $this->getProfilePhotoSerialFromDB($userId);
+            $saved = $this->db->executePrepared(
+                "UPDATE $userTable SET deleted = 1, oneTimeCode = '', oneTimeCodeAttempts = 0 WHERE userId = ?",
+                [$userId]
+            );
+            if ($saved) {
+                $saved = $this->db->executePrepared('DELETE FROM session WHERE userId = ?', [$userId]);
+            }
+            foreach (array_merge([$photoTable], $identityTables) as $table) {
+                if ($saved) {
+                    $saved = $this->db->executePrepared("DELETE FROM $table WHERE userId = ?", [$userId]);
+                }
+            }
+            $this->db->query($saved ? 'COMMIT' : 'ROLLBACK');
+            if (!$saved) {
+                return false;
+            }
+        } catch (Throwable $error) {
+            $this->db->query('ROLLBACK');
+            Utils::trace('Could not delete a Kris Kringle account.');
+            return false;
         }
         PictureUpload::delete($this->s(), $serial);
-	}
+        return true;
+    }
 
     protected function saveFollowToDB(int $followId, bool $follow){
        $sql = "
