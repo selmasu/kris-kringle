@@ -28,7 +28,7 @@ class KrisKringleService extends KrisKringleModel {
         return ['data' => $groups, 'total' => $this->getKrisKringlesTotalFromDB()];
     }
 
-    public function createKrisKringle(string $name, string $firstGroupName, ?array $upload = null, int $copyFromId = 0, bool $secret = false):array
+    public function createKrisKringle(string $name, string $firstGroupName, ?array $upload = null, int $copyFromId = 0, bool $secret = true):array
     {
         $userId = (int)$this->s()->userId();
         if ($userId <= 0) {

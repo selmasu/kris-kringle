@@ -292,5 +292,26 @@ namespace {
     check(send($s, 'fallback@example.test')['sent'] === true, 'A default email works before a custom template is configured');
     check(str_contains(end(EmailService::$messages)['subject'], 'Kris Kringle'), 'The default code email is branded');
 
+    foreach (['tester@testing.com', 'parent@testing.com', 'child+one@testing.com', '  CASE@Testing.COM  '] as $address) {
+        $s = new Selmasu();
+        $normalized = strtolower(trim($address));
+        $mailCount = count(EmailService::$messages);
+        EmailService::$succeeds = false;
+        check(send($s, $address)['sent'] === true, 'Testing-domain accounts work without mail transport');
+        check($s->db->user($normalized)['oneTimeCode'] === '000000', 'Every testing.com address receives the fixed test code');
+        check(count(EmailService::$messages) === $mailCount, 'Testing-domain requests never send an email');
+        check(send($s, $address)['sent'] === false, 'Testing accounts retain the resend cooldown');
+        check(isset(login($s, $normalized, '000000')['token']), 'The fixed test code can sign in');
+        check(isset(login($s, $normalized, '000000')['error']), 'Testing codes remain single use');
+        EmailService::$succeeds = true;
+    }
+    foreach (['user@sub.testing.com', 'user@testing.com.example.org', 'user@nottesting.com', 'user@other-testing.com'] as $address) {
+        $s = new Selmasu();
+        $mailCount = count(EmailService::$messages);
+        check(send($s, $address)['sent'] === true, 'Other domains still receive normal codes');
+        check(count(EmailService::$messages) === $mailCount + 1, 'Only the exact testing.com domain skips email delivery');
+        check(preg_match('/^[0-9]{6}$/', $s->db->user($address)['oneTimeCode']) === 1, 'Other domains still receive six-digit codes');
+    }
+
     echo "PASS: " . $assertions . " email-code authentication assertions\n";
 }

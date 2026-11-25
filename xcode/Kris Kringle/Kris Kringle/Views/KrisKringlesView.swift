@@ -277,7 +277,7 @@ private struct CreateKrisKringleView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
     @State private var firstGroupName = ""
-    @State private var isSecret = false
+    @State private var isSecret = true
     @State private var copyFromId = 0
     @State private var showCopyPrompt = false
     @State private var hasAskedToCopy = false

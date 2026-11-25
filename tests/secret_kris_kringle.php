@@ -96,7 +96,11 @@ check($ownerApi->api('updateKrisKringle',$_POST)['data']['secret']===false,'Crea
 check(count($parent->getKrisKringle(1)['members'])===3,'Disabling secrecy restores the read-only roster');
 check($parent->getKrisKringleMemberPicture(1,3)==='photo:503','Normal photo permissions are restored');
 $fresh=$owner->createKrisKringle('Default Exchange','First Group');
-check($fresh['data']['secret']===false,'New exchanges default to non-secret');
+check($fresh['data']['secret']===true,'New exchanges default to secret');
+$defaultApi=$ownerApi->api('createKrisKringle',['name'=>'Default API Exchange','firstGroupName'=>'First Group']);
+check($defaultApi['data']['secret']===true,'API creation defaults to secret when omitted');
+$openApi=$ownerApi->api('createKrisKringle',['name'=>'Non-secret Exchange','firstGroupName'=>'First Group','secret'=>'0']);
+check($openApi['data']['secret']===false,'Creators can explicitly turn Secret off');
 check(isset($ownerApi->api('createKrisKringle',['name'=>'Bad Secret','firstGroupName'=>'First Group','secret'=>['bad']])['error']),'Malformed create settings are rejected');
 $secret=$ownerApi->api('createKrisKringle',['name'=>'Secret Exchange','firstGroupName'=>'First Group','secret'=>'1']);
 check($secret['data']['secret']===true,'New exchanges can be secret');
@@ -107,7 +111,7 @@ check(isset($copy['data']),'Members can copy a secret previous exchange as reque
 $newId=$copy['data']['krisKringleId'];
 check(count($db->fetchAll("SELECT * FROM krisKringleMember WHERE krisKringleId=$newId"))===5,'Copy includes groups, members and children');
 check($db->fetchAll("SELECT * FROM krisKringleAssignment WHERE krisKringleId=$newId")===[],'Copy has no gift allocations');
-check($copy['data']['secret']===false,'Copied exchange uses its own chosen Secret setting');
+check($copy['data']['secret']===true,'Copied exchange also defaults to secret');
 $db->pdo->exec('DELETE FROM krisKringleAssignment WHERE krisKringleId=1');
 $unassigned=$parent->getKrisKringle(1);
 check($unassigned['members']===[] && $unassigned['data']['recipientName']===null && $unassigned['data']['childGiftRecipients']===[],'Secret unassigned members see no roster or fabricated gifts');

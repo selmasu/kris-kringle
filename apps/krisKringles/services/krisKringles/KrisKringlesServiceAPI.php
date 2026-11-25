@@ -47,7 +47,7 @@ class KrisKringleServiceAPI extends ServiceAPI
                 if ($copyFromId === false) {
                     return ['error' => 'Choose a valid previous Kris Kringle.'];
                 }
-                $secret = filter_var($arguments['secret'] ?? false, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                $secret = filter_var($arguments['secret'] ?? true, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
                 if ($secret === null) {
                     return ['error' => 'Choose a valid Secret setting.'];
                 }

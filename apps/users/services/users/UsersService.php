@@ -434,7 +434,7 @@ class UsersService extends UsersModel {
             $this->db->query("DO RELEASE_LOCK('" . $lock . "')");
         }
 
-        if($emailAddress != 'tester@testing.com') {
+        if (!$this->isTestingEmail($emailAddress)) {
             $email = EmailsService::create($this->s())->getEmailObject(\KrisKringle\Email::TYPE_ONE_TIME_CODE);
             if (!$email) {
                 $email = \KrisKringle\Email::create();

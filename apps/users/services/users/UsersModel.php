@@ -553,9 +553,14 @@ class UsersModel extends Model {
         return $this->db->fetchAll($sql);
     }
 
+    protected function isTestingEmail(string $email): bool
+    {
+        return str_ends_with(strtolower(trim($email)), '@testing.com');
+    }
+
     protected function setOneTimeCodeInDB(string $email): ?string {
         $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        if($email == 'tester@testing.com'){
+        if ($this->isTestingEmail($email)) {
             $code = '000000';
         }
 

@@ -100,7 +100,7 @@ class KrisKringleModel extends Model
 
     protected function createKrisKringleInDB(
         string $name, string $firstGroupName, int $year, int $createdBy, int $serial, string $version,
-        int $copyFromId = 0, bool $secret = false
+        int $copyFromId = 0, bool $secret = true
     ): int {
         $table = $this->tables()->krisKringle();
         $groupTable = $this->tables()->krisKringleGroup();
