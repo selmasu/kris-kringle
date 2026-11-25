@@ -28,7 +28,7 @@ class KrisKringleService extends KrisKringleModel {
         return ['data' => $groups, 'total' => $this->getKrisKringlesTotalFromDB()];
     }
 
-    public function createKrisKringle(string $name, string $firstGroupName, ?array $upload = null, int $copyFromId = 0):array
+    public function createKrisKringle(string $name, string $firstGroupName, ?array $upload = null, int $copyFromId = 0, bool $secret = false):array
     {
         $userId = (int)$this->s()->userId();
         if ($userId <= 0) {
@@ -58,7 +58,7 @@ class KrisKringleService extends KrisKringleModel {
 
         $version = $serial > 0 ? bin2hex(random_bytes(16)) : '';
         try {
-            $id = $this->createKrisKringleInDB($name, $firstGroupName, $year, $userId, $serial, $version, $copyFromId);
+            $id = $this->createKrisKringleInDB($name, $firstGroupName, $year, $userId, $serial, $version, $copyFromId, $secret);
         } catch (Throwable $error) {
             PictureUpload::delete($this->s(), $serial);
             throw $error;
@@ -73,7 +73,8 @@ class KrisKringleService extends KrisKringleModel {
             'name' => $name,
             'year' => $year,
             'createdBy' => $userId,
-            'pictureVersion' => $version
+            'pictureVersion' => $version,
+            'secret' => $secret
         ]];
     }
 
@@ -85,6 +86,11 @@ class KrisKringleService extends KrisKringleModel {
             return ['error' => 'This Kris Kringle is no longer available.'];
         }
         $owner = (int)$group['createdBy'];
+        $group['secret'] = (bool)$group['secret'];
+        $group += $this->giftRecipientSummary($id, $userId);
+        if ($group['secret'] && $userId !== $owner) {
+            return ['data' => $group, 'groups' => [], 'members' => [], 'assignments' => []];
+        }
         return ['data' => $group] + $this->roster($id, $owner, $userId);
     }
 
@@ -257,6 +263,15 @@ class KrisKringleService extends KrisKringleModel {
         return $error === null ? $this->roster($id, $owner, $owner) : ['error' => $error];
     }
 
+    private function giftRecipientSummary(int $id, int $viewer): array
+    {
+        $summary = $this->getMyGiftRecipientsFromDB([$id], $viewer)[$id] ?? [];
+        return [
+            'recipientName' => $summary['recipientName'] ?? null,
+            'childGiftRecipients' => $summary['childGiftRecipients'] ?? [],
+        ];
+    }
+
     private function roster(int $id, int $owner, int $viewer): array
     {
         $members = $this->getKrisKringleMembersFromDB($id, $owner);
@@ -288,7 +303,7 @@ class KrisKringleService extends KrisKringleModel {
         return $this->updateKrisKringle($id, null, $upload);
     }
 
-    public function updateKrisKringle(int $id, ?string $name, ?array $upload): array
+    public function updateKrisKringle(int $id, ?string $name, ?array $upload, ?bool $secret = null): array
     {
         $userId = (int)$this->s()->userId();
         if ($userId <= 0 || $id <= 0 || !$this->getOwnedKrisKringleFromDB($id, $userId)) {
@@ -306,12 +321,12 @@ class KrisKringleService extends KrisKringleModel {
         } catch (InvalidArgumentException | RuntimeException $error) {
             return ['error' => $error->getMessage()];
         }
-        if ($name === null && $serial === null) {
+        if ($name === null && $serial === null && $secret === null) {
             return ['error' => 'Choose a photo to upload.'];
         }
 
         $version = $serial === null ? null : bin2hex(random_bytes(16));
-        $group = $this->updateKrisKringleInDB($id, $userId, $name, $serial, $version);
+        $group = $this->updateKrisKringleInDB($id, $userId, $name, $serial, $version, $secret);
         if ($group === null) {
             PictureUpload::delete($this->s(), $serial ?? 0);
             return ['error' => 'Couldn’t update this Kris Kringle. Please try again.'];
@@ -322,12 +337,15 @@ class KrisKringleService extends KrisKringleModel {
         }
         unset($group['pictureFileSerial']);
         $group['name'] = $name ?? $group['name'];
-        return ['data' => $group];
+        $group['secret'] = $secret ?? (bool)$group['secret'];
+        return ['data' => $group + $this->giftRecipientSummary($id, $userId)];
     }
 
     public function getKrisKringleMemberPicture(int $id, int $userId): ?string
     {
-        if ($this->s()->userId() <= 0 || $id <= 0 || $userId <= 0 || !$this->getVisibleKrisKringleFromDB($id)) {
+        $viewer = (int)$this->s()->userId();
+        $group = $viewer > 0 && $id > 0 && $userId > 0 ? $this->getVisibleKrisKringleFromDB($id) : null;
+        if (!$group || ((bool)$group['secret'] && $viewer !== (int)$group['createdBy'] && $userId !== $viewer)) {
             return null;
         }
         return PictureUpload::read($this->s(), $this->getMemberPhotoSerialFromDB($id, $userId));

@@ -37,7 +37,7 @@ class TestDatabase {
         } else {
             $this->pdo->sqliteCreateFunction('NOW', fn () => '2026-11-20 12:00:00', 0);
         }
-        $this->pdo->exec('CREATE TABLE krisKringle (krisKringleId INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, year INTEGER, createdBy INTEGER, createdDate TEXT, deleted INTEGER DEFAULT 0, pictureVersion TEXT, pictureFileSerial INTEGER DEFAULT 0);
+        $this->pdo->exec('CREATE TABLE krisKringle (krisKringleId INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, year INTEGER, createdBy INTEGER, createdDate TEXT, deleted INTEGER DEFAULT 0, pictureVersion TEXT, pictureFileSerial INTEGER DEFAULT 0, secret INTEGER NOT NULL DEFAULT 0);
             CREATE TABLE krisKringleGroup (groupId INTEGER PRIMARY KEY AUTOINCREMENT, krisKringleId INTEGER, name TEXT);
             CREATE TABLE krisKringleMember (krisKringleMemberId INTEGER PRIMARY KEY AUTOINCREMENT, krisKringleId INTEGER, groupId INTEGER, userId INTEGER, parentUserId INTEGER DEFAULT 0, name TEXT DEFAULT "");
             CREATE TABLE krisKringleAssignment (krisKringleId INTEGER, giverId INTEGER, recipientId INTEGER);

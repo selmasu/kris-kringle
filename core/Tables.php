@@ -154,6 +154,7 @@ final class Tables
             ->addField(TableField::create()->name()->set('krisKringleId')->type()->set(TableField::TYPE_BIGINT)->autoIncrement()->set(TRUE)->primaryKey()->set(TRUE))
             ->addField(TableField::create()->name()->set('deleted')->type()->set(TableField::TYPE_TINYINT))
             ->addField(TableField::create()->name()->set('year')->type()->set(TableField::TYPE_YEAR))
+            ->addField(TableField::create()->name()->set('secret')->type()->set(TableField::TYPE_TINYINT)->defaultValue()->set('0'))
             ->addField(TableField::create()->name()->set('createdBy')->type()->set(TableField::TYPE_BIGINT)->key()->set(TRUE))
             ->addField(TableField::create()->name()->set('createdDate')->type()->set(TableField::TYPE_DATETIME))
             ->addField(TableField::create()->name()->set('updatedBy')->type()->set(TableField::TYPE_BIGINT)->key()->set(TRUE))

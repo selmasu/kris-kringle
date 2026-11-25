@@ -9,6 +9,7 @@ struct KrisKringleDetailView: View {
     @Binding private var currentUserPhoto: UIImage?
     @State private var group: KrisKringleSummary
     @State private var name: String
+    @State private var isSecret: Bool
     @State private var roster: KrisKringleRoster?
     @State private var memberPhotos = NSCache<NSString, UIImage>()
     @State private var isShowingAddMember = false
@@ -46,6 +47,7 @@ struct KrisKringleDetailView: View {
         _currentUserPhoto = currentUserPhoto
         _group = State(initialValue: group)
         _name = State(initialValue: group.name)
+        _isSecret = State(initialValue: group.isSecret)
     }
 
     private var isCreator: Bool { group.createdBy == Globals.userId }
@@ -54,7 +56,7 @@ struct KrisKringleDetailView: View {
     private var trimmedEmail: String { email.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var canSave: Bool {
         isCreator && !isBusy && !isPreparingPhoto && (1...100).contains(trimmedName.unicodeScalars.count)
-            && (trimmedName != group.name || picture != nil)
+            && (trimmedName != group.name || picture != nil || isSecret != group.isSecret)
     }
     private var canAdd: Bool { isCreator && !isBusy && selectedGroupId != nil && contactEmails.isEmpty && !trimmedEmail.isEmpty }
     private var trimmedNewGroupName: String { newGroupName.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -83,6 +85,8 @@ struct KrisKringleDetailView: View {
                         }
                         rosterSections(roster)
                     }
+                } else if group.isSecret {
+                    secretRecipientSection
                 } else {
                     rosterSections(roster)
                 }
@@ -182,6 +186,21 @@ struct KrisKringleDetailView: View {
         }
     }
 
+    private var secretRecipientSection: some View {
+        Section("Your Gift Recipients") {
+            if let recipientName = group.recipientName {
+                GiftRecipientCard(giverName: nil, recipientName: recipientName, krisKringleName: group.name)
+            }
+            ForEach(group.childGiftRecipients) { child in
+                GiftRecipientCard(giverName: child.childName, recipientName: child.recipientName, krisKringleName: group.name)
+            }
+            if group.recipientName == nil && group.childGiftRecipients.isEmpty {
+                Text("Your gift recipients haven’t been assigned yet.")
+                    .translucentDarkRow()
+            }
+        }
+    }
+
     private var detailsSection: some View {
         Section("Kris Kringle Details") {
             HStack(spacing: 8) {
@@ -205,6 +224,12 @@ struct KrisKringleDetailView: View {
                 .disabled(!canSave)
             }
             .translucentDarkRow()
+            Toggle("Secret", isOn: $isSecret)
+                .translucentDarkRow()
+            Text("When secret, members only see who they and their children are buying for. Only you can see the full roster. Save to apply changes.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .translucentDarkRow()
             if let saveError { Text(saveError).foregroundStyle(.red).translucentDarkRow() }
         }
         .disabled(isBusy)
@@ -433,10 +458,12 @@ struct KrisKringleDetailView: View {
         do {
             let detail = try await KrisKringleService.detail(id: group.id)
             try Task.checkCancellation()
-            let summaryChanged = group.name != detail.group.name || group.pictureVersion != detail.group.pictureVersion
+            let summaryChanged = group.name != detail.group.name || group.pictureVersion != detail.group.pictureVersion || group.isSecret != detail.group.isSecret
             let isNameEdited = name != group.name
+            let isSecretEdited = isSecret != group.isSecret
             group = detail.group
             if !isNameEdited { name = group.name }
+            if !isSecretEdited { isSecret = group.isSecret }
             roster = detail.roster
             if summaryChanged { onUpdate(group) }
         } catch is CancellationError {
@@ -449,15 +476,17 @@ struct KrisKringleDetailView: View {
         guard canSave else { return }
         let updatedName = trimmedName == group.name ? nil : trimmedName
         let selectedPicture = picture
+        let secret = isSecret == group.isSecret ? nil : isSecret
         isSaving = true
         saveError = nil
         Task {
             defer { isSaving = false }
             do {
-                let updatedGroup = try await KrisKringleService.update(id: group.id, name: updatedName, picture: selectedPicture)
+                let updatedGroup = try await KrisKringleService.update(id: group.id, name: updatedName, picture: selectedPicture, isSecret: secret)
                 photos.store(selectedPicture, for: updatedGroup)
                 group = updatedGroup
                 name = group.name
+                isSecret = group.isSecret
                 picture = nil
                 onUpdate(group)
             } catch {

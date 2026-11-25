@@ -44,7 +44,7 @@ final class HighlightDatabase {
     public PDO $pdo;
     public function __construct() {
         $this->pdo = new PDO('sqlite::memory:', null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-        $this->pdo->exec('CREATE TABLE krisKringle (krisKringleId INTEGER PRIMARY KEY, name TEXT, year INTEGER, createdBy INTEGER, deleted INTEGER DEFAULT 0, pictureVersion TEXT DEFAULT "");
+        $this->pdo->exec('CREATE TABLE krisKringle (krisKringleId INTEGER PRIMARY KEY, name TEXT, year INTEGER, createdBy INTEGER, deleted INTEGER DEFAULT 0, pictureVersion TEXT DEFAULT "", secret INTEGER NOT NULL DEFAULT 0);
             CREATE TABLE krisKringleMember (krisKringleMemberId INTEGER PRIMARY KEY, krisKringleId INTEGER, userId INTEGER, parentUserId INTEGER DEFAULT 0, name TEXT);
             CREATE TABLE krisKringleAssignment (krisKringleId INTEGER, giverId INTEGER PRIMARY KEY, recipientId INTEGER);
             CREATE TABLE user (userId INTEGER PRIMARY KEY, displayName TEXT, firstName TEXT, lastName TEXT, email TEXT, deleted INTEGER DEFAULT 0);

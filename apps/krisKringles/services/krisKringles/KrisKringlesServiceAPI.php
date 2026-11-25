@@ -34,6 +34,7 @@ class KrisKringleServiceAPI extends ServiceAPI
 		
 		switch( $functionToCall ) {
             case self::GET_KRIS_KRINGLES:
+                header('Cache-Control: private, no-store');
                 return $this->krisKringleService->getKrisKringles(ListArguments::create()->fromArray($arguments));
 
             case self::CREATE_KRIS_KRINGLE:
@@ -46,8 +47,12 @@ class KrisKringleServiceAPI extends ServiceAPI
                 if ($copyFromId === false) {
                     return ['error' => 'Choose a valid previous Kris Kringle.'];
                 }
+                $secret = filter_var($arguments['secret'] ?? false, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                if ($secret === null) {
+                    return ['error' => 'Choose a valid Secret setting.'];
+                }
                 return $this->krisKringleService->createKrisKringle(
-                    is_string($name) ? $name : '', is_string($firstGroupName) ? $firstGroupName : '', $_FILES['picture'] ?? null, $copyFromId
+                    is_string($name) ? $name : '', is_string($firstGroupName) ? $firstGroupName : '', $_FILES['picture'] ?? null, $copyFromId, $secret
                 );
 
             case 'getKrisKringle':
@@ -136,7 +141,14 @@ class KrisKringleServiceAPI extends ServiceAPI
                 if ($name !== null && !is_string($name)) {
                     return ['error' => 'Enter a valid name.'];
                 }
-                return $this->krisKringleService->updateKrisKringle($id, $name, $_FILES['picture'] ?? null);
+                $secret = null;
+                if (array_key_exists('secret', $_POST)) {
+                    $secret = filter_var($_POST['secret'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                    if ($secret === null) {
+                        return ['error' => 'Choose a valid Secret setting.'];
+                    }
+                }
+                return $this->krisKringleService->updateKrisKringle($id, $name, $_FILES['picture'] ?? null, $secret);
 
             case self::UPDATE_PICTURE:
                 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {

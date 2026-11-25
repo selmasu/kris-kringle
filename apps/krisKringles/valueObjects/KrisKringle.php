@@ -20,6 +20,11 @@ class KrisKringle extends ValueObject {
         return $this->intProperty( $this->year );
     }
 
+    protected $secret = null;
+    public function secret():BoolProperty {
+        return $this->boolProperty($this->secret);
+    }
+
     protected $pictureVersion = null;
     public function pictureVersion():StringProperty {
         return $this->stringProperty($this->pictureVersion);

@@ -7,6 +7,7 @@ struct KrisKringleSummary: Identifiable {
     let name: String
     let year: Int
     let createdBy: Int
+    let isSecret: Bool
     let pictureVersion: String
     let recipientName: String?
     let childGiftRecipients: [KrisKringleChildGiftRecipient]
@@ -22,6 +23,7 @@ struct KrisKringleSummary: Identifiable {
         self.name = name.isEmpty ? "Kris Kringle" : name
         self.year = year
         self.createdBy = createdBy
+        self.isSecret = json["secret"].bool ?? ((json["secret"].int ?? 0) != 0)
         self.pictureVersion = json["pictureVersion"].stringValue
         self.recipientName = json["recipientName"].string
         self.childGiftRecipients = try (json["childGiftRecipients"].array ?? []).map(KrisKringleChildGiftRecipient.init(json:))
@@ -192,8 +194,8 @@ enum KrisKringleService {
         return try groups.map(KrisKringleSummary.init(json:))
     }
 
-    static func create(name: String, firstGroupName: String, picture: Data? = nil, copyFromId: Int? = nil) async throws -> KrisKringleSummary {
-        var fields = ["name": name, "firstGroupName": firstGroupName]
+    static func create(name: String, firstGroupName: String, picture: Data? = nil, copyFromId: Int? = nil, isSecret: Bool = false) async throws -> KrisKringleSummary {
+        var fields = ["name": name, "firstGroupName": firstGroupName, "secret": isSecret ? "1" : "0"]
         if let copyFromId { fields["copyFromId"] = String(copyFromId) }
         let result = try await request("createKrisKringle", parameters: fields, picture: picture)
         return try KrisKringleSummary(json: result["data"])
@@ -204,9 +206,10 @@ enum KrisKringleService {
         return (try KrisKringleSummary(json: result["data"]), try KrisKringleRoster(json: result))
     }
 
-    static func update(id: Int, name: String?, picture: Data?) async throws -> KrisKringleSummary {
+    static func update(id: Int, name: String?, picture: Data?, isSecret: Bool? = nil) async throws -> KrisKringleSummary {
         var fields = ["id": String(id)]
         fields["name"] = name
+        if let isSecret { fields["secret"] = isSecret ? "1" : "0" }
         let result = try await request("updateKrisKringle", parameters: fields, picture: picture)
         return try KrisKringleSummary(json: result["data"])
     }

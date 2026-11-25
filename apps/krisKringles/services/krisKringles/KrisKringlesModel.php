@@ -8,7 +8,7 @@ class KrisKringleModel extends Model
                     krisKringle.name,
                     krisKringle.year,
                     krisKringle.createdBy,
-                    krisKringle.pictureVersion "
+                    krisKringle.pictureVersion, krisKringle.secret "
             . $this->visibleGroupsFromWhere() . "
             " . $query->orderByString() . "
             " . $query->limitString();
@@ -100,13 +100,13 @@ class KrisKringleModel extends Model
 
     protected function createKrisKringleInDB(
         string $name, string $firstGroupName, int $year, int $createdBy, int $serial, string $version,
-        int $copyFromId = 0
+        int $copyFromId = 0, bool $secret = false
     ): int {
         $table = $this->tables()->krisKringle();
         $groupTable = $this->tables()->krisKringleGroup();
         $memberTable = $this->tables()->krisKringleMember();
         // Schema initialization must finish before the transaction starts.
-        $this->adb->query("SELECT pictureVersion, pictureFileSerial FROM $table LIMIT 0");
+        $this->adb->query("SELECT pictureVersion, pictureFileSerial, secret FROM $table LIMIT 0");
         $this->adb->query("SELECT groupId FROM $groupTable LIMIT 0");
         $this->adb->query("SELECT groupId, parentUserId, name FROM $memberTable LIMIT 0");
         $this->adb->query('START TRANSACTION');
@@ -128,9 +128,9 @@ class KrisKringleModel extends Model
                 }
             }
             $saved = $this->adb->executePrepared(
-                "INSERT INTO $table (name, `year`, createdBy, createdDate, deleted, pictureVersion, pictureFileSerial)
-                    VALUES (?, ?, ?, NOW(), 0, ?, ?)",
-                [$name, $year, $createdBy, $version, $serial]
+                "INSERT INTO $table (name, `year`, createdBy, createdDate, deleted, pictureVersion, pictureFileSerial, secret)
+                    VALUES (?, ?, ?, NOW(), 0, ?, ?, ?)",
+                [$name, $year, $createdBy, $version, $serial, (int)$secret]
             );
             $id = $saved ? (int)$this->adb->insertId() : 0;
             if ($copyFromId > 0) {
@@ -239,14 +239,14 @@ class KrisKringleModel extends Model
     {
         $table = $this->tables()->krisKringle();
         $lockClause = $lock ? ' FOR UPDATE' : '';
-        return $this->adb->query("SELECT krisKringleId, name, `year`, createdBy, pictureVersion, pictureFileSerial
+        return $this->adb->query("SELECT krisKringleId, name, `year`, createdBy, pictureVersion, pictureFileSerial, secret
             FROM $table WHERE krisKringleId = $id AND createdBy = $owner AND deleted = 0$lockClause")->fetchAssoc();
     }
 
     protected function getVisibleKrisKringleFromDB(int $id): ?array
     {
         return $this->adb->query("SELECT krisKringle.krisKringleId, krisKringle.name, krisKringle.year,
-            krisKringle.createdBy, krisKringle.pictureVersion " . $this->visibleGroupsFromWhere()
+            krisKringle.createdBy, krisKringle.pictureVersion, krisKringle.secret " . $this->visibleGroupsFromWhere()
             . " AND krisKringle.krisKringleId = $id")->fetchAssoc();
     }
 
@@ -779,16 +779,16 @@ class KrisKringleModel extends Model
         return true;
     }
 
-    protected function updateKrisKringleInDB(int $id, int $owner, ?string $name, ?int $serial, ?string $version): ?array
+    protected function updateKrisKringleInDB(int $id, int $owner, ?string $name, ?int $serial, ?string $version, ?bool $secret = null): ?array
     {
         $table = $this->tables()->krisKringle();
         $this->adb->query('START TRANSACTION');
         $group = $this->getOwnedKrisKringleFromDB($id, $owner, true);
         if (!$group || !$this->adb->executePrepared(
             "UPDATE $table SET name = COALESCE(?, name), pictureFileSerial = COALESCE(?, pictureFileSerial),
-                pictureVersion = COALESCE(?, pictureVersion), updatedBy = ?, updatedDate = NOW()
+                pictureVersion = COALESCE(?, pictureVersion), secret = COALESCE(?, secret), updatedBy = ?, updatedDate = NOW()
                 WHERE krisKringleId = ?",
-            [$name, $serial, $version, $owner, $id]
+            [$name, $serial, $version, $secret === null ? null : (int)$secret, $owner, $id]
         )) {
             $this->adb->query('ROLLBACK');
             return null;

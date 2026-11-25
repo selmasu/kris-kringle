@@ -11,6 +11,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -110,12 +111,14 @@ fun ExchangesScreen(onSessionExpired: () -> Unit = {}, viewerProfile: MyProfile?
                     groups.filter { it.year == year }.forEach { group ->
                         group.recipientName?.takeIf { it.isNotBlank() }?.let { recipientName ->
                             item(key = "highlight-${group.id}") {
-                                GiftRecipientCard("You’re buying for $recipientName", group.name) { selectedId = group.id }
+                                GiftRecipientCard(giverName = null, recipientName = recipientName,
+                                    krisKringleName = group.name) { selectedId = group.id }
                             }
                         }
                         group.childGiftRecipients.forEach { child ->
                             item(key = "highlight-${group.id}-child-${child.id}") {
-                                GiftRecipientCard("${child.childName} is buying for ${child.recipientName}", group.name) { selectedId = group.id }
+                                GiftRecipientCard(giverName = child.childName, recipientName = child.recipientName,
+                                    krisKringleName = group.name) { selectedId = group.id }
                             }
                         }
                     }
@@ -154,7 +157,9 @@ fun ExchangesScreen(onSessionExpired: () -> Unit = {}, viewerProfile: MyProfile?
 }
 
 @Composable
-private fun GiftRecipientCard(assignment: String, krisKringleName: String, onClick: () -> Unit) {
+private fun GiftRecipientCard(
+    giverName: String?, recipientName: String, krisKringleName: String, onClick: () -> Unit
+) {
     Card(
         onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = .75f)),
@@ -163,7 +168,11 @@ private fun GiftRecipientCard(assignment: String, krisKringleName: String, onCli
         Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("🎁", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.headlineLarge)
-            Text(assignment, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Column(Modifier.semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(giverName?.let { "$it is buying for" } ?: "You’re buying for",
+                    style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text(recipientName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            }
             Text(krisKringleName, style = MaterialTheme.typography.bodyMedium)
         }
     }

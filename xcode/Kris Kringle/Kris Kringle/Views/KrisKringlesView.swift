@@ -139,7 +139,7 @@ struct KrisKringlesView: View {
     }
 }
 
-private struct GiftRecipientCard: View {
+struct GiftRecipientCard: View {
     let giverName: String?
     let recipientName: String
     let krisKringleName: String
@@ -277,6 +277,7 @@ private struct CreateKrisKringleView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
     @State private var firstGroupName = ""
+    @State private var isSecret = false
     @State private var copyFromId = 0
     @State private var showCopyPrompt = false
     @State private var hasAskedToCopy = false
@@ -343,6 +344,14 @@ private struct CreateKrisKringleView: View {
                             .shadow(color: .black.opacity(0.85), radius: 2)
                     }
                 }
+                Section {
+                    Toggle("Secret", isOn: $isSecret)
+                        .disabled(isSaving)
+                        .translucentDarkRow()
+                } footer: {
+                    Text("Members will only see who they and their children are buying for. Only you can see the full roster.")
+                        .foregroundStyle(.white)
+                }
                 Section("Kris Kringle Photo") {
                     PhotoPicker(picture: $picture, isPreparing: $isPreparingPhoto, isSaving: isSaving)
                         .translucentDarkRow()
@@ -382,13 +391,14 @@ private struct CreateKrisKringleView: View {
         let exchangeName = trimmedName
         let firstGroup = trimmedFirstGroupName
         let sourceId = copyFromId > 0 ? copyFromId : nil
+        let secret = isSecret
         isSaving = true
         errorMessage = nil
         Task {
             defer { isSaving = false }
             do {
                 let result = try await KrisKringleService.create(
-                    name: exchangeName, firstGroupName: firstGroup, picture: selectedPicture, copyFromId: sourceId
+                    name: exchangeName, firstGroupName: firstGroup, picture: selectedPicture, copyFromId: sourceId, isSecret: secret
                 )
                 onSave(result, selectedPicture)
                 dismiss()

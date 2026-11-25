@@ -13,7 +13,7 @@ final class CopyTestDatabase {
         $this->pdo->exec('CREATE TABLE krisKringle (
             krisKringleId INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, year INTEGER,
             createdBy INTEGER, createdDate TEXT, deleted INTEGER DEFAULT 0,
-            pictureVersion TEXT DEFAULT "", pictureFileSerial INTEGER DEFAULT 0)');
+            pictureVersion TEXT DEFAULT "", pictureFileSerial INTEGER DEFAULT 0, secret INTEGER NOT NULL DEFAULT 0)');
         $this->pdo->exec('CREATE TABLE krisKringleGroup (
             groupId INTEGER PRIMARY KEY AUTOINCREMENT, krisKringleId INTEGER, name TEXT)');
         $this->pdo->exec('CREATE TABLE krisKringleMember (
@@ -116,7 +116,7 @@ function fixture(): Selmasu {
         (2, 'Ada', '', '', 'ada@example.test', 0),
         (3, 'Deleted', '', '', 'deleted@example.test', 1),
         (4, 'Other', '', '', 'other@example.test', 0)");
-    $s->db->pdo->exec("INSERT INTO krisKringle VALUES
+    $s->db->pdo->exec("INSERT INTO krisKringle (krisKringleId,name,year,createdBy,createdDate,deleted,pictureVersion,pictureFileSerial) VALUES
         (1, 'Last year', " . ($year - 1) . ", 1, '', 0, 'old-photo', 99),
         (2, 'Invited last year', " . ($year - 1) . ", 4, '', 0, '', 0),
         (3, 'This year', $year, 1, '', 0, '', 0),
