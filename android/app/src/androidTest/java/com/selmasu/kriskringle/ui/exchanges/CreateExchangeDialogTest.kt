@@ -5,11 +5,14 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.selmasu.kriskringle.data.KrisKringleSummary
@@ -47,6 +50,7 @@ class CreateExchangeDialogTest {
         compose.onNodeWithText("Name").assertIsDisplayed()
         compose.onNodeWithText("First group").assertIsDisplayed()
         compose.onNodeWithText("Create").assertIsNotEnabled()
+        compose.onNodeWithText("Secret").performScrollTo().assertIsOn()
     }
 
     @Test
@@ -76,6 +80,7 @@ class CreateExchangeDialogTest {
         compose.onNodeWithText("First group").assertDoesNotExist()
         compose.onNodeWithText("Groups, members and children will be copied. Allocations won’t be copied.")
             .assertIsDisplayed()
+        compose.onNodeWithText("Secret").performScrollTo().assertIsOn().performClick().assertIsOff()
         compose.onNodeWithText("Create").assertIsEnabled()
     }
 

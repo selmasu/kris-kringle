@@ -25,21 +25,21 @@ class GiftAssignmentPrivacyTest {
         8 to KrisKringleGiftAssignment(8, "Riley")
     ))
 
-    @Test fun invitedMemberSeesOwnAndChildRecipientsWithoutEditActions() {
+    @Test fun nonSecretInvitedMemberSeesEveryAllocationWithoutEditActions() {
         compose.setContent {
             MaterialTheme {
                 Column {
-                    GiftAssignmentRow(GiftGiver(KrisKringleGiftGiverID.Member(5), "Me"), roster, false, true, 42, 42) {}
-                    GiftAssignmentRow(GiftGiver(KrisKringleGiftGiverID.Member(6), "My child"), roster, false, true, 42, 42) {}
-                    GiftAssignmentRow(GiftGiver(KrisKringleGiftGiverID.Member(7), "Other member"), roster, false, true, 99, 42) {}
-                    GiftAssignmentRow(GiftGiver(KrisKringleGiftGiverID.Member(8), "Other child"), roster, false, true, 99, 42) {}
+                    GiftAssignmentRow(GiftGiver(KrisKringleGiftGiverID.Member(5), "Me"), roster, false, true) {}
+                    GiftAssignmentRow(GiftGiver(KrisKringleGiftGiverID.Member(6), "My child"), roster, false, true) {}
+                    GiftAssignmentRow(GiftGiver(KrisKringleGiftGiverID.Member(7), "Other member"), roster, false, true) {}
+                    GiftAssignmentRow(GiftGiver(KrisKringleGiftGiverID.Member(8), "Other child"), roster, false, true) {}
                 }
             }
         }
         compose.onNodeWithText("🎁 Buying for Taylor").assertHasNoClickAction()
         compose.onNodeWithText("🎁 Buying for Morgan").assertHasNoClickAction()
-        compose.onNodeWithText("🎁 Buying for Casey").assertDoesNotExist()
-        compose.onNodeWithText("🎁 Buying for Riley").assertDoesNotExist()
+        compose.onNodeWithText("🎁 Buying for Casey").assertHasNoClickAction()
+        compose.onNodeWithText("🎁 Buying for Riley").assertHasNoClickAction()
         compose.onNodeWithText("🎁 Choose recipient").assertDoesNotExist()
     }
 
@@ -47,7 +47,7 @@ class GiftAssignmentPrivacyTest {
         var openedEditor = false
         compose.setContent {
             MaterialTheme {
-                GiftAssignmentRow(GiftGiver(KrisKringleGiftGiverID.Member(7), "Other member"), roster, true, true, 99, 42) { openedEditor = true }
+                GiftAssignmentRow(GiftGiver(KrisKringleGiftGiverID.Member(7), "Other member"), roster, true, true) { openedEditor = true }
             }
         }
         compose.onNodeWithText("🎁 Buying for Casey").assertHasClickAction().performClick()
@@ -57,7 +57,7 @@ class GiftAssignmentPrivacyTest {
     @Test fun invitedMemberCannotAllocateAnUnassignedGift() {
         compose.setContent {
             MaterialTheme {
-                GiftAssignmentRow(GiftGiver(KrisKringleGiftGiverID.Member(9), "Me"), roster, false, true, 42, 42) {}
+                GiftAssignmentRow(GiftGiver(KrisKringleGiftGiverID.Member(9), "Me"), roster, false, true) {}
             }
         }
         compose.onNodeWithText("🎁 Choose recipient").assertDoesNotExist()

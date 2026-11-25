@@ -44,6 +44,7 @@ internal fun ExchangeDetailScreen(
     val scope = rememberCoroutineScope()
     var group by remember(initialGroup.id) { mutableStateOf(initialGroup) }
     var name by rememberSaveable(initialGroup.id) { mutableStateOf(initialGroup.name) }
+    var isSecret by rememberSaveable(initialGroup.id) { mutableStateOf(initialGroup.isSecret) }
     var roster by remember { mutableStateOf<KrisKringleRoster?>(null) }
     var loading by remember { mutableStateOf(true) }
     var busy by remember { mutableStateOf(false) }
@@ -62,14 +63,18 @@ internal fun ExchangeDetailScreen(
     LaunchedEffect(group.id, refreshKey) {
         loading = true
         error = null
+        roster = null
         try {
             val result = exchangeRequest(context) { detail(group.id) }
-            roster = result.roster ?: throw IllegalStateException("The server didn’t return the Kris Kringle roster.")
-            result.summary?.let {
-                group = it
-                name = it.name
-                onUpdate(it)
-            }
+            val updated = result.summary ?: throw IllegalStateException("The server didn’t return the Kris Kringle.")
+            val updatedRoster = result.roster ?: throw IllegalStateException("The server didn’t return the Kris Kringle roster.")
+            val nameEdited = name.trim() != group.name
+            val secretEdited = isSecret != group.isSecret
+            group = updated
+            if (!nameEdited) name = updated.name
+            if (!secretEdited) isSecret = updated.isSecret
+            roster = updatedRoster
+            onUpdate(updated)
         } catch (cancelled: CancellationException) { throw cancelled }
         catch (failure: Exception) { error = failure.message ?: "Couldn’t load the Kris Kringle." }
         finally { loading = false }
@@ -120,20 +125,24 @@ internal fun ExchangeDetailScreen(
                     Text("Kris Kringle Details", style = MaterialTheme.typography.titleMedium)
                     OutlinedTextField(name, { name = it }, label = { Text("Name") }, singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth())
                     PhotoPicker(picture = picture, onPictureChange = { picture = it }, enabled = !busy, onPreparingChange = { photoPreparing = it })
+                    SecretSetting(isSecret, { isSecret = it }, enabled = !busy, requiresSave = true)
                     Button(
-                        enabled = !busy && !photoPreparing && validName(name) && (name.trim() != group.name || picture != null),
+                        enabled = !busy && !photoPreparing && validName(name) &&
+                            (name.trim() != group.name || picture != null || isSecret != group.isSecret),
                         onClick = {
                             busy = true
                             error = null
                             val draft = picture
                             val updatedName = name.trim().takeIf { it != group.name }
+                            val updatedSecret = isSecret.takeIf { it != group.isSecret }
                             scope.launch {
                                 try {
-                                    val updated = exchangeRequest(context) { update(group.id, updatedName, draft) }.summary
+                                    val updated = exchangeRequest(context) { update(group.id, updatedName, draft, updatedSecret) }.summary
                                         ?: throw IllegalStateException("The server didn’t return the updated Kris Kringle.")
                                     photos.store(updated, draft)
                                     group = updated
                                     name = updated.name
+                                    isSecret = updated.isSecret
                                     picture = null
                                     onUpdate(updated)
                                 } catch (cancelled: CancellationException) { throw cancelled }
@@ -149,41 +158,43 @@ internal fun ExchangeDetailScreen(
             }
             val currentRoster = roster
             if (currentRoster != null) {
-                currentRoster.groups.forEach { memberGroup ->
-                    item(key = "heading-${memberGroup.id}") {
-                        Text(memberGroup.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
-                    }
-                    val groupMembers = currentRoster.members.filter { it.groupId == memberGroup.id }
-                    if (groupMembers.isEmpty()) item(key = "empty-${memberGroup.id}") { ExchangeCard { Text("No members yet") } }
-                    items(groupMembers, key = { "member-${it.id}" }) { member ->
-                        ExchangeCard {
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                MemberAvatar(group.id, member,
-                                    picture = viewerProfile?.picture.takeIf { member.id == Globals.userId })
-                                Column(Modifier.weight(1f)) {
-                                    Text(
-                                        member.displayName, style = MaterialTheme.typography.titleMedium,
-                                        modifier = if (isCreator && !busy) Modifier.clickable { editingMember = EditableMember(member.memberId, member.id, member.name, member.email, member.isCreator) }
-                                            .padding(vertical = 6.dp) else Modifier
-                                    )
-                                    if (member.isCreator) Text("Creator", style = MaterialTheme.typography.labelMedium)
+                exchangeRosterItems(group, Globals.userId) {
+                    currentRoster.groups.forEach { memberGroup ->
+                        item(key = "heading-${memberGroup.id}") {
+                            Text(memberGroup.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+                        }
+                        val groupMembers = currentRoster.members.filter { it.groupId == memberGroup.id }
+                        if (groupMembers.isEmpty()) item(key = "empty-${memberGroup.id}") { ExchangeCard { Text("No members yet") } }
+                        items(groupMembers, key = { "member-${it.id}" }) { member ->
+                            ExchangeCard {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    MemberAvatar(group.id, member,
+                                        picture = viewerProfile?.picture.takeIf { member.id == Globals.userId })
+                                    Column(Modifier.weight(1f)) {
+                                        Text(
+                                            member.displayName, style = MaterialTheme.typography.titleMedium,
+                                            modifier = if (isCreator && !busy) Modifier.clickable { editingMember = EditableMember(member.memberId, member.id, member.name, member.email, member.isCreator) }
+                                                .padding(vertical = 6.dp) else Modifier
+                                        )
+                                        if (member.isCreator) Text("Creator", style = MaterialTheme.typography.labelMedium)
+                                    }
+                                    if (isCreator) TextButton(
+                                        onClick = { parentForChild = member }, enabled = !busy,
+                                        modifier = Modifier.semantics { contentDescription = "Add child under ${member.displayName}" }
+                                    ) { Text("Child +") }
                                 }
-                                if (isCreator) TextButton(
-                                    onClick = { parentForChild = member }, enabled = !busy,
-                                    modifier = Modifier.semantics { contentDescription = "Add child under ${member.displayName}" }
-                                ) { Text("Child +") }
-                            }
-                            val giver = GiftGiver(member.memberId?.let { KrisKringleGiftGiverID.Member(it) } ?: KrisKringleGiftGiverID.User(member.id), member.displayName)
-                            GiftAssignmentRow(giver, currentRoster, isCreator, !busy, member.id) { giftGiver = giver }
-                            member.children.forEach { child ->
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f))
-                                Column(Modifier.padding(start = 24.dp)) {
-                                    Text(
-                                        "↳ ${child.name}", style = MaterialTheme.typography.titleMedium,
-                                        modifier = if (isCreator && !busy) Modifier.clickable { editingMember = EditableMember(child.id, 0, child.name, null, false) }.padding(vertical = 8.dp) else Modifier
-                                    )
-                                    val childGiver = GiftGiver(KrisKringleGiftGiverID.Member(child.id), child.name)
-                                    GiftAssignmentRow(childGiver, currentRoster, isCreator, !busy, member.id) { giftGiver = childGiver }
+                                val giver = GiftGiver(member.memberId?.let { KrisKringleGiftGiverID.Member(it) } ?: KrisKringleGiftGiverID.User(member.id), member.displayName)
+                                GiftAssignmentRow(giver, currentRoster, isCreator, !busy) { giftGiver = giver }
+                                member.children.forEach { child ->
+                                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f))
+                                    Column(Modifier.padding(start = 24.dp)) {
+                                        Text(
+                                            "↳ ${child.name}", style = MaterialTheme.typography.titleMedium,
+                                            modifier = if (isCreator && !busy) Modifier.clickable { editingMember = EditableMember(child.id, 0, child.name, null, false) }.padding(vertical = 8.dp) else Modifier
+                                        )
+                                        val childGiver = GiftGiver(KrisKringleGiftGiverID.Member(child.id), child.name)
+                                        GiftAssignmentRow(childGiver, currentRoster, isCreator, !busy) { giftGiver = childGiver }
+                                    }
                                 }
                             }
                         }
@@ -206,13 +217,13 @@ internal fun ExchangeDetailScreen(
 }
 
 @Composable
-internal fun GiftAssignmentRow(giver: GiftGiver, roster: KrisKringleRoster, isCreator: Boolean, enabled: Boolean, ownerUserId: Int, viewerUserId: Int = Globals.userId, onEdit: () -> Unit) {
+internal fun GiftAssignmentRow(giver: GiftGiver, roster: KrisKringleRoster, isCreator: Boolean, enabled: Boolean, onEdit: () -> Unit) {
     val assignment = giver.memberId?.let { roster.assignments[it] }
     if (isCreator) {
         TextButton(onClick = onEdit, enabled = enabled, contentPadding = PaddingValues(horizontal = 0.dp, vertical = 4.dp)) {
             Text(assignment?.let { "🎁 Buying for ${it.recipientName}" } ?: "🎁 Choose recipient")
         }
-    } else if (assignment != null && ownerUserId == viewerUserId) {
+    } else if (assignment != null) {
         Text("🎁 Buying for ${assignment.recipientName}", style = MaterialTheme.typography.bodyMedium)
     }
 }

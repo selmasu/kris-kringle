@@ -20,9 +20,9 @@ class CopyPreviousExchangeTest {
     }
 
     @Test fun copyingSendsOnlyTheSourceAndNewNameInsteadOfAFirstGroupOrAllocations() {
-        assertEquals(mapOf("name" to "Family", "copyFromId" to "42"),
+        assertEquals(mapOf("name" to "Family", "copyFromId" to "42", "secret" to "1"),
             createKrisKringleFields("Family", "Unused group", 42))
-        assertEquals(mapOf("name" to "Friends", "firstGroupName" to "First group"),
+        assertEquals(mapOf("name" to "Friends", "firstGroupName" to "First group", "secret" to "1"),
             createKrisKringleFields("Friends", "First group", null))
         assertThrows(IllegalArgumentException::class.java) { createKrisKringleFields("Family", "", 0) }
     }

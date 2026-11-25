@@ -28,6 +28,7 @@ internal fun CreateExchangeDialog(
     var copyFromName by rememberSaveable { mutableStateOf("") }
     var name by rememberSaveable { mutableStateOf("") }
     var firstGroup by rememberSaveable { mutableStateOf("") }
+    var isSecret by rememberSaveable { mutableStateOf(true) }
     var picture by remember { mutableStateOf<ByteArray?>(null) }
     var busy by remember { mutableStateOf(false) }
     var photoPreparing by remember { mutableStateOf(false) }
@@ -73,7 +74,7 @@ internal fun CreateExchangeDialog(
                 scope.launch {
                     try {
                         val summary = exchangeRequest(context) {
-                            create(name.trim(), firstGroup.trim(), picture, copyFromId)
+                            create(name.trim(), firstGroup.trim(), picture, copyFromId, isSecret)
                         }.summary ?: throw IllegalStateException("The server didn’t return the new Kris Kringle.")
                         onCreated(summary, picture)
                     } catch (cancelled: CancellationException) { throw cancelled }
@@ -93,6 +94,7 @@ internal fun CreateExchangeDialog(
                 Text("Groups, members and children will be copied. Allocations won’t be copied.")
                 TextButton(onClick = { step = "choose" }, enabled = !busy && !photoPreparing) { Text("Change Year") }
             }
+            SecretSetting(isSecret, { isSecret = it }, enabled = !busy)
             Text("Kris Kringle photo", style = MaterialTheme.typography.titleSmall)
             PhotoPicker(picture = picture, onPictureChange = { picture = it }, enabled = !busy,
                 onPreparingChange = { photoPreparing = it })

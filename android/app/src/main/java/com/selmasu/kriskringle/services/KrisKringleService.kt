@@ -18,8 +18,9 @@ class KrisKringleService(private val listener: KrisKringleServiceListener, priva
             .objects().map(KrisKringleSummary::fromJSON))
     }
 
-    fun create(name: String, firstGroupName: String, picture: ByteArray? = null, copyFromId: Int? = null) =
-        request(Type.CREATE, "createKrisKringle", createKrisKringleFields(name, firstGroupName, copyFromId), picture) {
+    fun create(name: String, firstGroupName: String, picture: ByteArray? = null, copyFromId: Int? = null,
+               isSecret: Boolean = true) =
+        request(Type.CREATE, "createKrisKringle", createKrisKringleFields(name, firstGroupName, copyFromId, isSecret), picture) {
             KrisKringleServiceData(summary = KrisKringleSummary.fromJSON(it.getJSONObject("data")))
         }
 
@@ -28,8 +29,8 @@ class KrisKringleService(private val listener: KrisKringleServiceListener, priva
             roster = KrisKringleRoster.fromJSON(it))
     }
 
-    fun update(id: Int, name: String?, picture: ByteArray?) = request(Type.UPDATE, "updateKrisKringle",
-        idFields(id) + (name?.let { mapOf("name" to it) } ?: emptyMap()), picture) {
+    fun update(id: Int, name: String?, picture: ByteArray?, isSecret: Boolean? = null) = request(Type.UPDATE, "updateKrisKringle",
+        updateKrisKringleFields(id, name, isSecret), picture) {
         KrisKringleServiceData(summary = KrisKringleSummary.fromJSON(it.getJSONObject("data")))
     }
 
@@ -94,11 +95,17 @@ class KrisKringleService(private val listener: KrisKringleServiceListener, priva
         }, context).also(connections::add)
 }
 
-internal fun createKrisKringleFields(name: String, firstGroupName: String, copyFromId: Int?): Map<String, String> {
+internal fun createKrisKringleFields(
+    name: String, firstGroupName: String, copyFromId: Int?, isSecret: Boolean = true
+): Map<String, String> {
     require(copyFromId == null || copyFromId > 0) { "Choose a previous Kris Kringle." }
-    return mapOf("name" to name) + if (copyFromId == null) {
+    return mapOf("name" to name, "secret" to if (isSecret) "1" else "0") + if (copyFromId == null) {
         mapOf("firstGroupName" to firstGroupName)
     } else {
         mapOf("copyFromId" to copyFromId.toString())
     }
 }
+
+internal fun updateKrisKringleFields(id: Int, name: String?, isSecret: Boolean?): Map<String, String> =
+    mapOf("id" to id.toString()) + (name?.let { mapOf("name" to it) } ?: emptyMap()) +
+        (isSecret?.let { mapOf("secret" to if (it) "1" else "0") } ?: emptyMap())

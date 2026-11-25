@@ -15,6 +15,8 @@ Run `./gradlew :app:connectedDebugAndroidTest` with an emulator to check sign-in
 
 When creating a Kris Kringle, Android offers to copy an available KK from a previous year, including ones you were invited to. Choose a source or start fresh. Copying preserves its groups, members and children, and starts with no gift allocations. The new name and optional photo are entered separately. This requires deploying the `copyFromId` support in the Kris Kringle backend service, API and model together with the Android update.
 
+New KKs default to **Secret**, matching iOS. The creator can change this when creating a KK or in its details, then choose **Save changes**. Invited members of secret KKs see only their own and their children’s gift recipients; the full roster stays visible to the creator. Existing KKs retain their saved setting. This uses the shared backend’s `secret` field and recipient-only detail response.
+
 ## Google sign-in
 
 The app uses Android Credential Manager and the Web OAuth client ID in `data/Constants.kt`. That same audience is sent to the backend's `loginGoogle` endpoint. No client secret is embedded in the app.
@@ -46,6 +48,6 @@ The app supports email codes, saved-session validation, exchange creation/update
 
 The API base URL is defined in `data/Constants.kt`. Google sign-in additionally uses the backend client allowlist described above; SwiftUI source is unchanged by the Android implementation.
 
-## Existing backend behavior
+## Gift allocation visibility
 
-The roster endpoint currently returns every gift assignment to invited members as well as the creator. Android limits invited viewers to their own and their children’s recipient names in the UI. Enforcing that confidentiality against direct API access requires filtering the existing backend response; this Android port does not change the server.
+For non-secret KKs, all members can see the full roster and every gift allocation. Only the creator can edit them. For secret KKs, invited members see only their own and their children’s gift recipients; the backend omits the full roster and other allocations from their responses.

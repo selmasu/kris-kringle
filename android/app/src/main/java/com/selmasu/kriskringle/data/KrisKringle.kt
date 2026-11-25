@@ -12,6 +12,7 @@ data class KrisKringleSummary(
     val pictureVersion: String = "",
     val recipientName: String? = null,
     val childGiftRecipients: List<KrisKringleChildGiftRecipient> = emptyList(),
+    val isSecret: Boolean = false,
 ) {
     companion object {
         fun fromJSON(json: JSONObject): KrisKringleSummary {
@@ -21,7 +22,8 @@ data class KrisKringleSummary(
                 json.requiredString("name", error).ifEmpty { "Kris Kringle" },
                 json.getInt("year"), json.getInt("createdBy"), json.string("pictureVersion"),
                 json.nullableString("recipientName"),
-                json.optJSONArray("childGiftRecipients")?.objects()?.map(KrisKringleChildGiftRecipient::fromJSON) ?: emptyList())
+                json.optJSONArray("childGiftRecipients")?.objects()?.map(KrisKringleChildGiftRecipient::fromJSON) ?: emptyList(),
+                json.optBoolean("secret", false) || json.optInt("secret", 0) != 0)
         }
     }
 }

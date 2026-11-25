@@ -11,9 +11,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.selmasu.kriskringle.data.*
 import com.selmasu.kriskringle.services.*
@@ -152,28 +150,6 @@ fun ExchangesScreen(onSessionExpired: () -> Unit = {}, viewerProfile: MyProfile?
                     selectedId = group.id
                 }
             )
-        }
-    }
-}
-
-@Composable
-private fun GiftRecipientCard(
-    giverName: String?, recipientName: String, krisKringleName: String, onClick: () -> Unit
-) {
-    Card(
-        onClick = onClick,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = .75f)),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("🎁", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.headlineLarge)
-            Column(Modifier.semantics(mergeDescendants = true) {}, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(giverName?.let { "$it is buying for" } ?: "You’re buying for",
-                    style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                Text(recipientName, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            }
-            Text(krisKringleName, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
