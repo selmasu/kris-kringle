@@ -9,6 +9,7 @@ struct KrisKringleSummary: Identifiable {
     let createdBy: Int
     let pictureVersion: String
     let recipientName: String?
+    let childGiftRecipients: [KrisKringleChildGiftRecipient]
 
     init(json: JSON) throws {
         guard let id = json["krisKringleId"].int ?? Int(json["krisKringleId"].stringValue), id > 0,
@@ -23,6 +24,24 @@ struct KrisKringleSummary: Identifiable {
         self.createdBy = createdBy
         self.pictureVersion = json["pictureVersion"].stringValue
         self.recipientName = json["recipientName"].string
+        self.childGiftRecipients = try (json["childGiftRecipients"].array ?? []).map(KrisKringleChildGiftRecipient.init(json:))
+    }
+}
+
+struct KrisKringleChildGiftRecipient: Identifiable {
+    let id: Int
+    let childName: String
+    let recipientName: String
+
+    init(json: JSON) throws {
+        guard let id = json["memberId"].int, id > 0,
+              let childName = json["childName"].string,
+              let recipientName = json["recipientName"].string else {
+            throw KrisKringleService.ServiceError("The server returned an invalid child gift assignment.")
+        }
+        self.id = id
+        self.childName = childName
+        self.recipientName = recipientName
     }
 }
 

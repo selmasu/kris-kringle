@@ -25,6 +25,23 @@ class ServiceModelsTest {
         assertNull(group.recipientName)
     }
 
+    @Test fun childGiftRecipientsSurviveWithoutParentsOwnAssignment() {
+        val group = KrisKringleSummary.fromJSON(JSONObject("""{
+            "krisKringleId":4,"name":"Exchange","year":2026,"createdBy":12,
+            "childGiftRecipients":[
+                {"memberId":21,"childName":"Sam","recipientName":"Alex"},
+                {"memberId":22,"childName":"Sam","recipientName":"Taylor"}
+            ]
+        }"""))
+        assertNull(group.recipientName)
+        assertEquals(listOf(21, 22), group.childGiftRecipients.map { it.id })
+        assertEquals(listOf("Alex", "Taylor"), group.childGiftRecipients.map { it.recipientName })
+        assertEquals(listOf("Sam", "Sam"), group.childGiftRecipients.map { it.childName })
+        assertEquals(group.childGiftRecipients, group.copy(name = "Renamed").childGiftRecipients)
+        val legacy = KrisKringleSummary.fromJSON(JSONObject("""{"krisKringleId":5,"name":"Old Server","year":2026,"createdBy":12}"""))
+        assertTrue(legacy.childGiftRecipients.isEmpty())
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun rejectsMalformedExchangeInsteadOfDisplayingInvalidNavigationTarget() {
         KrisKringleSummary.fromJSON(JSONObject("""{"krisKringleId":0,"name":"Family","year":2026,"createdBy":12}"""))

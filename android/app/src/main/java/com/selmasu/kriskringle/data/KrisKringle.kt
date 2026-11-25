@@ -11,6 +11,7 @@ data class KrisKringleSummary(
     val createdBy: Int,
     val pictureVersion: String = "",
     val recipientName: String? = null,
+    val childGiftRecipients: List<KrisKringleChildGiftRecipient> = emptyList(),
 ) {
     companion object {
         fun fromJSON(json: JSONObject): KrisKringleSummary {
@@ -19,7 +20,18 @@ data class KrisKringleSummary(
             return KrisKringleSummary(json.requiredId("krisKringleId", error),
                 json.requiredString("name", error).ifEmpty { "Kris Kringle" },
                 json.getInt("year"), json.getInt("createdBy"), json.string("pictureVersion"),
-                json.nullableString("recipientName"))
+                json.nullableString("recipientName"),
+                json.optJSONArray("childGiftRecipients")?.objects()?.map(KrisKringleChildGiftRecipient::fromJSON) ?: emptyList())
+        }
+    }
+}
+
+data class KrisKringleChildGiftRecipient(val id: Int, val childName: String, val recipientName: String) {
+    companion object {
+        fun fromJSON(json: JSONObject): KrisKringleChildGiftRecipient {
+            val error = "The server returned an invalid child gift assignment."
+            return KrisKringleChildGiftRecipient(json.requiredId("memberId", error),
+                json.requiredString("childName", error), json.requiredString("recipientName", error))
         }
     }
 }

@@ -107,17 +107,15 @@ fun ExchangesScreen(onSessionExpired: () -> Unit = {}, viewerProfile: MyProfile?
                         }
                     }
                     val year = Calendar.getInstance().get(Calendar.YEAR)
-                    items(groups.filter { it.year == year && !it.recipientName.isNullOrBlank() }, key = { "highlight-${it.id}" }) { group ->
-                        Card(
-                            onClick = { selectedId = group.id },
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = .75f)),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Text("🎁", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.headlineLarge)
-                                Text("You’re buying for ${group.recipientName}", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                                Text(group.name, style = MaterialTheme.typography.bodyMedium)
+                    groups.filter { it.year == year }.forEach { group ->
+                        group.recipientName?.takeIf { it.isNotBlank() }?.let { recipientName ->
+                            item(key = "highlight-${group.id}") {
+                                GiftRecipientCard("You’re buying for $recipientName", group.name) { selectedId = group.id }
+                            }
+                        }
+                        group.childGiftRecipients.forEach { child ->
+                            item(key = "highlight-${group.id}-child-${child.id}") {
+                                GiftRecipientCard("${child.childName} is buying for ${child.recipientName}", group.name) { selectedId = group.id }
                             }
                         }
                     }
@@ -151,6 +149,22 @@ fun ExchangesScreen(onSessionExpired: () -> Unit = {}, viewerProfile: MyProfile?
                     selectedId = group.id
                 }
             )
+        }
+    }
+}
+
+@Composable
+private fun GiftRecipientCard(assignment: String, krisKringleName: String, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = .75f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("🎁", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.headlineLarge)
+            Text(assignment, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(krisKringleName, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

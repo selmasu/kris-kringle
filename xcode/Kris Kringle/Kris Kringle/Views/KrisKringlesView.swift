@@ -38,44 +38,17 @@ struct KrisKringlesView: View {
                 }
             case .loaded(let groups):
                 let currentYear = Calendar.current.component(.year, from: Date())
-                let highlights = groups.filter { $0.year == currentYear && $0.recipientName != nil }
+                let highlights = groups.filter { $0.year == currentYear && ($0.recipientName != nil || !$0.childGiftRecipients.isEmpty) }
                 List {
                     if !highlights.isEmpty {
                         Section {
                             ForEach(highlights) { group in
-                                VStack(alignment: .leading, spacing: 16) {
-                                    Image(systemName: "gift.fill")
-                                        .font(.largeTitle)
-                                        .foregroundStyle(Theme.christmasAccent)
-                                        .frame(maxWidth: .infinity)
-                                        .accessibilityHidden(true)
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("You're buying for")
-                                            .lineLimit(1)
-                                            .minimumScaleFactor(0.75)
-                                        Text(group.recipientName ?? "")
-                                            .fixedSize(horizontal: false, vertical: true)
-                                    }
-                                    .font(.title.bold())
-                                    .foregroundStyle(.white)
-                                    .accessibilityElement(children: .combine)
-                                    Text(group.name)
-                                        .font(.subheadline)
-                                        .foregroundStyle(.white.opacity(0.8))
+                                if let recipientName = group.recipientName {
+                                    GiftRecipientCard(giverName: nil, recipientName: recipientName, krisKringleName: group.name)
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(24)
-                                .background(
-                                    Theme.cardBackground,
-                                    in: RoundedRectangle(cornerRadius: 16)
-                                )
-                                .overlay {
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .strokeBorder(Theme.christmasAccent.opacity(0.6), lineWidth: 1)
+                                ForEach(group.childGiftRecipients) { child in
+                                    GiftRecipientCard(giverName: child.childName, recipientName: child.recipientName, krisKringleName: group.name)
                                 }
-                                .listRowInsets(EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12))
-                                .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
                             }
                         }
                     }
@@ -163,6 +136,53 @@ struct KrisKringlesView: View {
         } catch {
             state = .failed(error.localizedDescription)
         }
+    }
+}
+
+private struct GiftRecipientCard: View {
+    let giverName: String?
+    let recipientName: String
+    let krisKringleName: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Image(systemName: "gift.fill")
+                .font(.largeTitle)
+                .foregroundStyle(Theme.christmasAccent)
+                .frame(maxWidth: .infinity)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                if let giverName {
+                    Text("\(giverName) is buying for")
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("You're buying for")
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                }
+                Text(recipientName)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .font(.title.bold())
+            .foregroundStyle(.white)
+            .accessibilityElement(children: .combine)
+            Text(krisKringleName)
+                .font(.subheadline)
+                .foregroundStyle(.white.opacity(0.8))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(24)
+        .background(
+            Theme.cardBackground,
+            in: RoundedRectangle(cornerRadius: 16)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .strokeBorder(Theme.christmasAccent.opacity(0.6), lineWidth: 1)
+        }
+        .listRowInsets(EdgeInsets(top: 12, leading: 0, bottom: 12, trailing: 0))
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 }
 

@@ -19,7 +19,9 @@ class KrisKringleService extends KrisKringleModel {
         if ($returnType === Model::RETURN_TYPE_ARRAY) {
             $recipients = $this->getMyGiftRecipientsFromDB(array_column($groups, 'krisKringleId'), (int)$this->s()->userId());
             foreach ($groups as &$group) {
-                $group['recipientName'] = $recipients[(int)$group['krisKringleId']] ?? null;
+                $myRecipients = $recipients[(int)$group['krisKringleId']] ?? [];
+                $group['recipientName'] = $myRecipients['recipientName'] ?? null;
+                $group['childGiftRecipients'] = $myRecipients['childGiftRecipients'] ?? [];
             }
             unset($group);
         }
